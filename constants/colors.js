@@ -61,15 +61,41 @@
 // // 👇 change this to switch theme
 // export const COLORS = THEMES.coffee;
 
+import {colors} from "nativewind/theme";
+
+// export const lightTheme = {
+//     primary: "#2563EB",       /* royal blue */
+//     secondary: "#06B6D4",     /* cyan */
+//     background: "#E3F2FD",    /* light blue */
+//     accent: "#AEEA00",        /* lime green */
+//     border: "#1E293B",
+//     red: "#EF4444",
+//     lightRed: "#ff6347",     /* mapped from --color-errorBox */
+//     dangerBorder: "#EF4444",
+//     green: "#22c55e"
+// };
+
+// export const darkTheme = {
+//     primary: "#60A5FA",       /* soft blue */
+//     secondary: "#22D3EE",     /* bright cyan */
+//     background: "#020817",
+//     accent: "#AEEA00",        /* lime green */
+//     border: "#1E293B",
+//     red: "#7E1E1D",
+//     lightRed: "#EF4444",     /* mapped from --color-dangerBox */
+//     dangerBorder: "#7E1E1D",
+// };
+
 export const lightTheme = {
     primary: "#2563EB",       /* royal blue */
     secondary: "#06B6D4",     /* cyan */
     background: "#E3F2FD",    /* light blue */
     accent: "#AEEA00",        /* lime green */
     border: "#1E293B",
-    danger: "#EF4444",
-    dangerBox: "#ff6347",     /* mapped from --color-errorBox */
+    red: "#EF4444",
+    lightRed: "#ff6347",     /* mapped from --color-errorBox */
     dangerBorder: "#EF4444",
+    green: "#22c55e"
 };
 
 export const darkTheme = {
@@ -78,8 +104,8 @@ export const darkTheme = {
     background: "#020817",
     accent: "#AEEA00",        /* lime green */
     border: "#1E293B",
-    danger: "#7E1E1D",
-    dangerBox: "#EF4444",     /* mapped from --color-dangerBox */
+    red: "#7E1E1D",
+    lightRed: "#EF4444",     /* mapped from --color-dangerBox */
     dangerBorder: "#7E1E1D",
 };
 

@@ -27,7 +27,7 @@ yarn-debug.*
 yarn-error.*
 
 # macOS
-.DS_Store
+*.DS_Store
 *.pem
 
 # local env files
@@ -43,3 +43,5 @@ app-example
 /android
 
 .env
+
+constants/api.js

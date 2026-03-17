@@ -2,8 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
+import { API_URL } from "@/constants/api.js";
 
-const API_URL = "http://localhost:5001/api";
+// const API_URL = "http://localhost:5001/api";
 // const API_URL = "https://expense-api-wh34.onrender.com/api";
 
 export const useTransactions = (userId) => {
@@ -53,21 +54,30 @@ export const useTransactions = (userId) => {
         }
     }, [fetchTransactions, fetchSummary, userId]);
 
-    const deleteTransaction = async () => {
-        try {
-            const response = await fetch(`${API_URL}/transactions/${userId}`, {
-                method: "DELETE",
-            });
-            if (!response.ok) throw new Error("Failed to delete transanction");
+    const deleteTransaction = useCallback(
+        async (id) => {
+            try {
+                const response = await fetch(`${API_URL}/transactions/${id}`, {
+                    method: "DELETE",
+                });
 
-            loadData();
+                if (!response.ok) {
+                    // If you get a 429 here, it means the server is still blocking you
+                    throw new Error(
+                        `Deletion failed with status: ${response.status}`,
+                    );
+                }
 
-            Alert.alert("Success", "Transaction deleted succesfully");
-        } catch (error) {
-            console.log("Error deleting transaction:", error);
-            Alert.alert("Error", error.message);
-        }
-    };
+                // Re-fetch data to sync UI
+                await loadData();
+                Alert.alert("Success", "Transaction deleted successfully");
+            } catch (error) {
+                console.log("Error deleting transaction:", error);
+                Alert.alert("Error", error.message);
+            }
+        },
+        [loadData],
+    ); // Depends on loadData to stay fresh
 
     return { transactions, summary, isLoading, loadData, deleteTransaction };
 };
