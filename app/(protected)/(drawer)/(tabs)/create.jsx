@@ -35,14 +35,12 @@ const CreateScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { user } = useUser();
-  // <Ionicons name="car"/>
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isExpense, setIsExpense] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [currency, setCurrency] = useState("₹");
-
   const [isModalVisible, setModalVisible] = useState(false);
 
   const toggleModal = () => {
@@ -50,14 +48,17 @@ const CreateScreen = () => {
   };
 
   const handleCreate = async () => {
-    if (!title.trim())
+    if (!title.trim()) {
       return Alert.alert("Error", "Please enter a transaction title");
+    }
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
       Alert.alert("Error, Please enter a a valid amount");
       return;
     }
-    if (!selectedCategory)
+    if (!selectedCategory) {
       return Alert.alert("Error", "Please select a category");
+    }
+
     setIsLoading(true);
     try {
       const formattedAmount = isExpense
@@ -82,10 +83,12 @@ const CreateScreen = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         console.log(errorData);
         throw new Error(
-          errorData.error || "Failed to create transaction entry",
+          errorData.message ||
+            errorData.error ||
+            "Failed to create transaction entry",
         );
       }
 
@@ -100,35 +103,31 @@ const CreateScreen = () => {
   };
 
   return (
-    // Full Container
     <View className="flex-1 bg-background">
-      {/* Top Navigator */}
       <View className="flex-row items-center justify-between mx-6 my-3 pb-3 border-b-2 border-slate-300">
-        <CirclePressable name={"arrow-back"} onPress={() => {
-          if (navigation.canGoBack()) {
-            router.back();
-          } else {
-            router.replace("/");
-          }
-        }} />
+        <CirclePressable
+          name={"arrow-back"}
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
+          }}
+        />
         <Text className="font-sansBold color-slate-500 text-2xl">
           New Transaction
         </Text>
-        {/* <TouchableOpacity
-          className={`flex-row items-center pl-6 pr-3 py-3 gap-2 rounded-full ${isLoading ? "bg-slate-500" : "bg-blue-500 active:bg-accent"}  `}
+        <BluePressable
+          name={"checkmark"}
+          text={"Save"}
+          direction="right"
+          loadingText="Saving..."
           onPress={handleCreate}
-          disabled={isLoading}
-        >
-          <Text className="font-sansMed color-slate-50 text-xl">
-            {isLoading ? "Saving..." : "Save"}
-          </Text>
-          <Ionicons name="checkmark" color="white" size={25} />
-        </TouchableOpacity> */}
-        <BluePressable name={"checkmark"} text={"Save"} direction="right" loadingText="Saving..." onPress={handleCreate} isLoading={isLoading} />
+          isLoading={isLoading}
+        />
       </View>
-      {/* Card */}
       <View className="flex p-6 mx-5 bg-slate-50 gap-6 rounded-2xl border border-slate-400 border-dashed">
-        {/* Expense Income button */}
         <View className="flex-row gap-3">
           <TouchableOpacity
             className={`flex-1 flex-row items-center justify-center p-3 py-4 ${isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
@@ -161,7 +160,6 @@ const CreateScreen = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        {/* Amount */}
         <View className="flex-row gap-3 items-center border-b border-b-slate-400">
           <Text className="font-sansBold text-5xl color-slate-700 leading-tight">
             {currency}
@@ -176,16 +174,13 @@ const CreateScreen = () => {
             style={{ paddingVertical: 0, includeFontPadding: false }}
           />
         </View>
-        {/* Transaction Title */}
         <CardTitle name={"ticket-outline"} title={"Title"} />
         <FieldInputBox
           value={title}
           onChangeText={setTitle}
           placeholder="Transaction title"
         />
-        {/* Category Heading*/}
         <CardTitle name={"pricetag-outline"} title={"Category"} />
-        {/* Category Icons */}
         <Pressable
           onPress={toggleModal}
           className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-300 py-3 rounded-full"
@@ -193,9 +188,22 @@ const CreateScreen = () => {
           {({ pressed }) => (
             <>
               {selectedCategory ? (
-                <Ionicons name={selectedCategory.icon} size={22} color={pressed ? colors.slate[600] : selectedCategory ? (isExpense ? colors.red[500] : colors.green[500]) : colors.slate[50]} />
+                <Ionicons
+                  name={selectedCategory.icon}
+                  size={22}
+                  color={
+                    pressed
+                      ? colors.slate[600]
+                      : isExpense
+                        ? colors.red[500]
+                        : colors.green[500]
+                  }
+                />
               ) : null}
-              <Text selectable={false} className={`font-sansMed ${pressed ? "text-slate-600" : (selectedCategory ? "text-slate-600" : "text-slate-400")} text-center text-lg`}>
+              <Text
+                selectable={false}
+                className={`font-sansMed ${pressed ? "text-slate-600" : selectedCategory ? "text-slate-600" : "text-slate-400"} text-center text-lg`}
+              >
                 {selectedCategory ? selectedCategory.name : "Select Category"}
               </Text>
             </>
@@ -211,31 +219,36 @@ const CreateScreen = () => {
           animationOut="slideOutDown"
           useNativeDriver={true}
           useNativeDriverForBackdrop={true}
-          backdropTransitionInTiming={300} // Prevents backdrop flicker
-          backdropTransitionOutTiming={300} // Prevents backdrop flicker
-          // animationInTiming={600}      // Duration of the slide up (in ms)
-          animationOutTiming={1000}     // Duration of the slide down (in ms)
+          backdropTransitionInTiming={300}
+          backdropTransitionOutTiming={300}
+          animationOutTiming={1000}
           style={{ justifyContent: "flex-end", margin: 0 }}
         >
           <View className="bg-slate-50 h-64 rounded-t-3xl border-t border-l border-r border-t-slate-400 border-l-slate-400 border-r-slate-400 p-4">
-            {/* <TouchableOpacity onPress={toggleModal}>
-              </TouchableOpacity> */}
-            <ScrollView showsVerticalScrollIndicator={false} className="">
+            <ScrollView showsVerticalScrollIndicator={false}>
               {CATEGORY_ICONS.map((category) => (
                 <Pressable
                   key={category.id}
                   onPress={() => {
                     setSelectedCategory(category);
-                    toggleModal()
+                    toggleModal();
                   }}
                   className={`flex-row py-2 gap-2 rounded-md pl-3 ${selectedCategory?.name == category.name ? "bg-blue-500" : "bg-slate-50"}`}
                 >
                   <Ionicons
                     name={category.icon}
                     size={20}
-                    color={selectedCategory?.name == category.name ? colors.slate[50] : colors.blue[500]}
+                    color={
+                      selectedCategory?.name == category.name
+                        ? colors.slate[50]
+                        : colors.blue[500]
+                    }
                   />
-                  <Text className={`${selectedCategory?.name == category.name ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}>{category.name}</Text>
+                  <Text
+                    className={`${selectedCategory?.name == category.name ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}
+                  >
+                    {category.name}
+                  </Text>
                 </Pressable>
               ))}
             </ScrollView>

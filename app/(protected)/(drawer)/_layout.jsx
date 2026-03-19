@@ -21,7 +21,14 @@ import { Drawer } from "expo-router/drawer";
 
 export default function DrawerLayout() {
   return (
-    <Drawer screenOptions={{ headerShown: false }}>
+    <Drawer
+      screenOptions={{
+        headerShown: false,
+        drawerType: "front",
+        overlayColor: "transparent",
+        swipeEdgeWidth: 60,
+      }}
+    >
       <Drawer.Screen
         name="(tabs)"
         options={{ drawerLabel: "Home", title: "Home" }}
@@ -32,4 +39,3 @@ export default function DrawerLayout() {
     </Drawer>
   );
 }
-

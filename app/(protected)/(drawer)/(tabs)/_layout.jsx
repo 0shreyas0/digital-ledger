@@ -1,10 +1,8 @@
-import { Tabs, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
 export default function TabsLayout() {
-  const router = useRouter();
-
   return (
     <Tabs screenOptions={{ headerShown: false }}>
       <Tabs.Screen
@@ -26,12 +24,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="compose"
+        name="create"
         options={{
           title: "",
-          tabBarButton: () => (
+          tabBarButton: (props) => (
             <Pressable
-              onPress={() => router.push("/create")}
+              onPress={props.onPress}
               style={{
                 top: -12,
                 justifyContent: "center",
@@ -46,10 +44,6 @@ export default function TabsLayout() {
                   backgroundColor: "#2563eb",
                   justifyContent: "center",
                   alignItems: "center",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.18,
-                  shadowRadius: 12,
                   elevation: 8,
                 }}
               >

@@ -22,6 +22,13 @@ export const useTransactions = (userId) => {
     const fetchTransactions = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/transactions/${userId}`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    errorData.message ||
+                        `Failed to fetch transactions (${response.status})`,
+                );
+            }
             const data = await response.json();
             setTransactions(data);
         } catch (error) {
@@ -34,6 +41,13 @@ export const useTransactions = (userId) => {
             const response = await fetch(
                 `${API_URL}/transactions/summary/${userId}`,
             );
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    errorData.message ||
+                        `Failed to fetch summary (${response.status})`,
+                );
+            }
             const data = await response.json();
             setSummary(data);
         } catch (error) {
