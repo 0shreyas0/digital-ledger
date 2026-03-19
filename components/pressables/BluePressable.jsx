@@ -3,7 +3,7 @@ import React from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import colors from 'tailwindcss/colors'
 
-const BluePressable= ({name, text, onPress, direction="left", isLoading=false, disabled=isLoading, loadingText="Loading",  ...props}) => {
+const BluePressable = ({ name, text, onPress, direction = "left", isLoading = false, disabled = isLoading, loadingText = "Loading", ...props }) => {
   return (
     <Pressable
       {...props}
@@ -13,10 +13,8 @@ const BluePressable= ({name, text, onPress, direction="left", isLoading=false, d
     >
       {({ pressed }) => (
         <>
-          <Ionicons name={name} size={25} color={pressed ? colors.slate[900] : colors.slate[50]}
-          />
-          <Text className={`font-sansBold text-xl ${direction == "left" ? "mr-1" : "ml-1"} ${pressed ? "text-slate-900" : "text-slate-50"}`}
-          >
+          <Ionicons name={name} size={25} color={pressed ? colors.slate[900] : colors.slate[50]} />
+          <Text className={`font-sansBold text-xl ${direction == "left" ? "mr-1" : "ml-1"} ${pressed ? "text-slate-900" : "text-slate-50"}`}>
             {isLoading ? loadingText : text}
           </Text>
         </>

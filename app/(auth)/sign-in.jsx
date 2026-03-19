@@ -36,6 +36,7 @@ export default function Page() {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace("/");
       } else if (signInAttempt.status === "needs_second_factor") {
+        await signIn.prepareSecondFactor({ strategy: "email_code" });
         // This triggers the UI change
         setPendingVerification(true);
       }
@@ -47,7 +48,7 @@ export default function Page() {
   const onVerifyPress = async () => {
     if (!isLoaded) return;
     try {
-      const attempt = await signIn.attemptFirstFactor({
+      const attempt = await signIn.attemptSecondFactor({
         strategy: "email_code", // Changed from reset_password_email_code
         code,
       });
@@ -65,11 +66,11 @@ export default function Page() {
   if (pendingVerification) {
     return (
       <View className="flex-1 justify-center items-center gap-4 bg-background mx-4">
-        <Text className="text-2xl font-sansBold">Verify your email</Text>
-        <Text>Please enter the code sent to your email.</Text>
-        <TextInput
+        <Text className="text-2xl font-sansBold">Confirm this sign-in</Text>
+        <Text className="font-sansReg">Please enter the code sent to your email.</Text>
+        <TextInput 
+          className="w-full bg-slate-50 px-3 py-4 rounded-2xl font-sansReg border border-slate-400"
           value={code}
-          className="w-full bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
           placeholder="Verification Code"
           onChangeText={setCode}
         />
