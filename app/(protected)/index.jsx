@@ -73,10 +73,11 @@ export default function Page() {
               style={{ height: 75, width: 75 }}
               contentFit="contain"
             />
-            <View className="">
+            <View>
               <Text className="font-sansBold color-slate-400">Welcome,</Text>
               <Text className="font-sansMed">
-                {user?.emailAddresses[0]?.emailAddress.split("@")[0]}
+                {user.username}
+                {/* {user?.emailAddresses[0]?.emailAddress.split("@")[0]} */}
               </Text>
             </View>
           </View>

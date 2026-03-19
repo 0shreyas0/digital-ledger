@@ -36,4 +36,3 @@ const BalanceCard = ({ currency, summary }) => {
 };
 
 export default BalanceCard;
-

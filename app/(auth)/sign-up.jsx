@@ -14,11 +14,13 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { COLORS } from "@/constants/colors.js";
 import { getSignUpErrorMessage } from "@/lib/clerkErrorMessage";
 import ErrorBanner from "@/components/ErrorBanner";
+import OTPInput from "@/components/OTPInput";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
 
+  const [username, setUsername] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
@@ -33,6 +35,7 @@ export default function SignUpScreen() {
     // Start sign-up process using email and password provided
     try {
       await signUp.create({
+        username,
         emailAddress,
         password,
       });
@@ -85,13 +88,14 @@ export default function SignUpScreen() {
           Verify your email
         </Text>
           <ErrorBanner error={error} setError={setError}/>
-        <TextInput
+        {/* <TextInput
           style={{ includeFontPadding: false }}
           className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
           value={code}
           placeholder="Enter your verification code"
           onChangeText={(code) => setCode(code)}
-        />
+        /> */}
+        <OTPInput code={code} setCode={setCode} />
         <TouchableOpacity
           className="bg-blue-500 hover:bg-lime-400 w-full items-center py-3 rounded-full"
           onPress={onVerifyPress}
@@ -123,6 +127,14 @@ export default function SignUpScreen() {
           Create Account
         </Text>
           <ErrorBanner error={error} setError={setError}/>
+        <TextInput
+          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
+          style={{ includeFontPadding: false }}
+          autoCapitalize="none"
+          value={username}
+          placeholder="Enter username"
+          onChangeText={(value) => setUsername(value)}
+        />
         <TextInput
           className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
           style={{ includeFontPadding: false }}

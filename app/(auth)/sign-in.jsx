@@ -13,12 +13,14 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { getSignInErrorMessage } from "@/lib/clerkErrorMessage";
 import ErrorBanner from "@/components/ErrorBanner";
+import OTPInput from "@/components/OTPInput";
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = useState("");
+  // const [emailAddress, setEmailAddress] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
@@ -28,7 +30,8 @@ export default function Page() {
     if (!isLoaded) return;
     try {
       const signInAttempt = await signIn.create({
-        identifier: emailAddress,
+        // identifier: emailAddress,
+        identifier,
         password,
       });
 
@@ -68,12 +71,7 @@ export default function Page() {
       <View className="flex-1 justify-center items-center gap-4 bg-background mx-4">
         <Text className="text-2xl font-sansBold">Confirm this sign-in</Text>
         <Text className="font-sansReg">Please enter the code sent to your email.</Text>
-        <TextInput 
-          className="w-full bg-slate-50 px-3 py-4 rounded-2xl font-sansReg border border-slate-400"
-          value={code}
-          placeholder="Verification Code"
-          onChangeText={setCode}
-        />
+        <OTPInput code={code} setCode={setCode} />
         <TouchableOpacity 
           className="bg-primary w-full items-center py-4 rounded-full"
           onPress={onVerifyPress}
@@ -107,13 +105,13 @@ export default function Page() {
           className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
           style={{ includeFontPadding: false }}
           autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Enter email"
-          onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+          value={identifier} // changed from email to indentifer
+          placeholder="Enter username or email"
+          onChangeText={(value) => setIdentifier(value)}
         />
         <TextInput
           className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
-          style={{  paddingEnd: false, includeFontPadding: false }}
+          style={{ paddingEnd: false, includeFontPadding: false }}
           value={password}
           placeholder="Enter password"
           secureTextEntry={true}

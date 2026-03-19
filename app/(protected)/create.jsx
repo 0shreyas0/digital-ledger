@@ -71,6 +71,10 @@ const CreateScreen = () => {
         },
         body: JSON.stringify({
           user_id: user.id,
+          username: user.username || user.fullName || user.firstName,
+          email:
+            user?.primaryEmailAddress?.emailAddress ||
+            user?.emailAddresses?.[0]?.emailAddress,
           title,
           amount: formattedAmount,
           category: selectedCategory.name,
