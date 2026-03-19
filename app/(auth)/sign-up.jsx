@@ -77,7 +77,7 @@ export default function SignUpScreen() {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error(JSON.stringify(err, null, 2));
-      setError(getSignUpErrorMessage(err));
+      setError(getErrorMessage(err));
     }
   };
 
@@ -87,7 +87,7 @@ export default function SignUpScreen() {
         <Text className="text-primary text-3xl font-sansBold">
           Verify your email
         </Text>
-          <ErrorBanner error={error} setError={setError}/>
+        <ErrorBanner error={error} setError={setError} />
         {/* <TextInput
           style={{ includeFontPadding: false }}
           className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
@@ -126,7 +126,7 @@ export default function SignUpScreen() {
         <Text className="text-primary text-3xl font-sansBold">
           Create Account
         </Text>
-          <ErrorBanner error={error} setError={setError}/>
+        <ErrorBanner error={error} setError={setError} />
         <TextInput
           className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
           style={{ includeFontPadding: false }}

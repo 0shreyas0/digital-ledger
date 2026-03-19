@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { getSignInErrorMessage } from "@/lib/clerkErrorMessage";
 import ErrorBanner from "@/components/ErrorBanner";
 import OTPInput from "@/components/OTPInput";
+import WidePressable from "@/components/pressables/WidePressable";
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -61,7 +62,7 @@ export default function Page() {
         router.replace("/");
       }
     } catch (err) {
-      setError(getSignInErrorMessage(err));
+      setError(geErrorMessage(err));
     }
   };
 
@@ -69,15 +70,17 @@ export default function Page() {
   if (pendingVerification) {
     return (
       <View className="flex-1 justify-center items-center gap-4 bg-background mx-4">
+        <WidePressable name={"arrow-back"} text={"Back"} onPress={() => router.back()} />
         <Text className="text-2xl font-sansBold">Confirm this sign-in</Text>
         <Text className="font-sansReg">Please enter the code sent to your email.</Text>
         <OTPInput code={code} setCode={setCode} />
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           className="bg-primary w-full items-center py-4 rounded-full"
           onPress={onVerifyPress}
         >
           <Text className="text-white font-sansBold">Verify Code</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        <WidePressable name={"checkmark"} text={"Verify Code"} onPress={onVerifyPress} />
       </View>
     );
   }

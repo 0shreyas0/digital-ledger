@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const SettingsLayout = () => {
+const Dashboard = () => {
   return (
     <View>
-      <Text>SettingsLayout</Text>
+      <Text>Dashboard</Text>
     </View>
   )
 }
 
-export default SettingsLayout
+export default Dashboard

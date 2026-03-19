@@ -1,9 +1,7 @@
-import { Text, Pressable } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
 import React from 'react'
-import { Ionicons } from '@expo/vector-icons'
-import colors from 'tailwindcss/colors'
 
-const BluePressable = ({ name, text, direction = "left", isLoading = false, disabled = isLoading, loadingText = "Loading", hasIcon = true, ...props }) => {
+const WidePressable = ({ name, text, direction = "left", isLoading = false, disabled = isLoading, loadingText = "Loading", hasIcon = true, ...props }) => {
   return (
     <Pressable
       {...props}
@@ -22,4 +20,4 @@ const BluePressable = ({ name, text, direction = "left", isLoading = false, disa
   )
 }
 
-export default BluePressable
+export default WidePressable

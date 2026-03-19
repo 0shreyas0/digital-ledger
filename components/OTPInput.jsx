@@ -1,15 +1,16 @@
 import { View, Text } from 'react-native'
 import React from 'react'
+import { TextInput } from 'react-native-gesture-handler';
 
 const OTPInput = ({code, setCode}) => {
   return (
     <>
-        <TextInput 
-            className="w-full bg-slate-50 px-3 py-4 rounded-2xl font-sansReg border border-slate-400"
-            value={code}
-            placeholder="Verification Code"
-            onChangeText={setCode}
-        />
+      <TextInput 
+        className="w-full bg-slate-50 px-3 py-4 rounded-2xl font-sansReg border border-slate-400"
+        value={code}
+        placeholder="Verification Code"
+        onChangeText={setCode}
+      />
     </>
   )
 }
