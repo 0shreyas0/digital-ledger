@@ -7,44 +7,41 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useNavigation } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { API_URL } from "@/constants/api";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "tailwindcss/colors";
 import Modal from "react-native-modal";
-
 import CardTitle from "@/components/CardTitle";
 import FieldInputBox from "@/components/FieldInputBox";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import BluePressable from "@/components/pressables/BluePressable";
-
-const CATEGORY_ICONS = [
-  { id: "food", name: "Foods & Drinks", icon: "fast-food" },
-  { id: "shopping", name: "Shopping", icon: "cart" },
-  { id: "transportation", name: "Transportation", icon: "car" },
-  { id: "entertainment", name: "Entertainment", icon: "film" },
-  { id: "bills", name: "Bills", icon: "receipt" },
-  { id: "income", name: "Income", icon: "cash" },
-  { id: "gym", name: "Gym", icon: "fitness-sharp" },
-  { id: "other", name: "Other", icon: "ellipsis-horizontal" },
-];
+import PageLoader from "@/components/PageLoader";
+import { useCategories } from "@/hooks/useCategories";
+import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 
 const CreateScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { user } = useUser();
+  const { categories, isLoading: isCategoriesLoading, loadCategories } =
+    useCategories(user);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isExpense, setIsExpense] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [currency, setCurrency] = useState("₹");
+  const [currency] = useState("₹");
   const [isModalVisible, setModalVisible] = useState(false);
 
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
   const toggleModal = () => {
-    setModalVisible(!isModalVisible);
+    setModalVisible((currentValue) => !currentValue);
   };
 
   const handleCreate = async () => {
@@ -79,6 +76,8 @@ const CreateScreen = () => {
           title,
           amount: formattedAmount,
           category: selectedCategory.name,
+          category_id: selectedCategory.category_id,
+          category_icon: selectedCategory.icon,
         }),
       });
 
@@ -101,6 +100,8 @@ const CreateScreen = () => {
       setIsLoading(false);
     }
   };
+
+  if (isCategoriesLoading) return <PageLoader />;
 
   return (
     <View className="flex-1 bg-background">
@@ -189,7 +190,7 @@ const CreateScreen = () => {
             <>
               {selectedCategory ? (
                 <Ionicons
-                  name={selectedCategory.icon}
+                  name={selectedCategory.icon || DEFAULT_CATEGORY_ICON}
                   size={22}
                   color={
                     pressed
@@ -209,6 +210,15 @@ const CreateScreen = () => {
             </>
           )}
         </Pressable>
+        <Pressable onPress={() => router.push("/category")} className="items-center py-2">
+          {({ pressed }) => (
+            <Text
+              className={`font-sansMed ${pressed ? "text-slate-500" : "text-blue-600"}`}
+            >
+              Manage categories
+            </Text>
+          )}
+        </Pressable>
       </View>
       <View>
         <Modal
@@ -226,31 +236,52 @@ const CreateScreen = () => {
         >
           <View className="bg-slate-50 h-64 rounded-t-3xl border-t border-l border-r border-t-slate-400 border-l-slate-400 border-r-slate-400 p-4">
             <ScrollView showsVerticalScrollIndicator={false}>
-              {CATEGORY_ICONS.map((category) => (
+              {categories.map((category) => (
                 <Pressable
-                  key={category.id}
+                  key={category.category_id}
                   onPress={() => {
-                    setSelectedCategory(category);
+                    setSelectedCategory({
+                      category_id: category.category_id,
+                      name: category.category,
+                      icon: category.icon,
+                    });
                     toggleModal();
                   }}
-                  className={`flex-row py-2 gap-2 rounded-md pl-3 ${selectedCategory?.name == category.name ? "bg-blue-500" : "bg-slate-50"}`}
+                  className={`flex-row py-2 gap-2 rounded-md pl-3 ${selectedCategory?.name == category.category ? "bg-blue-500" : "bg-slate-50"}`}
                 >
                   <Ionicons
-                    name={category.icon}
+                    name={category.icon || DEFAULT_CATEGORY_ICON}
                     size={20}
                     color={
-                      selectedCategory?.name == category.name
+                      selectedCategory?.name == category.category
                         ? colors.slate[50]
                         : colors.blue[500]
                     }
                   />
                   <Text
-                    className={`${selectedCategory?.name == category.name ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}
+                    className={`${selectedCategory?.name == category.category ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}
                   >
-                    {category.name}
+                    {category.category}
                   </Text>
                 </Pressable>
               ))}
+              {categories.length === 0 ? (
+                <Pressable
+                  onPress={() => {
+                    toggleModal();
+                    router.push("/category");
+                  }}
+                  className="items-center py-4"
+                >
+                  {({ pressed }) => (
+                    <Text
+                      className={`font-sansMed ${pressed ? "text-slate-500" : "text-blue-600"}`}
+                    >
+                      Add a category first
+                    </Text>
+                  )}
+                </Pressable>
+              ) : null}
             </ScrollView>
           </View>
         </Modal>
