@@ -1,22 +1,14 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { formatDate } from "@/lib/utils.js";
-
-const CATEGORY_ICONS = {
-  "Foods & Drinks": "fast-food",
-  Shopping: "cart",
-  Transportation: "car",
-  Entertainment: "film",
-  Bills: "receipt",
-  Income: "cash",
-  Gym: "fitness-sharp",
-  Other: "ellipsis-horizontal",
-};
+import CirclePressable from "@/components/pressables/CirclePressable";
+import colors from "tailwindcss/colors";
+import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 
 const TransactionItem = ({ item, onDelete, currency }) => {
   const isIncome = parseFloat(item.amount) > 0;
-  const iconName = CATEGORY_ICONS[item.category] || "pricetag-outline";
+  const iconName = item.icon || DEFAULT_CATEGORY_ICON;
 
   return (
     <View
@@ -50,12 +42,14 @@ const TransactionItem = ({ item, onDelete, currency }) => {
         </View>
         <View className="border-l h-15 border-l-slate-300 mx-3">
         </View>
-        <TouchableOpacity
-          className="h-12 w-12 rounded-full self-center items-center justify-center active:bg-accent"
+        <CirclePressable
+          className="self-center h-14 w-14 p-3 items-center justify-center"
           onPress={() => onDelete(item.id)}
-        >
-          <Ionicons size={24} name="trash" color="#ef4444" />
-        </TouchableOpacity>
+          name="trash-outline"
+          size={22}
+          iconColor={colors.red[500]}
+          pressedIconColor={colors.red[700]}
+        />
       </View>
     </View>
   );
@@ -75,4 +69,3 @@ export default TransactionItem;
     //     </TouchableOpacity>
     //   </View>
     // </View>
-

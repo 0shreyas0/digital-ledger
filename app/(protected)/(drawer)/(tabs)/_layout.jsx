@@ -7,7 +7,7 @@ import colors from 'tailwindcss/colors';
 
 const TabRoot = () => {
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs screenOptions={{ headerShown: false, backgroundColor: colors.green[500] }}>
       <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="home" size={25} color={colors.blue[500]} />) } }} />
       <Tabs.Screen name="dashboard" options={{ title: "Dashboard", tabBarIcon: ({ color, size }) => { return (<MaterialIcons name="dashboard" size={25} color={colors.blue[500]} />) } }} />
       <Tabs.Screen name="create" options={{ title: "Create", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="plus-circle" size={25} color={colors.blue[500]} />) } }} />

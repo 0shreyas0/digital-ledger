@@ -15,6 +15,7 @@ import colors from "tailwindcss/colors";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import BluePressable from "@/components/pressables/BluePressable";
 import PageLoader from "@/components/PageLoader";
+import CategoryItem from "@/components/CategoryItem";
 import {
   CATEGORY_ICON_OPTIONS,
   DEFAULT_CATEGORY_ICON,
@@ -127,32 +128,11 @@ const Category = () => {
             </View>
           }
           renderItem={({ item }) => (
-            <View className="flex-row items-center justify-between bg-slate-50 border border-slate-300 rounded-2xl px-4 py-4">
-              <View className="flex-row items-center gap-3 flex-1">
-                <View className="bg-blue-100 rounded-full p-3">
-                  <Ionicons
-                    name={item.icon || DEFAULT_CATEGORY_ICON}
-                    size={20}
-                    color={colors.blue[600]}
-                  />
-                </View>
-                <View className="flex-1">
-                  <Text className="font-sansBold text-lg text-slate-700">
-                    {item.category}
-                  </Text>
-                  <Text className="font-sansReg text-slate-500">
-                    {item.transaction_count > 0
-                      ? `${item.transaction_count} transactions`
-                      : "No transactions yet"}
-                  </Text>
-                </View>
-              </View>
-              <CirclePressable
-                name={"trash-outline"}
-                disabled={deletingCategoryId === item.category_id}
-                onPress={() => handleDeleteCategory(item)}
-              />
-            </View>
+            <CategoryItem
+              item={item}
+              isDeleting={deletingCategoryId === item.category_id}
+              onDelete={handleDeleteCategory}
+            />
           )}
         />
       </View>
@@ -177,6 +157,19 @@ const Category = () => {
             placeholder="Category name"
             placeholderTextColor={colors.slate[400]}
           />
+          <View className="flex-row items-center justify-between">
+            <Text className="font-sansMed text-slate-500">Choose an icon</Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="font-sansReg text-slate-500">Selected</Text>
+              <View className="bg-blue-100 rounded-full p-2">
+                <Ionicons
+                  name={selectedIcon}
+                  size={18}
+                  color={colors.blue[600]}
+                />
+              </View>
+            </View>
+          </View>
           <View className="flex-row flex-wrap gap-3 justify-between">
             {CATEGORY_ICON_OPTIONS.map((iconOption) => {
               const isSelected = selectedIcon === iconOption.icon;
@@ -185,27 +178,20 @@ const Category = () => {
                 <Pressable
                   key={iconOption.id}
                   onPress={() => setSelectedIcon(iconOption.icon)}
-                  className={`w-[22%] items-center py-3 rounded-2xl border ${isSelected ? "bg-blue-600 border-blue-600" : "bg-slate-50 border-slate-300"}`}
+                  className={`w-[22%] items-center justify-center py-5 rounded-2xl border ${isSelected ? "bg-blue-600 border-blue-600" : "bg-slate-50 border-slate-300"}`}
                 >
                   {({ pressed }) => (
-                    <>
-                      <Ionicons
-                        name={iconOption.icon}
-                        size={22}
-                        color={
-                          isSelected
-                            ? colors.slate[50]
-                            : pressed
-                              ? colors.slate[600]
-                              : colors.slate[700]
-                        }
-                      />
-                      <Text
-                        className={`font-sansReg text-xs mt-2 ${isSelected ? "text-slate-50" : "text-slate-600"}`}
-                      >
-                        {iconOption.label}
-                      </Text>
-                    </>
+                    <Ionicons
+                      name={iconOption.icon}
+                      size={24}
+                      color={
+                        isSelected
+                          ? colors.slate[50]
+                          : pressed
+                            ? colors.slate[600]
+                            : colors.slate[700]
+                      }
+                    />
                   )}
                 </Pressable>
               );

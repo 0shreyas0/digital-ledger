@@ -7,9 +7,10 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useRouter, useNavigation } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useFocusEffect } from "@react-navigation/native";
 import { API_URL } from "@/constants/api";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "tailwindcss/colors";
@@ -36,9 +37,11 @@ const CreateScreen = () => {
   const [currency] = useState("₹");
   const [isModalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
+  useFocusEffect(
+    useCallback(() => {
+      loadCategories();
+    }, [loadCategories]),
+  );
 
   const toggleModal = () => {
     setModalVisible((currentValue) => !currentValue);

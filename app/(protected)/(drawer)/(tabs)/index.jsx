@@ -1,9 +1,9 @@
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { Link, useRouter } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Alert,
   FlatList,
-  Pressable,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -11,22 +11,21 @@ import {
 } from "react-native";
 import { SignOutButton } from "@/components/signOutButton";
 import { useTransactions } from "@/hooks/useTransactions";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import PageLoader from "@/components/PageLoader";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import BalanceCard from "@/components/BalanceCard";
 import TransactionItem from "@/components/TransactionItem";
 import NoTransactionFound from "@/components/NoTransactionFound";
-import colors from "tailwindcss/colors";
-import { useColorScheme } from "nativewind";
+// import { useColorScheme } from "nativewind";
 import BluePressable from "@/components/pressables/BluePressable";
 
 export default function Page() {
   const { user } = useUser();
   const router = useRouter();
   const [currency, setCurrency] = useState("₹");
-  const { colorScheme, toggleColorScheme } = useColorScheme();
+  // const { colorScheme, toggleColorScheme } = useColorScheme();
   const { transactions, summary, isLoading, loadData, deleteTransaction } =
     useTransactions(user.id);
 
@@ -53,9 +52,11 @@ export default function Page() {
     setRefreshing(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData]),
+  );
 
   console.log("userId:", user.id);
   console.log("transactions:", transactions);
@@ -82,19 +83,6 @@ export default function Page() {
             </View>
           </View>
           <View className="flex-row items-center mx-6 gap-2">
-            {/* <TouchableOpacity
-              className="group flex-row bg-blue-600 active:bg-accent p-3 rounded-full gap-2"
-              onPress={() => router.push("/create")}
-            >
-              <Ionicons
-                name="add"
-                size={25}
-                color="#E3F2FD"
-              />
-              <Text className="font-sansBold text-lg color-slate-50 group-active:text-slate-900 mr-1">
-                Add
-              </Text>
-            </TouchableOpacity> */}
             <BluePressable name={"add"} text={"Add"} onPress={() => router.push("/create")}/>
             <SignOutButton />
           </View>
@@ -122,13 +110,13 @@ export default function Page() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
-      <View className="ml-6 mb-6">
+      {/* <View className="ml-6 mb-6">
         <TouchableOpacity className="bg-slate-700 h-14 w-14 rounded-full items-center justify-center"
           onPress={toggleColorScheme}
         >          
         <Ionicons size={25} name={colorScheme == "dark" ? "moon": "bulb"} color={colorScheme == "dark" ? colors.blue[800] : colors.slate[50]}></Ionicons>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </View>
   );
 }
