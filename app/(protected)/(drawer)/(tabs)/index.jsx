@@ -68,10 +68,10 @@ export default function Page() {
     <View className="bg-background flex-1">
       <View>
         <View className="flex-row justify-between">
-          <View className="flex-row items-center">
+          <View className="flex-row items-center gap-3 px-4 pt-2">
             <Image
               source={require("@/assets/images/logo.png")}
-              style={{ height: 75, width: 75 }}
+              style={{ height: 50, width: 50 }}
               contentFit="contain"
             />
             <View>
