@@ -6,6 +6,7 @@ import {
   TextInput,
   Pressable,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import React, { useCallback, useState } from "react";
 import { useRouter, useNavigation } from "expo-router";
@@ -104,7 +105,8 @@ const CreateScreen = () => {
     }
   };
 
-  if (isCategoriesLoading) return <PageLoader />;
+  // Remove full-page loader to allow interaction while categories load
+  // if (isCategoriesLoading) return <PageLoader />;
 
   return (
     <View className="flex-1 bg-background">
@@ -112,11 +114,7 @@ const CreateScreen = () => {
         <CirclePressable
           name={"arrow-back"}
           onPress={() => {
-            if (navigation.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/");
-            }
+            router.back();
           }}
         />
         <Text className="font-sansBold color-slate-500 text-2xl">
@@ -268,7 +266,11 @@ const CreateScreen = () => {
                   </Text>
                 </Pressable>
               ))}
-              {categories.length === 0 ? (
+              {isCategoriesLoading && categories.length === 0 ? (
+                <View className="items-center py-4">
+                  <ActivityIndicator color={colors.blue[500]} />
+                </View>
+              ) : categories.length === 0 ? (
                 <Pressable
                   onPress={() => {
                     toggleModal();

@@ -101,11 +101,7 @@ const Category = () => {
         <CirclePressable
           name={"arrow-back"}
           onPress={() => {
-            if (navigation.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/");
-            }
+            router.back();
           }}
         />
         <Text className="font-sansBold text-slate-500 text-2xl">Category</Text>
