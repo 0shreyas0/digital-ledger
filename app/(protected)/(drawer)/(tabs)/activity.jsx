@@ -42,6 +42,8 @@ const Activity = () => {
     type: "all"
   });
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
   // --- SERVER SYNC LOGIC ---
   const applyFiltersToServer = useCallback(async () => {
     const serverFilters = {
@@ -69,10 +71,12 @@ const Activity = () => {
     }
 
     await loadData(serverFilters);
+    setIsSyncing(false);
   }, [searchQuery, filters, loadData]);
 
   // Sync with server when filters change (debounced for search)
   useEffect(() => {
+    setIsSyncing(true); // Signal that sync is starting
     const timer = setTimeout(() => {
       applyFiltersToServer();
     }, 400); // 400ms debounce
@@ -178,7 +182,6 @@ const Activity = () => {
     <View className="flex-1 bg-background">
       {/* Header & Search */}
       <View className="px-6 pt-4 pb-6">
-        <Text className="font-sansBold text-3xl text-slate-800 mb-4">Activity</Text>
         <View className="flex-row items-center gap-3">
           <SearchBar
             placeholder="Search transactions..."
@@ -202,7 +205,7 @@ const Activity = () => {
             <TouchableOpacity
               key={f.value}
               onPress={() => setFilters({ ...filters, dateRange: f.value, customRange: { start: null, end: null } })}
-              className={`px-5 py-2 rounded-full border ${filters.dateRange === f.value ? 'bg-slate-800 border-slate-800' : 'bg-white border-slate-200'}`}
+              className={`px-5 py-2 rounded-full border ${filters.dateRange === f.value ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-200'}`}
             >
               <Text className={`font-sansMed ${filters.dateRange === f.value ? 'text-white' : 'text-slate-600'}`}>
                 {f.label}
@@ -212,7 +215,7 @@ const Activity = () => {
         </ScrollView>
       </View>
 
-      {isLoading && !refreshing && transactions.length === 0 ? (
+      {((isLoading || isSyncing) && !refreshing && (transactions.length === 0 || hasActiveFilters)) ? (
         <PageLoader />
       ) : (
         <FlatList
@@ -227,14 +230,15 @@ const Activity = () => {
             />
           )}
           ListEmptyComponent={
-            <View className="mt-10">
-              <NoTransactionFound />
-              {hasActiveFilters && (
-                <TouchableOpacity onPress={clearFilters} className="mt-4">
-                  <Text className="text-blue-600 font-sansBold">Clear all filters</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            // Hide empty state while loading or debouncing to prevent "flicking"
+            (isLoading || isSyncing) ? null : (
+              <View className="mt-10">
+                <NoTransactionFound 
+                  mode={hasActiveFilters ? "filter" : "initial"} 
+                  onClear={clearFilters} 
+                />
+              </View>
+            )
           }
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

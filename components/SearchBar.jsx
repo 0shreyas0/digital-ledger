@@ -11,8 +11,8 @@ const SearchBar = ({
   placeholderTextColor = colors.slate[400]
 }) => {
   return (
-    <View className={`flex-row items-center bg-slate-100 rounded-2xl px-4 h-14 border border-slate-350 ${containerClassName}`}>
-      <Ionicons name="search" size={20} color={colors.slate[350]} />
+    <View className={`flex-row items-center bg-slate-50 rounded-2xl px-4 h-14 border border-slate-400 ${containerClassName}`}>
+      <Ionicons name="search" size={20} color={colors.slate[400]} />
       <TextInput
         placeholder={placeholder}
         value={value}

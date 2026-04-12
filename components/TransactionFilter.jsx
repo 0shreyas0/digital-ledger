@@ -11,6 +11,7 @@ import Modal from "react-native-modal";
 import { Calendar } from "react-native-calendars";
 import colors from "tailwindcss/colors";
 import CloseButton from "./CloseButton";
+import SearchBar from "./SearchBar";
 
 /**
  * TransactionFilter Component
@@ -113,7 +114,7 @@ const TransactionFilter = ({
             setStagedFilters(activeFilters); // Sync with active when opening
             setIsModalVisible(true);
         }}
-        className={`w-14 h-14 items-center justify-center rounded-2xl border ${hasActiveFilters ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-200'}`}
+        className={`w-14 h-14 items-center justify-center rounded-2xl border ${hasActiveFilters ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-200'}`}
       >
         <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : colors.slate[600]} />
       </TouchableOpacity>
@@ -146,9 +147,9 @@ const TransactionFilter = ({
                     <TouchableOpacity
                       key={type}
                       onPress={() => updateStaged('type', type)}
-                      className={`px-5 py-2 rounded-xl border ${isActive ? `bg-blue-50 border-blue-600` : 'bg-slate-50 border-slate-200'}`}
+                      className={`px-5 py-2 rounded-xl border ${isActive ? `bg-slate-700 border-slate-700` : 'bg-slate-50 border-slate-200'}`}
                     >
-                      <Text className={`font-sansMed capitalize ${isActive ? `text-blue-600` : 'text-slate-600'}`}>
+                      <Text className={`font-sansMed capitalize ${isActive ? `text-white` : 'text-slate-600'}`}>
                         {type}
                       </Text>
                     </TouchableOpacity>
@@ -204,15 +205,12 @@ const TransactionFilter = ({
               </View>
 
               {isCategorySearchVisible && (
-                <View className="mb-4 flex-row items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                  <Ionicons name="search" size={16} color={colors.slate[400]} />
-                  <TextInput
-                    placeholder="Search categories..."
-                    value={categorySearch}
-                    onChangeText={setCategorySearch}
-                    className="flex-1 ml-2 font-sansReg text-slate-700"
-                  />
-                </View>
+                <SearchBar
+                  placeholder="Search categories..."
+                  value={categorySearch}
+                  onChangeText={setCategorySearch}
+                  containerClassName="mb-4"
+                />
               )}
 
               <View style={{ height: 250 }} className="border border-slate-100 rounded-2xl bg-slate-50/50 p-2">
@@ -223,7 +221,7 @@ const TransactionFilter = ({
                       <TouchableOpacity
                         key={cat.category_id}
                         onPress={() => toggleCategory(cat.category)}
-                        className={`flex-row items-center gap-3 px-4 py-3 mb-2 rounded-2xl border ${stagedFilters.categories?.includes(cat.category) ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-100'}`}
+                        className={`flex-row items-center gap-3 px-4 py-3 mb-2 rounded-2xl border ${stagedFilters.categories?.includes(cat.category) ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-100'}`}
                       >
                         <Ionicons 
                           name={cat.icon} 
@@ -268,7 +266,7 @@ const TransactionFilter = ({
 
           <TouchableOpacity
             onPress={handleApply}
-            className="bg-slate-800 py-4 rounded-2xl items-center"
+            className="bg-slate-700 py-4 rounded-2xl items-center"
           >
             <Text className="text-white font-sansBold text-lg">Apply Filters</Text>
           </TouchableOpacity>

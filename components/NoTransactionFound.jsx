@@ -2,58 +2,50 @@ import { View, Text, TouchableOpacity, Pressable } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import colors from "tailwindcss/colors";
 
-const NoTransactionFound = () => {
+const NoTransactionFound = ({ mode = "initial", onClear }) => {
   const router = useRouter();
+  const isFilter = mode === "filter";
 
   return (
-    <View className="flex-col m-5 p-8 rounded-3xl shadow-sm bg-slate-50 border border-slate-200">
-      {/* CENTER CONTENT */}
-      <View className="flex-1 items-center justify-center">
-        <View style={{ height: 60, width: 60 }}>
+    <View className="flex-col p-8 rounded-3xl bg-slate-50 border border-slate-200">
+      <View className="items-center justify-center">
+        <View className="bg-slate-200/50 p-4 rounded-full mb-4">
           <Ionicons
-            name="receipt"
-            color="white"
-            size={60}
-            style={{ position: "absolute" }}
-          />
-          <Ionicons
-            name="receipt-outline"
-            color="grey"
-            size={60}
-            style={{ position: "absolute" }}
+            name={isFilter ? "search-outline" : "receipt-outline"}
+            color={colors.slate[400]}
+            size={40}
           />
         </View>
 
-        <Text className="font-sansBold text-2xl mt-3">No Transactions yet</Text>
+        <Text className="font-sansBold text-2xl text-slate-800 text-center">
+          {isFilter ? "No Results Found" : "No Transactions yet"}
+        </Text>
 
-        <Text className="font-sansMed text-lg px-2 text-center my-3 text-slate-500">
-          Start tracking your finances by adding your first transaction
+        <Text className="font-sansMed text-base px-4 text-center mt-2 mb-6 text-slate-500">
+          {isFilter 
+            ? "We couldn't find any matches. Try adjusting your filters or search terms." 
+            : "Start tracking your finances by adding your first transaction today!"}
         </Text>
       </View>
 
-      {/* BOTTOM BUTTON */}
-      <Pressable
-        onPress={() => router.push("/create")}
-        className="flex-row bg-blue-600 active:bg-accent w-full justify-center p-4 rounded-xl gap-2 items-center mt-4"
-      >
-        {({ pressed }) => (
-          <>
-            <Ionicons
-              name="add-circle"
-              size={25}
-              color={pressed ? "#0f172a" : "#f8fafc"}
-            />
-            <Text
-              className={`font-sansBold text-lg ${
-                pressed ? "text-slate-900" : "text-slate-50"
-              }`}
-            >
-              Add
-            </Text>
-          </>
-        )}
-      </Pressable>
+      {isFilter ? (
+        <TouchableOpacity
+          onPress={onClear}
+          className="bg-slate-700 py-4 rounded-2xl items-center"
+        >
+          <Text className="text-white font-sansBold text-lg">Clear Filters</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          onPress={() => router.push("/create")}
+          className="flex-row bg-slate-700 justify-center py-4 rounded-2xl gap-2 items-center"
+        >
+          <Ionicons name="add-circle" size={20} color="white" />
+          <Text className="font-sansBold text-white text-lg">Add Transaction</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
