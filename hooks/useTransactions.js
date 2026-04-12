@@ -12,10 +12,13 @@ export const useTransactions = () => {
         transactions, 
         summary, 
         isLoading, 
-        loadData, 
-        setTransactions, 
-        setSummary 
+        loadData: contextLoadData, 
     } = useTransactionContext();
+
+    const loadData = useCallback(
+        (filters = {}) => contextLoadData(true, filters),
+        [contextLoadData]
+    );
 
     const deleteTransaction = useCallback(
         async (id) => {
@@ -28,8 +31,7 @@ export const useTransactions = () => {
                     throw new Error(`Deletion failed with status: ${response.status}`);
                 }
 
-                // Refresh the global state after deletion
-                await loadData(true);
+                await loadData();
                 Alert.alert("Success", "Transaction deleted successfully");
             } catch (error) {
                 console.log("Error deleting transaction:", error);
@@ -43,7 +45,7 @@ export const useTransactions = () => {
         transactions, 
         summary, 
         isLoading, 
-        loadData: (filters = {}) => loadData(true, filters), // Force refresh with optional filters
+        loadData, 
         deleteTransaction 
     };
 };
