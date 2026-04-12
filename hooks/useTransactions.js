@@ -43,7 +43,7 @@ export const useTransactions = () => {
         transactions, 
         summary, 
         isLoading, 
-        loadData: () => loadData(true), // Force refresh
+        loadData: (filters = {}) => loadData(true, filters), // Force refresh with optional filters
         deleteTransaction 
     };
 };

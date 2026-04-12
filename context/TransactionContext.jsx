@@ -11,18 +11,39 @@ export const TransactionProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [lastFetched, setLastFetched] = useState(null);
 
-    const loadData = useCallback(async (force = false) => {
+    const loadData = useCallback(async (force = false, filters = {}) => {
         if (!user?.id) return;
         
-        // Caching: Only fetch if forced (refresh) or if it's the first time
-        if (!force && transactions.length > 0 && lastFetched) return;
+        // Caching logic: only if no filters are applied and not forced
+        const hasFilters = Object.keys(filters).length > 0;
+        if (!force && !hasFilters && transactions.length > 0 && lastFetched) return;
 
         setIsLoading(true);
         try {
-            console.log("Fetching transactions globally...");
+            console.log("Fetching transactions...", hasFilters ? "with filters" : "global");
+            
+            // Build query string from filters
+            const queryParams = new URLSearchParams();
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "" && value !== "all") {
+                    if (Array.isArray(value)) {
+                        if (value.length > 0) queryParams.append(key, value.join(','));
+                    } else {
+                        queryParams.append(key, value);
+                    }
+                }
+            });
+
+            const queryString = queryParams.toString();
+            const baseUrl = `${API_URL}/transactions/${user.id}`;
+            const summaryUrl = `${API_URL}/transactions/summary/${user.id}`;
+            
+            const fetchTxUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+            const fetchSumUrl = queryString ? `${summaryUrl}?${queryString}` : summaryUrl;
+
             const [txRes, sumRes] = await Promise.all([
-                fetch(`${API_URL}/transactions/${user.id}`),
-                fetch(`${API_URL}/transactions/summary/${user.id}`)
+                fetch(fetchTxUrl),
+                fetch(fetchSumUrl)
             ]);
 
             if (txRes.ok && sumRes.ok) {
@@ -30,10 +51,10 @@ export const TransactionProvider = ({ children }) => {
                 const sumData = await sumRes.json();
                 setTransactions(txData);
                 setSummary(sumData);
-                setLastFetched(Date.now());
+                if (!hasFilters) setLastFetched(Date.now());
             }
         } catch (error) {
-            console.error("Error fetching global transactions:", error);
+            console.error("Error fetching transactions:", error);
         } finally {
             setIsLoading(false);
         }

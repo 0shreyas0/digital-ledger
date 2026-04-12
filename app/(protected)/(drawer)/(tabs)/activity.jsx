@@ -44,7 +44,44 @@ const Activity = () => {
   const [isCategorySearchVisible, setIsCategorySearchVisible] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
 
-  // --- LOCAL FILTERING LOGIC ---
+  // --- SERVER SYNC LOGIC ---
+  const applyFiltersToServer = useCallback(async () => {
+    const filters = {
+      search: searchQuery,
+      type: transactionType,
+      categories: selectedCategories,
+      minAmount,
+      maxAmount,
+    };
+
+    if (dateRange === "today") {
+      filters.startDate = new Date().toISOString().split('T')[0];
+      filters.endDate = filters.startDate;
+    } else if (dateRange === "week") {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      filters.startDate = d.toISOString().split('T')[0];
+    } else if (dateRange === "month") {
+      const d = new Date();
+      d.setMonth(d.getMonth() - 1);
+      filters.startDate = d.toISOString().split('T')[0];
+    } else if (dateRange === "custom" && customRange.start) {
+      filters.startDate = customRange.start;
+      filters.endDate = customRange.end;
+    }
+
+    await loadData(filters);
+  }, [searchQuery, transactionType, selectedCategories, minAmount, maxAmount, dateRange, customRange, loadData]);
+
+  // Sync with server when filters change (debounced for search)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      applyFiltersToServer();
+    }, 400); // 400ms debounce
+    return () => clearTimeout(timer);
+  }, [applyFiltersToServer]);
+
+  // --- LOCAL REFINEMENT (Optional, but good for instant UI feedback) ---
   const filteredTransactions = useMemo(() => {
     return transactions.filter(txn => {
       // 1. Text Search
@@ -67,32 +104,35 @@ const Activity = () => {
       if (minAmount && absAmount < parseFloat(minAmount)) return false;
       if (maxAmount && absAmount > parseFloat(maxAmount)) return false;
 
-      // 5. Date Filter
-      const txnDate = new Date(txn.date);
-      txnDate.setHours(0, 0, 0, 0); // Normalize to start of day
+      // 5. Date Filter (Fixed for timezone issues)
+      if (txn.date) {
+        const [y, m, d] = txn.date.split('-').map(Number);
+        const txnDate = new Date(y, m - 1, d);
+        txnDate.setHours(0, 0, 0, 0);
 
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
 
-      if (dateRange === "today") {
-        if (txnDate.toDateString() !== now.toDateString()) return false;
-      } else if (dateRange === "week") {
-        const lastWeek = new Date();
-        lastWeek.setDate(now.getDate() - 7);
-        if (txnDate < lastWeek) return false;
-      } else if (dateRange === "month") {
-        const lastMonth = new Date();
-        lastMonth.setMonth(now.getMonth() - 1);
-        if (txnDate < lastMonth) return false;
-      } else if (dateRange === "custom" && customRange.start) {
-        const start = new Date(customRange.start);
-        start.setHours(0, 0, 0, 0);
-        if (txnDate < start) return false;
-        
-        if (customRange.end) {
-          const end = new Date(customRange.end);
-          end.setHours(23, 59, 59, 999);
-          if (txnDate > end) return false;
+        if (dateRange === "today") {
+          if (txnDate.getTime() !== now.getTime()) return false;
+        } else if (dateRange === "week") {
+          const lastWeek = new Date();
+          lastWeek.setDate(now.getDate() - 7);
+          if (txnDate < lastWeek) return false;
+        } else if (dateRange === "month") {
+          const lastMonth = new Date();
+          lastMonth.setMonth(now.getMonth() - 1);
+          if (txnDate < lastMonth) return false;
+        } else if (dateRange === "custom" && customRange.start) {
+          const [sy, sm, sd] = customRange.start.split('-').map(Number);
+          const start = new Date(sy, sm - 1, sd);
+          if (txnDate < start) return false;
+          
+          if (customRange.end) {
+            const [ey, em, ed] = customRange.end.split('-').map(Number);
+            const end = new Date(ey, em - 1, ed);
+            if (txnDate > end) return false;
+          }
         }
       }
 
@@ -104,7 +144,7 @@ const Activity = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await applyFiltersToServer();
     setRefreshing(false);
   };
 
