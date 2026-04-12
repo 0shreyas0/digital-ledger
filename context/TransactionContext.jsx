@@ -14,14 +14,16 @@ export const TransactionProvider = ({ children }) => {
     const loadData = useCallback(async (force = false, filters = {}) => {
         if (!user?.id) return;
         
-        // Caching logic: only if no filters are applied and not forced
         const hasFilters = Object.keys(filters).length > 0;
-        if (!force && !hasFilters && transactions.length > 0 && lastFetched) return;
+        
+        // Caching logic: only if no filters and not forced
+        // We use the stale-while-revalidate pattern or just a simple check
+        if (!force && !hasFilters && transactions.length > 0 && lastFetched) {
+            return;
+        }
 
         setIsLoading(true);
         try {
-            console.log("Fetching transactions...", hasFilters ? "with filters" : "global");
-            
             // Build query string from filters
             const queryParams = new URLSearchParams();
             Object.entries(filters).forEach(([key, value]) => {
@@ -58,14 +60,14 @@ export const TransactionProvider = ({ children }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [user?.id, lastFetched, transactions.length]);
+    }, [user?.id]); // Removed transactions and lastFetched to prevent infinite loops
 
     // Initial load when user becomes available
     useEffect(() => {
         if (user?.id) {
             loadData();
         }
-    }, [user?.id, loadData]);
+    }, [user?.id]); // Only run when user ID changes, not when loadData changes
 
     return (
         <TransactionContext.Provider value={{ 
