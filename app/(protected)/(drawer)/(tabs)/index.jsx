@@ -6,7 +6,6 @@ import {
   FlatList,
   RefreshControl,
   Text,
-  TouchableOpacity,
   View
 } from "react-native";
 import { SignOutButton } from "@/components/signOutButton";
@@ -14,20 +13,18 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useCallback, useState } from "react";
 import PageLoader from "@/components/PageLoader";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
 import BalanceCard from "@/components/BalanceCard";
 import TransactionItem from "@/components/TransactionItem";
 import NoTransactionFound from "@/components/NoTransactionFound";
-// import { useColorScheme } from "nativewind";
 import BluePressable from "@/components/pressables/BluePressable";
 
 export default function Page() {
   const { user } = useUser();
   const router = useRouter();
-  const [currency, setCurrency] = useState("₹");
-  // const { colorScheme, toggleColorScheme } = useColorScheme();
-  const { transactions, summary, isLoading, loadData, deleteTransaction } =
-    useTransactions(user.id);
+  const [currency] = useState("₹");
+  
+  // Now uses the global context via the updated hook
+  const { transactions, summary, isLoading, loadData, deleteTransaction } = useTransactions();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -48,21 +45,21 @@ export default function Page() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData(); // This now forces a refresh in the context
     setRefreshing(false);
   };
 
+  // We keep this to ensure data is fresh when returning to home, 
+  // but it's much cheaper now if data isn't stale.
   useFocusEffect(
     useCallback(() => {
-      loadData();
-    }, [loadData]),
+      // Not calling loadData() here because the Provider handles initial load 
+      // and we want to avoid the "constant fetching" feeling.
+      // If the user wants a refresh, they can pull to refresh.
+    }, []),
   );
 
-  console.log("userId:", user.id);
-  console.log("transactions:", transactions);
-  console.log("summary:", summary);
-
-  if (isLoading && !refreshing) return <PageLoader />;
+  if (isLoading && !refreshing && transactions.length === 0) return <PageLoader />;
 
   return (
     <View className="bg-background flex-1">
@@ -78,7 +75,6 @@ export default function Page() {
               <Text className="font-sansBold color-slate-400">Welcome,</Text>
               <Text className="font-sansMed">
                 {user.username}
-                {/* {user?.emailAddresses[0]?.emailAddress.split("@")[0]} */}
               </Text>
             </View>
           </View>
@@ -96,7 +92,8 @@ export default function Page() {
       <FlatList
         style={{ flex: 1, marginHorizontal: 20 }}
         contentContainerStyle={{ paddingBottom: 20 }}
-        data={transactions}
+        data={transactions.slice(0, 5)} // Only show recent ones on home
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TransactionItem
             item={item}
@@ -110,13 +107,6 @@ export default function Page() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
-      {/* <View className="ml-6 mb-6">
-        <TouchableOpacity className="bg-slate-700 h-14 w-14 rounded-full items-center justify-center"
-          onPress={toggleColorScheme}
-        >          
-        <Ionicons size={25} name={colorScheme == "dark" ? "moon": "bulb"} color={colorScheme == "dark" ? colors.blue[800] : colors.slate[50]}></Ionicons>
-        </TouchableOpacity>
-      </View> */}
     </View>
   );
 }

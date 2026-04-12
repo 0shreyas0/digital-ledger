@@ -7,7 +7,7 @@ const NoTransactionFound = () => {
   const router = useRouter();
 
   return (
-    <View className="flex-1 flex-col m-3 mb-20 p-3 rounded-2xl shadow-sm bg-slate-50">
+    <View className="flex-col m-5 p-8 rounded-3xl shadow-sm bg-slate-50 border border-slate-200">
       {/* CENTER CONTENT */}
       <View className="flex-1 items-center justify-center">
         <View style={{ height: 60, width: 60 }}>
@@ -27,7 +27,7 @@ const NoTransactionFound = () => {
 
         <Text className="font-sansBold text-2xl mt-3">No Transactions yet</Text>
 
-        <Text className="font-sansMed text-lg px-8 text-center my-3 text-slate-500">
+        <Text className="font-sansMed text-lg px-2 text-center my-3 text-slate-500">
           Start tracking your finances by adding your first transaction
         </Text>
       </View>
@@ -35,7 +35,7 @@ const NoTransactionFound = () => {
       {/* BOTTOM BUTTON */}
       <Pressable
         onPress={() => router.push("/create")}
-        className="flex-row bg-blue-600 active:bg-accent w-full justify-center p-3 rounded-xl gap-2 items-center"
+        className="flex-row bg-blue-600 active:bg-accent w-full justify-center p-4 rounded-xl gap-2 items-center mt-4"
       >
         {({ pressed }) => (
           <>

@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Slot, SplashScreen } from "expo-router";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
-
-SplashScreen.preventAutoHideAsync();
 import { ClerkProvider } from "@clerk/clerk-expo";
+import { TransactionProvider } from "@/context/TransactionContext";
 import SafeScreen from "@/components/SafeScreen";
 import "@/global.css";
+
+SplashScreen.preventAutoHideAsync();
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 if (!publishableKey) {
@@ -32,9 +33,11 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-      <SafeScreen>
-        <Slot />
-      </SafeScreen>
+      <TransactionProvider>
+        <SafeScreen>
+          <Slot />
+        </SafeScreen>
+      </TransactionProvider>
     </ClerkProvider>
   );
 }
