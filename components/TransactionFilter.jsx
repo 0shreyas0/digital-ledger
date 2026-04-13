@@ -114,7 +114,7 @@ const TransactionFilter = ({
             setStagedFilters(activeFilters); // Sync with active when opening
             setIsModalVisible(true);
         }}
-        className={`w-14 h-14 items-center justify-center rounded-2xl border ${hasActiveFilters ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-200'}`}
+        className={`w-14 h-14 items-center justify-center rounded-2xl ${hasActiveFilters ? 'bg-blue-600' : 'bg-slate-50 border border-slate-400'}`}
       >
         <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : colors.slate[600]} />
       </TouchableOpacity>
