@@ -16,15 +16,12 @@ export const TransactionProvider = ({ children }) => {
         
         const hasFilters = Object.keys(filters).length > 0;
         
-        // Caching logic: only if no filters and not forced
-        // We use the stale-while-revalidate pattern or just a simple check
         if (!force && !hasFilters && transactions.length > 0 && lastFetched) {
-            return;
+            return { transactions, summary };
         }
 
         setIsLoading(true);
         try {
-            // Build query string from filters
             const queryParams = new URLSearchParams();
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== "" && value !== "all") {
@@ -42,25 +39,31 @@ export const TransactionProvider = ({ children }) => {
             
             const fetchTxUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
             const fetchSumUrl = queryString ? `${summaryUrl}?${queryString}` : summaryUrl;
-
+ 
             const [txRes, sumRes] = await Promise.all([
                 fetch(fetchTxUrl),
                 fetch(fetchSumUrl)
             ]);
-
+ 
             if (txRes.ok && sumRes.ok) {
                 const txData = await txRes.json();
                 const sumData = await sumRes.json();
-                setTransactions(txData);
-                setSummary(sumData);
-                if (!hasFilters) setLastFetched(Date.now());
+                
+                // Only update global state if no filters are applied (this keeps Home recents clean)
+                if (!hasFilters) {
+                    setTransactions(txData);
+                    setSummary(sumData);
+                    setLastFetched(Date.now());
+                }
+                
+                return { transactions: txData, summary: sumData };
             }
         } catch (error) {
             console.error("Error fetching transactions:", error);
         } finally {
             setIsLoading(false);
         }
-    }, [user?.id]); // Removed transactions and lastFetched to prevent infinite loops
+    }, [user?.id, transactions, summary, lastFetched]);
 
     // Initial load when user becomes available
     useEffect(() => {
