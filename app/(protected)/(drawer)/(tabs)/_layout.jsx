@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import { Tabs } from 'expo-router'
-import { AntDesign, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { AntDesign, MaterialIcons, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import colors from 'tailwindcss/colors';
 
 
@@ -9,10 +9,10 @@ const TabRoot = () => {
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarStyle: { paddingTop: 4, paddingBottom: 0, height: 65 } }} backBehavior='history'>
       <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="home" size={25} color={colors.blue[500]} />) } }} />
-      <Tabs.Screen name="dashboard" options={{ title: "Dashboard", tabBarIcon: ({ color, size }) => { return (<MaterialIcons name="dashboard" size={25} color={colors.blue[500]} />) } }} />
-      <Tabs.Screen name="create" options={{ title: "Create", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="plus-circle" size={25} color={colors.blue[500]} />) } }} />
       <Tabs.Screen name="activity" options={{ title: "Activity", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="user" size={25} color={colors.blue[500]} />) } }} />
-      <Tabs.Screen name="category" options={{ title: "Category", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="list" size={25} color={colors.blue[500]} />) } }} />
+      <Tabs.Screen name="create" options={{ title: "Create", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="plus-circle" size={25} color={colors.blue[500]} />) } }} />
+      <Tabs.Screen name="tags" options={{ title: "Tags", tabBarIcon: ({ color, size }) => { return (<FontAwesome name="tags" size={25} color={colors.blue[500]} />) } }} />
+      <Tabs.Screen name="category" options={{ title: "Category", tabBarIcon: ({ color, size }) => { return (<FontAwesome5 name="layer-group" size={22} color={colors.blue[500]} />) } }} />
     </Tabs>
   )
 }

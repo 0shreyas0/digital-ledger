@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { Slot, SplashScreen } from "expo-router";
+import { Slot } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { TransactionProvider } from "@/context/TransactionContext";

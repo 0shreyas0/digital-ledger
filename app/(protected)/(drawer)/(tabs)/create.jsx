@@ -5,8 +5,6 @@ import {
   TouchableOpacity,
   TextInput,
   Pressable,
-  ScrollView,
-  ActivityIndicator,
   Animated,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -15,19 +13,20 @@ import { useRouter, useNavigation } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "@react-navigation/native";
 import { API_URL } from "@/constants/api";
-import { Ionicons } from "@expo/vector-icons";
-import { Calendar } from "react-native-calendars";
+import { Ionicons, Feather } from "@expo/vector-icons";
 import colors from "tailwindcss/colors";
-import Modal from "react-native-modal";
 import CardTitle from "@/components/CardTitle";
 import FieldInputBox from "@/components/FieldInputBox";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import BluePressable from "@/components/pressables/BluePressable";
-import CloseButton from "@/components/CloseButton";
 import PageLoader from "@/components/PageLoader";
 import { useCategories } from "@/hooks/useCategories";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useTags } from "@/hooks/useTags";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
+import CategorySelectModal from "@/components/CategorySelectModal";
+import TagsSelectModal from "@/components/TagsSelectModal";
+import DateSelectModal from "@/components/DateSelectModal";
 
 const CreateScreen = () => {
   const router = useRouter();
@@ -35,25 +34,37 @@ const CreateScreen = () => {
   const { user } = useUser();
   const { categories, isLoading: isCategoriesLoading, loadCategories } =
     useCategories(user);
+  const { loadTags, tags, createTag, isSaving: isTagSaving } = useTags(user);
   const { loadData } = useTransactions();
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [isExpense, setIsExpense] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [currency] = useState("₹");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
+  const [isTagsModalVisible, setTagsModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let toValue = 0;
+    if (isTagsModalVisible) {
+      toValue = -240;
+    } else if (isModalVisible) {
+      toValue = -38;
+    } else if (isCalendarModalVisible) {
+      toValue = 0;
+    }
+
     Animated.timing(slideAnim, {
-      toValue: isModalVisible || isCalendarModalVisible ? -180 : 0,
+      toValue,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [isModalVisible, isCalendarModalVisible]);
+  }, [isModalVisible, isCalendarModalVisible, isTagsModalVisible]);
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -61,14 +72,14 @@ const CreateScreen = () => {
     setSelectedCategory(null);
     setIsExpense(true);
     setDate(new Date().toISOString().split("T")[0]);
+    setSelectedTags([]);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       loadCategories();
-      // Optional: Clear form on focus if you want it always fresh when switching tabs
-      // resetForm(); 
-    }, [loadCategories]),
+      loadTags();
+    }, [loadCategories, loadTags]),
   );
 
   const toggleModal = () => {
@@ -110,6 +121,7 @@ const CreateScreen = () => {
           category: selectedCategory.name,
           category_id: selectedCategory.category_id,
           category_icon: selectedCategory.icon,
+          tag_ids: selectedTags.map((tag) => tag.tag_id),
         }),
       });
 
@@ -137,8 +149,10 @@ const CreateScreen = () => {
     }
   };
 
-  // Remove full-page loader to allow interaction while categories load
-  // if (isCategoriesLoading) return <PageLoader />;
+
+
+  const SEMICIRCLE_RADIUS = 16;
+  const CORNER_RADIUS = 16;
 
   return (
     <View className="flex-1 bg-background">
@@ -163,60 +177,63 @@ const CreateScreen = () => {
       </View>
       <KeyboardAwareScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        scrollEnabled={false}
+        scrollEnabled={true}
       >
         <Animated.View
           style={{ transform: [{ translateY: slideAnim }] }}
-          className="flex p-6 mx-5 bg-slate-50 gap-6 rounded-2xl border border-slate-400 border-dashed"
+          className="flex p-6 mx-5 bg-slate-50 gap-4 rounded-2xl border border-slate-400"
         >
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              className={`flex-1 flex-row items-center justify-center p-3 py-4 ${isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
-              onPress={() => setIsExpense(true)}
-            >
-              <Ionicons
-                name="pricetag"
-                size={18}
-                color={isExpense ? "white" : "red"}
-              />
-              <Text
-                className={`font-sansMed text-xl ml-4 ${isExpense ? "text-white ml-4" : " text-slate-700"} `}
+          {/* Grouped type selector and amount to reduce gap */}
+          <View className="gap-2">
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                className={`flex-1 flex-row items-center justify-center p-2 py-3 ${isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                onPress={() => setIsExpense(true)}
               >
-                Expense
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 flex-row items-center justify-center p-3 py-4 ${!isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
-              onPress={() => setIsExpense(false)}
-            >
-              <Ionicons
-                name="cash"
-                size={18}
-                color={!isExpense ? "white" : "#22c55e"}
-              />
-              <Text
-                className={`font-sansMed text-xl ml-4 ${!isExpense ? "text-white ml-4" : " text-slate-700"} `}
+                <Ionicons
+                  name="pricetag"
+                  size={16}
+                  color={isExpense ? "white" : "red"}
+                />
+                <Text
+                  className={`font-sansMed text-lg ml-2 ${isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                >
+                  Expense
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 flex-row items-center justify-center p-2 py-3 ${!isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                onPress={() => setIsExpense(false)}
               >
-                Income
+                <Ionicons
+                  name="cash"
+                  size={16}
+                  color={!isExpense ? "white" : "#22c55e"}
+                />
+                <Text
+                  className={`font-sansMed text-lg ml-2 ${!isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                >
+                  Income
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View className="flex-row gap-3 items-center border-b border-b-slate-400">
+              <Text className="font-sansBold text-5xl color-slate-700 leading-tight">
+                {currency}
               </Text>
-            </TouchableOpacity>
-          </View>
-          <View className="flex-row gap-3 items-center border-b border-b-slate-400">
-            <Text className="font-sansBold text-5xl color-slate-700 leading-tight">
-              {currency}
-            </Text>
-            <TextInput
-              className="flex-1 font-sansBold text-5xl leading-tight h-20"
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="0.00"
-              placeholderTextColor={colors.slate[400]}
-              keyboardType="numeric"
-              style={{ paddingVertical: 0, includeFontPadding: false }}
-            />
+              <TextInput
+                className="flex-1 font-sansBold text-5xl leading-tight h-16"
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="0.00"
+                placeholderTextColor={colors.slate[400]}
+                keyboardType="numeric"
+                style={{ paddingVertical: 0, includeFontPadding: false }}
+              />
+            </View>
           </View>
 
           <CardTitle name={"calendar-outline"} title={"Date"} />
@@ -234,13 +251,13 @@ const CreateScreen = () => {
             </Text>
           </Pressable>
 
-          <CardTitle name={"ticket-outline"} title={"Title"} />
+          <CardTitle name={"Pencil"} title={"Title"} library="Lucide" />
           <FieldInputBox
             value={title}
             onChangeText={setTitle}
             placeholder="Transaction title"
           />
-          <CardTitle name={"pricetag-outline"} title={"Category"} />
+          <CardTitle name={"layers-outline"} title={"Category"} />
           <Pressable
             onPress={toggleModal}
             className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
@@ -269,142 +286,267 @@ const CreateScreen = () => {
               </>
             )}
           </Pressable>
-          <View className="flex-row justify-between items-center py-2">
-            <Pressable onPress={() => router.push("/category")}>
+
+          {/* Ticket Perforation Divider */}
+          <View className="relative my-2 items-center justify-center">
+            <View className="w-full border-t border-dashed border-slate-400" />
+            
+            {/* Left semicircular punch */}
+            <View
+              style={{
+                width: SEMICIRCLE_RADIUS + 1.5,
+                height: SEMICIRCLE_RADIUS * 2,
+                position: 'absolute',
+                left: -(SEMICIRCLE_RADIUS + 6.5),
+                overflow: 'hidden',
+              }}
+            >
+              <View
+                style={{
+                  width: SEMICIRCLE_RADIUS * 2,
+                  height: SEMICIRCLE_RADIUS * 2,
+                  borderRadius: SEMICIRCLE_RADIUS,
+                  backgroundColor: '#E3F2FD',
+                  borderWidth: 1,
+                  borderColor: '#94a3b8',
+                  position: 'absolute',
+                  left: -SEMICIRCLE_RADIUS,
+                }}
+              />
+            </View>
+
+            {/* Right semicircular punch */}
+            <View
+              style={{
+                width: SEMICIRCLE_RADIUS + 1.5,
+                height: SEMICIRCLE_RADIUS * 2,
+                position: 'absolute',
+                right: -(SEMICIRCLE_RADIUS + 6.5),
+                overflow: 'hidden',
+              }}
+            >
+              <View
+                style={{
+                  width: SEMICIRCLE_RADIUS * 2,
+                  height: SEMICIRCLE_RADIUS * 2,
+                  borderRadius: SEMICIRCLE_RADIUS,
+                  backgroundColor: '#E3F2FD',
+                  borderWidth: 1,
+                  borderColor: '#94a3b8',
+                  position: 'absolute',
+                  left: 0,
+                }}
+              />
+            </View>
+          </View>
+
+          {/* Lower Ticket Section: Tags */}
+          {selectedTags.length === 0 && (
+            <CardTitle name={"pricetags-outline"} title={"Tags"} />
+          )}
+          {selectedTags.length > 0 && (
+            <View className="flex-row flex-wrap gap-2 items-center mb-3">
+              {selectedTags.map((tag) => (
+                <View
+                  key={tag.tag_id}
+                  style={{ backgroundColor: `${tag.color}35`, borderColor: tag.color }}
+                  className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border"
+                >
+                  <Text className="font-sansBold text-xs text-slate-800">
+                    {tag.tag_name}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setSelectedTags((prev) => prev.filter((t) => t.tag_id !== tag.tag_id))}
+                  >
+                    <Ionicons name="close-circle" size={14} color={colors.slate[500]} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {selectedTags.length < 5 && (
+            <Pressable
+              onPress={() => setTagsModalVisible(true)}
+              className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
+            >
               {({ pressed }) => (
                 <Text
-                  className={`font-sansMed ${pressed ? "text-slate-500" : "text-blue-600"}`}
+                  selectable={false}
+                  className={`font-sansMed ${pressed ? "text-slate-600" : "text-slate-400"} text-center text-lg`}
                 >
-                  Manage categories
+                  Add Tag
                 </Text>
               )}
             </Pressable>
-            <TouchableOpacity onPress={resetForm}>
-              <Text className="font-sansMed text-red-500">Reset Form</Text>
-            </TouchableOpacity>
+          )}
+
+          {/* Ticket Corner Cutouts */}
+          {/* Top-Left Corner */}
+          <View
+            style={{
+              position: 'absolute',
+              top: -1.5,
+              left: -1.5,
+              width: CORNER_RADIUS + 1.5,
+              height: CORNER_RADIUS + 1.5,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                width: CORNER_RADIUS * 2,
+                height: CORNER_RADIUS * 2,
+                borderRadius: CORNER_RADIUS,
+                backgroundColor: '#E3F2FD',
+                borderWidth: 1,
+                borderColor: '#94a3b8',
+                position: 'absolute',
+                top: -(CORNER_RADIUS + 0.5),
+                left: -(CORNER_RADIUS + 0.5),
+              }}
+            />
+          </View>
+
+          {/* Top-Right Corner */}
+          <View
+            style={{
+              position: 'absolute',
+              top: -1.5,
+              right: -1.5,
+              width: CORNER_RADIUS + 1.5,
+              height: CORNER_RADIUS + 1.5,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                width: CORNER_RADIUS * 2,
+                height: CORNER_RADIUS * 2,
+                borderRadius: CORNER_RADIUS,
+                backgroundColor: '#E3F2FD',
+                borderWidth: 1,
+                borderColor: '#94a3b8',
+                position: 'absolute',
+                top: -(CORNER_RADIUS + 0.5),
+                right: -(CORNER_RADIUS + 0.5),
+              }}
+            />
+          </View>
+
+          {/* Bottom-Left Corner */}
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -1.5,
+              left: -1.5,
+              width: CORNER_RADIUS + 1.5,
+              height: CORNER_RADIUS + 1.5,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                width: CORNER_RADIUS * 2,
+                height: CORNER_RADIUS * 2,
+                borderRadius: CORNER_RADIUS,
+                backgroundColor: '#E3F2FD',
+                borderWidth: 1,
+                borderColor: '#94a3b8',
+                position: 'absolute',
+                bottom: -(CORNER_RADIUS + 0.5),
+                left: -(CORNER_RADIUS + 0.5),
+              }}
+            />
+          </View>
+
+          {/* Bottom-Right Corner */}
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -1.5,
+              right: -1.5,
+              width: CORNER_RADIUS + 1.5,
+              height: CORNER_RADIUS + 1.5,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                width: CORNER_RADIUS * 2,
+                height: CORNER_RADIUS * 2,
+                borderRadius: CORNER_RADIUS,
+                backgroundColor: '#E3F2FD',
+                borderWidth: 1,
+                borderColor: '#94a3b8',
+                position: 'absolute',
+                bottom: -(CORNER_RADIUS + 0.5),
+                right: -(CORNER_RADIUS + 0.5),
+              }}
+            />
           </View>
         </Animated.View>
-      </KeyboardAwareScrollView>
-      <View>
-        <Modal
-          isVisible={isModalVisible}
-          onBackdropPress={toggleModal}
-          backdropColor="transparent"
-          animationIn="slideInUp"
-          animationOut="slideOutDown"
-          useNativeDriver={true}
-          useNativeDriverForBackdrop={true}
-          backdropTransitionInTiming={300}
-          backdropTransitionOutTiming={300}
-          animationOutTiming={300}
-          style={{ justifyContent: "flex-end", margin: 0 }}
-          avoidKeyboard={true}
-        >
-          <View className="bg-white h-80 rounded-t-3xl border-t border-l border-r border-slate-200 p-6">
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="font-sansBold text-2xl text-slate-800">Select Category</Text>
-              <CloseButton onPress={toggleModal} />
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-              {categories.map((category) => (
-                <Pressable
-                  key={category.category_id}
-                  onPress={() => {
-                    setSelectedCategory({
-                      category_id: category.category_id,
-                      name: category.category,
-                      icon: category.icon,
-                    });
-                    toggleModal();
-                  }}
-                  className={`flex-row py-2 gap-2 rounded-md pl-3 active:bg-accent ${selectedCategory?.name == category.category ? "bg-blue-500" : "bg-slate-50"}`}
-                >
-                  {({ pressed }) => (
-                    <>
-                      <Ionicons
-                        name={category.icon || DEFAULT_CATEGORY_ICON}
-                        size={20}
-                        color={
-                          pressed
-                            ? "black"
-                            : selectedCategory?.name == category.category
-                              ? colors.slate[50]
-                              : colors.blue[500]
-                        }
-                      />
-                      <Text
-                        className={`${pressed ? "text-black" : selectedCategory?.name == category.category ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}
-                      >
-                        {category.category}
-                      </Text>
-                    </>
-                  )}
-                </Pressable>
-              ))}
-              {isCategoriesLoading && categories.length === 0 ? (
-                <View className="items-center py-4">
-                  <ActivityIndicator color={colors.blue[500]} />
-                </View>
-              ) : categories.length === 0 ? (
-                <Pressable
-                  onPress={() => {
-                    toggleModal();
-                    router.push("/category");
-                  }}
-                  className="items-center py-4"
-                >
-                  {({ pressed }) => (
-                    <Text
-                      className={`font-sansMed ${pressed ? "text-slate-500" : "text-blue-600"}`}
-                    >
-                      Add a category first
-                    </Text>
-                  )}
-                </Pressable>
-              ) : null}
-            </ScrollView>
-          </View>
-        </Modal>
-      </View>
 
-      <Modal
-        isVisible={isCalendarModalVisible}
-        onBackdropPress={() => setCalendarModalVisible(false)}
-        style={{ justifyContent: "flex-end", margin: 0 }}
-        animationIn="slideInUp"
-        animationOut="slideOutDown"
-        useNativeDriver={true}
-        useNativeDriverForBackdrop={true}
-        backdropTransitionInTiming={300}
-        backdropTransitionOutTiming={300}
-        animationOutTiming={300}
-        avoidKeyboard={true}
-      >
-        <View className="bg-white rounded-t-3xl p-6 pb-6">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="font-sansBold text-2xl text-slate-800">Select Date</Text>
-            <CloseButton onPress={() => setCalendarModalVisible(false)} />
-          </View>
-          <Calendar
-            current={date}
-            onDayPress={(day) => {
-              setDate(day.dateString);
-              setCalendarModalVisible(false);
+        {/* Actions Footer - Positioned Outside Ticket Card */}
+        <View className="flex-row justify-between items-center mx-10 mt-4">
+          <Pressable onPress={() => router.push("/category")}>
+            {({ pressed }) => (
+              <Text
+                className={`font-sansMed ${pressed ? "text-slate-500" : "text-blue-600"}`}
+              >
+                Manage categories
+              </Text>
+            )}
+          </Pressable>
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                "Reset Form",
+                "Are you sure you want to reset the form?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Reset",
+                    style: "destructive",
+                    onPress: () => {
+                      resetForm();
+                    },
+                  },
+                ],
+              );
             }}
-            markedDates={{
-              [date]: { selected: true, selectedColor: colors.slate[700] },
-            }}
-            theme={{
-              todayTextColor: colors.blue[600],
-              arrowColor: colors.blue[600],
-              monthTextColor: colors.slate[800],
-              textDayFontFamily: "GoogleSans-Regular",
-              textMonthFontFamily: "GoogleSans-Bold",
-              textDayHeaderFontFamily: "GoogleSans-Medium",
-            }}
-          />
+            className="active:opacity-50 p-1 -mr-1"
+          >
+            <Feather name="refresh-cw" size={22} color={colors.red[500]} strokeWidth={2.5} />
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </KeyboardAwareScrollView>
+      <CategorySelectModal
+        isVisible={isModalVisible}
+        onClose={toggleModal}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        isCategoriesLoading={isCategoriesLoading}
+        onAddCategoryPress={() => router.push("/category")}
+      />
+
+      <TagsSelectModal
+        isVisible={isTagsModalVisible}
+        onClose={() => setTagsModalVisible(false)}
+        tags={tags}
+        selectedTags={selectedTags}
+        onSelectTags={setSelectedTags}
+        createTag={createTag}
+        isSavingTag={isTagSaving}
+      />
+
+      <DateSelectModal
+        isVisible={isCalendarModalVisible}
+        onClose={() => setCalendarModalVisible(false)}
+        date={date}
+        onSelectDate={setDate}
+      />
     </View>
   );
 };

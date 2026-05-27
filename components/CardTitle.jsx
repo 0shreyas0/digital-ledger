@@ -1,12 +1,29 @@
-import { Ionicons } from '@expo/vector-icons'
+import { Ionicons, FontAwesome, FontAwesome5 } from '@expo/vector-icons'
+import * as LucideIcons from 'lucide-react-native'
 import { View, Text } from 'react-native'
 import colors from 'tailwindcss/colors'
 
-const CardTitle = ({name="default", title}) => {
+const CardTitle = ({name="default", title, library="Ionicons"}) => {
+  const renderIcon = () => {
+    if (library === "Lucide") {
+      const IconComponent = LucideIcons[name];
+      if (IconComponent) {
+        return <IconComponent size={25} color={colors.slate[500]} />;
+      }
+    }
+    if (library === "FontAwesome") {
+      return <FontAwesome name={name} size={25} color={colors.slate[500]} />;
+    }
+    if (library === "FontAwesome5") {
+      return <FontAwesome5 name={name} size={25} color={colors.slate[500]} />;
+    }
+    return <Ionicons name={name} size={25} color={colors.slate[500]} />;
+  };
+
   return (
     <View className="flex-row items-center">
-      <Ionicons name={name} size={25} color={colors.slate[500]}/>
-      <Text incl className="font-sansBold text-2xl text-slate-500 mt-[1] ml-2">{title}</Text>
+      {renderIcon()}
+      <Text className="font-sansBold text-2xl text-slate-500 mt-[1] ml-2">{title}</Text>
     </View>
   )
 }
