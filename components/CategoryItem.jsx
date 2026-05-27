@@ -1,13 +1,16 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "tailwindcss/colors";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 
-const CategoryItem = ({ item, onDelete, isDeleting = false }) => {
+const CategoryItem = ({ item, onDelete, isDeleting = false, onPress }) => {
   return (
-    <View className="flex-row items-center justify-between bg-slate-50 border border-slate-300 rounded-2xl px-4 py-4">
+    <Pressable 
+      onPress={onPress}
+      className="flex-row items-center justify-between bg-slate-50 border border-slate-300 rounded-2xl px-4 py-4 active:bg-slate-200"
+    >
       <View className="flex-row items-center gap-3 flex-1">
         <View className="bg-blue-100 rounded-full p-3 active:bg-accent">
           <Ionicons
@@ -32,7 +35,7 @@ const CategoryItem = ({ item, onDelete, isDeleting = false }) => {
         disabled={isDeleting}
         onPress={() => onDelete(item)}
       />
-    </View>
+    </Pressable>
   );
 };
 

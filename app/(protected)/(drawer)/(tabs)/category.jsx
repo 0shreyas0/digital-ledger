@@ -128,6 +128,7 @@ const Category = () => {
               item={item}
               isDeleting={deletingCategoryId === item.category_id}
               onDelete={handleDeleteCategory}
+              onPress={() => router.push(`/category/${item.category_id}?name=${encodeURIComponent(item.category)}`)}
             />
           )}
         />

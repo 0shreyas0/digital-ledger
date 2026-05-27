@@ -49,7 +49,7 @@ const CreateScreen = () => {
 
   useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue: isModalVisible || isCalendarModalVisible ? -250 : 0,
+      toValue: isModalVisible || isCalendarModalVisible ? -180 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -118,14 +118,14 @@ const CreateScreen = () => {
         console.log(errorData);
         throw new Error(
           errorData.message ||
-            errorData.error ||
-            "Failed to create transaction entry",
+          errorData.error ||
+          "Failed to create transaction entry",
         );
       }
 
       // Refresh global context
       await loadData(true);
-      
+
       Alert.alert("Success", "Transaction created successfully");
       resetForm();
       router.back();
@@ -166,8 +166,9 @@ const CreateScreen = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={false}
       >
-        <Animated.View 
+        <Animated.View
           style={{ transform: [{ translateY: slideAnim }] }}
           className="flex p-6 mx-5 bg-slate-50 gap-6 rounded-2xl border border-slate-400 border-dashed"
         >
@@ -299,7 +300,7 @@ const CreateScreen = () => {
           style={{ justifyContent: "flex-end", margin: 0 }}
           avoidKeyboard={true}
         >
-          <View className="bg-white h-96 rounded-t-3xl border-t border-l border-r border-slate-200 p-6">
+          <View className="bg-white h-80 rounded-t-3xl border-t border-l border-r border-slate-200 p-6">
             <View className="flex-row justify-between items-center mb-6">
               <Text className="font-sansBold text-2xl text-slate-800">Select Category</Text>
               <CloseButton onPress={toggleModal} />
@@ -316,22 +317,28 @@ const CreateScreen = () => {
                     });
                     toggleModal();
                   }}
-                  className={`flex-row py-2 gap-2 rounded-md pl-3 ${selectedCategory?.name == category.category ? "bg-blue-500" : "bg-slate-50"}`}
+                  className={`flex-row py-2 gap-2 rounded-md pl-3 active:bg-accent ${selectedCategory?.name == category.category ? "bg-blue-500" : "bg-slate-50"}`}
                 >
-                  <Ionicons
-                    name={category.icon || DEFAULT_CATEGORY_ICON}
-                    size={20}
-                    color={
-                      selectedCategory?.name == category.category
-                        ? colors.slate[50]
-                        : colors.blue[500]
-                    }
-                  />
-                  <Text
-                    className={`${selectedCategory?.name == category.category ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}
-                  >
-                    {category.category}
-                  </Text>
+                  {({ pressed }) => (
+                    <>
+                      <Ionicons
+                        name={category.icon || DEFAULT_CATEGORY_ICON}
+                        size={20}
+                        color={
+                          pressed
+                            ? "black"
+                            : selectedCategory?.name == category.category
+                              ? colors.slate[50]
+                              : colors.blue[500]
+                        }
+                      />
+                      <Text
+                        className={`${pressed ? "text-black" : selectedCategory?.name == category.category ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}
+                      >
+                        {category.category}
+                      </Text>
+                    </>
+                  )}
                 </Pressable>
               ))}
               {isCategoriesLoading && categories.length === 0 ? (
@@ -373,7 +380,7 @@ const CreateScreen = () => {
         animationOutTiming={300}
         avoidKeyboard={true}
       >
-        <View className="bg-white rounded-t-3xl p-6 pb-10">
+        <View className="bg-white rounded-t-3xl p-6 pb-6">
           <View className="flex-row justify-between items-center mb-4">
             <Text className="font-sansBold text-2xl text-slate-800">Select Date</Text>
             <CloseButton onPress={() => setCalendarModalVisible(false)} />
