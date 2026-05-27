@@ -243,7 +243,7 @@ const CreateScreen = () => {
           <CardTitle name={"pricetag-outline"} title={"Category"} />
           <Pressable
             onPress={toggleModal}
-            className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-accent py-3 rounded-full"
+            className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
           >
             {({ pressed }) => (
               <>
