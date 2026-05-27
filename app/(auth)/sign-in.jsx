@@ -105,18 +105,20 @@ export default function Page() {
         </Text>
         <ErrorBanner error={error} setError={setError} />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
+          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
           style={{ includeFontPadding: false }}
           autoCapitalize="none"
           value={identifier} // changed from email to indentifer
           placeholder="Enter username or email"
+          placeholderTextColor="#64748b"
           onChangeText={(value) => setIdentifier(value)}
         />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
-          style={{ paddingEnd: false, includeFontPadding: false }}
+          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
+          style={{ includeFontPadding: false }}
           value={password}
           placeholder="Enter password"
+          placeholderTextColor="#64748b"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />

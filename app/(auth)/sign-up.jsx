@@ -128,26 +128,29 @@ export default function SignUpScreen() {
         </Text>
         <ErrorBanner error={error} setError={setError} />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
+          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
           style={{ includeFontPadding: false }}
           autoCapitalize="none"
           value={username}
           placeholder="Enter username"
+          placeholderTextColor="#64748b"
           onChangeText={(value) => setUsername(value)}
         />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
+          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
           style={{ includeFontPadding: false }}
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Enter email"
+          placeholderTextColor="#64748b"
           onChangeText={(email) => setEmailAddress(email)}
         />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
+          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
           style={{ includeFontPadding: false }}
           value={password}
           placeholder="Enter password"
+          placeholderTextColor="#64748b"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />
