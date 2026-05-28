@@ -5,8 +5,10 @@ import { formatDate } from "@/lib/utils.js";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import colors from "tailwindcss/colors";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
+import { useRouter } from "expo-router";
 
 const TransactionItem = ({ item, onDelete, currency, onPressIcon }) => {
+  const router = useRouter();
   const isIncome = parseFloat(item.amount) > 0;
   const iconName = item.icon || DEFAULT_CATEGORY_ICON;
 
@@ -17,7 +19,7 @@ const TransactionItem = ({ item, onDelete, currency, onPressIcon }) => {
       >
       <View className="flex-row flex-1 items-center">
         <TouchableOpacity 
-          onPress={() => onPressIcon && onPressIcon(item)}
+          onPress={() => onPressIcon ? onPressIcon(item) : router.push(`/edit?id=${item.id}`)}
           className="h-25 w-25 p-3 mx-3 rounded-full bg-slate-200 active:bg-accent justify-center items-center"
         >
           <Ionicons

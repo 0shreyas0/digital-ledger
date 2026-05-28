@@ -127,13 +127,14 @@ const TagsScreen = () => {
             </View>
           }
           renderItem={({ item }) => (
-            <View
+            <Pressable
+              onPress={() => router.push(`/tag/${item.tag_id}?name=${encodeURIComponent(item.tag_name)}`)}
               style={{
                 backgroundColor: item.color,
                 borderColor: colors.slate[300],
                 borderWidth: 1,
               }}
-              className="flex-row items-center justify-between rounded-2xl px-4 py-4"
+              className="flex-row items-center justify-between rounded-2xl px-4 py-4 mb-2 active:opacity-70"
             >
               <View className="flex-1">
                 <Text className="font-sansBold text-lg text-slate-800">
@@ -150,7 +151,7 @@ const TagsScreen = () => {
                 disabled={deletingTagId === item.tag_id}
                 onPress={() => handleDeleteTag(item)}
               />
-            </View>
+            </Pressable>
           )}
         />
       </View>
