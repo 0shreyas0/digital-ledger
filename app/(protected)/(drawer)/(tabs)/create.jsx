@@ -27,6 +27,7 @@ import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 import CategorySelectModal from "@/components/CategorySelectModal";
 import TagsSelectModal from "@/components/TagsSelectModal";
 import DateSelectModal from "@/components/DateSelectModal";
+import Ticket from "@/components/Ticket";
 
 const CreateScreen = () => {
   const router = useRouter();
@@ -151,8 +152,6 @@ const CreateScreen = () => {
 
 
 
-  const SEMICIRCLE_RADIUS = 16;
-  const CORNER_RADIUS = 16;
 
   return (
     <View className="flex-1 bg-background">
@@ -182,310 +181,163 @@ const CreateScreen = () => {
         keyboardShouldPersistTaps="handled"
         scrollEnabled={true}
       >
-        <Animated.View
+        <Ticket
+          borderColor="#94a3b8"
           style={{ transform: [{ translateY: slideAnim }] }}
-          className="flex p-6 mx-5 bg-slate-50 gap-4 rounded-2xl border border-slate-400"
-        >
-          {/* Grouped type selector and amount to reduce gap */}
-          <View className="gap-2">
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                className={`flex-1 flex-row items-center justify-center p-2 py-3 ${isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
-                onPress={() => setIsExpense(true)}
-              >
-                <Ionicons
-                  name="pricetag"
-                  size={16}
-                  color={isExpense ? "white" : "red"}
-                />
-                <Text
-                  className={`font-sansMed text-lg ml-2 ${isExpense ? "text-white ml-2" : " text-slate-700"} `}
-                >
-                  Expense
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`flex-1 flex-row items-center justify-center p-2 py-3 ${!isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
-                onPress={() => setIsExpense(false)}
-              >
-                <Ionicons
-                  name="cash"
-                  size={16}
-                  color={!isExpense ? "white" : "#22c55e"}
-                />
-                <Text
-                  className={`font-sansMed text-lg ml-2 ${!isExpense ? "text-white ml-2" : " text-slate-700"} `}
-                >
-                  Income
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View className="flex-row gap-3 items-center border-b border-b-slate-400">
-              <Text className="font-sansBold text-5xl color-slate-700 leading-tight">
-                {currency}
-              </Text>
-              <TextInput
-                className="flex-1 font-sansBold text-5xl leading-tight h-16"
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="0.00"
-                placeholderTextColor={colors.slate[400]}
-                keyboardType="numeric"
-                style={{ paddingVertical: 0, includeFontPadding: false }}
-              />
-            </View>
-          </View>
-
-          <CardTitle name={"calendar-outline"} title={"Date"} />
-          <Pressable
-            onPress={() => setCalendarModalVisible(true)}
-            className="flex-row items-center gap-4 border border-slate-400 bg-slate-50 active:bg-accent py-3 px-5 rounded-full"
-          >
-            <Ionicons
-              name="calendar"
-              size={22}
-              color={colors.blue[500]}
-            />
-            <Text className="font-sansMed text-slate-600 text-lg">
-              {date}
-            </Text>
-          </Pressable>
-
-          <CardTitle name={"Pencil"} title={"Title"} library="Lucide" />
-          <FieldInputBox
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Transaction title"
-          />
-          <CardTitle name={"layers-outline"} title={"Category"} />
-          <Pressable
-            onPress={toggleModal}
-            className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
-          >
-            {({ pressed }) => (
-              <>
-                {selectedCategory ? (
-                  <Ionicons
-                    name={selectedCategory.icon || DEFAULT_CATEGORY_ICON}
-                    size={22}
-                    color={
-                      pressed
-                        ? colors.slate[600]
-                        : isExpense
-                          ? colors.red[500]
-                          : colors.green[500]
-                    }
-                  />
-                ) : null}
-                <Text
-                  selectable={false}
-                  className={`font-sansMed ${pressed ? "text-slate-600" : selectedCategory ? "text-slate-600" : "text-slate-400"} text-center text-lg`}
-                >
-                  {selectedCategory ? selectedCategory.name : "Select Category"}
-                </Text>
-              </>
-            )}
-          </Pressable>
-
-          {/* Ticket Perforation Divider */}
-          <View className="relative my-2 items-center justify-center">
-            <View className="w-full border-t border-dashed border-slate-400" />
-            
-            {/* Left semicircular punch */}
-            <View
-              style={{
-                width: SEMICIRCLE_RADIUS + 1.5,
-                height: SEMICIRCLE_RADIUS * 2,
-                position: 'absolute',
-                left: -(SEMICIRCLE_RADIUS + 6.5),
-                overflow: 'hidden',
-              }}
-            >
-              <View
-                style={{
-                  width: SEMICIRCLE_RADIUS * 2,
-                  height: SEMICIRCLE_RADIUS * 2,
-                  borderRadius: SEMICIRCLE_RADIUS,
-                  backgroundColor: '#E3F2FD',
-                  borderWidth: 1,
-                  borderColor: '#94a3b8',
-                  position: 'absolute',
-                  left: -SEMICIRCLE_RADIUS,
-                }}
-              />
-            </View>
-
-            {/* Right semicircular punch */}
-            <View
-              style={{
-                width: SEMICIRCLE_RADIUS + 1.5,
-                height: SEMICIRCLE_RADIUS * 2,
-                position: 'absolute',
-                right: -(SEMICIRCLE_RADIUS + 6.5),
-                overflow: 'hidden',
-              }}
-            >
-              <View
-                style={{
-                  width: SEMICIRCLE_RADIUS * 2,
-                  height: SEMICIRCLE_RADIUS * 2,
-                  borderRadius: SEMICIRCLE_RADIUS,
-                  backgroundColor: '#E3F2FD',
-                  borderWidth: 1,
-                  borderColor: '#94a3b8',
-                  position: 'absolute',
-                  left: 0,
-                }}
-              />
-            </View>
-          </View>
-
-          {/* Lower Ticket Section: Tags */}
-          {selectedTags.length === 0 && (
-            <CardTitle name={"pricetags-outline"} title={"Tags"} />
-          )}
-          {selectedTags.length > 0 && (
-            <View className="flex-row flex-wrap gap-2 items-center mb-3">
-              {selectedTags.map((tag) => (
-                <View
-                  key={tag.tag_id}
-                  style={{ backgroundColor: `${tag.color}35`, borderColor: tag.color }}
-                  className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border"
-                >
-                  <Text className="font-sansBold text-xs text-slate-800">
-                    {tag.tag_name}
-                  </Text>
+          className="mx-5 gap-4"
+          perforationRadius={5}
+          cornerRadius={16}
+          cornerType="cutout"
+          semicircleRadius={16}
+          topTicketView={
+            <>
+              {/* Grouped type selector and amount to reduce gap */}
+              <View className="gap-2">
+                <View className="flex-row gap-3">
                   <TouchableOpacity
-                    onPress={() => setSelectedTags((prev) => prev.filter((t) => t.tag_id !== tag.tag_id))}
+                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                    onPress={() => setIsExpense(true)}
                   >
-                    <Ionicons name="close-circle" size={14} color={colors.slate[500]} />
+                    <Ionicons
+                      name="pricetag"
+                      size={16}
+                      color={isExpense ? "white" : "red"}
+                    />
+                    <Text
+                      className={`font-sansMed text-lg ml-2 ${isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                    >
+                      Expense
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${!isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                    onPress={() => setIsExpense(false)}
+                  >
+                    <Ionicons
+                      name="cash"
+                      size={16}
+                      color={!isExpense ? "white" : "#22c55e"}
+                    />
+                    <Text
+                      className={`font-sansMed text-lg ml-2 ${!isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                    >
+                      Income
+                    </Text>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </View>
-          )}
+                <View className="flex-row gap-3 items-center border-b border-b-slate-400">
+                  <Text className="font-sansBold text-5xl color-slate-700 leading-tight">
+                    {currency}
+                  </Text>
+                  <TextInput
+                    className="flex-1 font-sansBold text-5xl leading-tight h-16"
+                    value={amount}
+                    onChangeText={setAmount}
+                    placeholder="0.00"
+                    placeholderTextColor={colors.slate[400]}
+                    keyboardType="numeric"
+                    style={{ paddingVertical: 0, includeFontPadding: false }}
+                  />
+                </View>
+              </View>
 
-          {selectedTags.length < 5 && (
-            <Pressable
-              onPress={() => setTagsModalVisible(true)}
-              className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
-            >
-              {({ pressed }) => (
-                <Text
-                  selectable={false}
-                  className={`font-sansMed ${pressed ? "text-slate-600" : "text-slate-400"} text-center text-lg`}
-                >
-                  Add Tag
+              <CardTitle name={"calendar-outline"} title={"Date"} />
+              <Pressable
+                onPress={() => setCalendarModalVisible(true)}
+                className="flex-row items-center gap-4 border border-slate-400 bg-slate-50 active:bg-accent py-3 px-5 rounded-full"
+              >
+                <Ionicons
+                  name="calendar"
+                  size={22}
+                  color={colors.blue[500]}
+                />
+                <Text className="font-sansMed text-slate-600 text-lg">
+                  {date}
                 </Text>
+              </Pressable>
+
+              <CardTitle name={"Pencil"} title={"Title"} library="Lucide" />
+              <FieldInputBox
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Transaction title"
+              />
+              <CardTitle name={"layers-outline"} title={"Category"} />
+              <Pressable
+                onPress={toggleModal}
+                className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
+              >
+                {({ pressed }) => (
+                  <>
+                    {selectedCategory ? (
+                      <Ionicons
+                        name={selectedCategory.icon || DEFAULT_CATEGORY_ICON}
+                        size={22}
+                        color={
+                          pressed
+                            ? colors.slate[600]
+                            : isExpense
+                              ? colors.red[500]
+                              : colors.green[500]
+                        }
+                      />
+                    ) : null}
+                    <Text
+                      selectable={false}
+                      className={`font-sansMed ${pressed ? "text-slate-600" : selectedCategory ? "text-slate-600" : "text-slate-400"} text-center text-lg`}
+                    >
+                      {selectedCategory ? selectedCategory.name : "Select Category"}
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            </>
+          }
+          bottomTicketView={
+            <>
+              {/* Lower Ticket Section: Tags */}
+              {selectedTags.length === 0 && (
+                <CardTitle name={"pricetags-outline"} title={"Tags"} />
               )}
-            </Pressable>
-          )}
+              {selectedTags.length > 0 && (
+                <View className="flex-row flex-wrap gap-2 items-center mb-3">
+                  {selectedTags.map((tag) => (
+                    <View
+                      key={tag.tag_id}
+                      style={{ backgroundColor: `${tag.color}35`, borderColor: tag.color }}
+                      className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border"
+                    >
+                      <Text className="font-sansBold text-xs text-slate-800">
+                        {tag.tag_name}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => setSelectedTags((prev) => prev.filter((t) => t.tag_id !== tag.tag_id))}
+                      >
+                        <Ionicons name="close-circle" size={14} color={colors.slate[500]} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
 
-          {/* Ticket Corner Cutouts */}
-          {/* Top-Left Corner */}
-          <View
-            style={{
-              position: 'absolute',
-              top: -1.5,
-              left: -1.5,
-              width: CORNER_RADIUS + 1.5,
-              height: CORNER_RADIUS + 1.5,
-              overflow: 'hidden',
-            }}
-          >
-            <View
-              style={{
-                width: CORNER_RADIUS * 2,
-                height: CORNER_RADIUS * 2,
-                borderRadius: CORNER_RADIUS,
-                backgroundColor: '#E3F2FD',
-                borderWidth: 1,
-                borderColor: '#94a3b8',
-                position: 'absolute',
-                top: -(CORNER_RADIUS + 0.5),
-                left: -(CORNER_RADIUS + 0.5),
-              }}
-            />
-          </View>
-
-          {/* Top-Right Corner */}
-          <View
-            style={{
-              position: 'absolute',
-              top: -1.5,
-              right: -1.5,
-              width: CORNER_RADIUS + 1.5,
-              height: CORNER_RADIUS + 1.5,
-              overflow: 'hidden',
-            }}
-          >
-            <View
-              style={{
-                width: CORNER_RADIUS * 2,
-                height: CORNER_RADIUS * 2,
-                borderRadius: CORNER_RADIUS,
-                backgroundColor: '#E3F2FD',
-                borderWidth: 1,
-                borderColor: '#94a3b8',
-                position: 'absolute',
-                top: -(CORNER_RADIUS + 0.5),
-                right: -(CORNER_RADIUS + 0.5),
-              }}
-            />
-          </View>
-
-          {/* Bottom-Left Corner */}
-          <View
-            style={{
-              position: 'absolute',
-              bottom: -1.5,
-              left: -1.5,
-              width: CORNER_RADIUS + 1.5,
-              height: CORNER_RADIUS + 1.5,
-              overflow: 'hidden',
-            }}
-          >
-            <View
-              style={{
-                width: CORNER_RADIUS * 2,
-                height: CORNER_RADIUS * 2,
-                borderRadius: CORNER_RADIUS,
-                backgroundColor: '#E3F2FD',
-                borderWidth: 1,
-                borderColor: '#94a3b8',
-                position: 'absolute',
-                bottom: -(CORNER_RADIUS + 0.5),
-                left: -(CORNER_RADIUS + 0.5),
-              }}
-            />
-          </View>
-
-          {/* Bottom-Right Corner */}
-          <View
-            style={{
-              position: 'absolute',
-              bottom: -1.5,
-              right: -1.5,
-              width: CORNER_RADIUS + 1.5,
-              height: CORNER_RADIUS + 1.5,
-              overflow: 'hidden',
-            }}
-          >
-            <View
-              style={{
-                width: CORNER_RADIUS * 2,
-                height: CORNER_RADIUS * 2,
-                borderRadius: CORNER_RADIUS,
-                backgroundColor: '#E3F2FD',
-                borderWidth: 1,
-                borderColor: '#94a3b8',
-                position: 'absolute',
-                bottom: -(CORNER_RADIUS + 0.5),
-                right: -(CORNER_RADIUS + 0.5),
-              }}
-            />
-          </View>
-        </Animated.View>
+              {selectedTags.length < 5 && (
+                <Pressable
+                  onPress={() => setTagsModalVisible(true)}
+                  className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
+                >
+                  {({ pressed }) => (
+                    <Text
+                      selectable={false}
+                      className={`font-sansMed ${pressed ? "text-slate-600" : "text-slate-400"} text-center text-lg`}
+                    >
+                      Add Tag
+                    </Text>
+                  )}
+                </Pressable>
+              )}
+            </>
+          }
+        />
 
         {/* Actions Footer - Positioned Outside Ticket Card */}
         <View className="flex-row justify-between items-center mx-10 mt-4">

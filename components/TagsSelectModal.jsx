@@ -73,7 +73,6 @@ const TagsSelectModal = ({
     <Modal
       isVisible={isVisible}
       onBackdropPress={onClose}
-      backdropColor="transparent"
       animationIn="slideInUp"
       animationOut="slideOutDown"
       useNativeDriver={true}
