@@ -58,6 +58,8 @@ const TransactionFilter = ({
   const [activeAmountPillId, setActiveAmountPillId] = useState('default');
   const [isDateSectionOpen, setIsDateSectionOpen] = useState(false);
   const [isAmountSectionOpen, setIsAmountSectionOpen] = useState(false);
+  const [isMatchLogicSectionOpen, setIsMatchLogicSectionOpen] = useState(false);
+  const [isTypeSectionOpen, setIsTypeSectionOpen] = useState(false);
 
   const [stagedFilters, setStagedFilters] = useState(activeFilters);
 
@@ -297,42 +299,74 @@ const TransactionFilter = ({
 
             {/* ─── Matching Logic ─── */}
             <Animated.View layout={LinearTransition.duration(250)}>
-              <Text className="font-sansBold text-slate-500 mb-3">Matching Logic</Text>
-              <SegmentControl
-                options={[
-                  { label: 'Match All', value: 'all' },
-                  { label: 'Match Any', value: 'any' }
-                ]}
-                selectedOption={stagedFilters.matchLogic || 'all'}
-                onSelect={handleMatchLogicChange}
-              />
-              <Text className="text-slate-400 text-xs mt-2 mx-1 font-sansReg">
-                {isMatchAny
-                  ? 'Shows transactions matching ANY selected category, tag, type, date, or amount group.'
-                  : 'Shows transactions matching ALL of your selected categories, tags, and type.'}
-              </Text>
+              <TouchableOpacity
+                onPress={() => setIsMatchLogicSectionOpen(!isMatchLogicSectionOpen)}
+                className="flex-row justify-between items-center mb-3"
+              >
+                <Text className="font-sansBold text-slate-500">Matching Logic</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-sansMed text-blue-600 text-sm">
+                    {stagedFilters.matchLogic === 'any' ? 'Match Any' : 'Match All'}
+                  </Text>
+                  <Ionicons name={isMatchLogicSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.slate[400]} />
+                </View>
+              </TouchableOpacity>
+              
+              {isMatchLogicSectionOpen && (
+                <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+                  <SegmentControl
+                    options={[
+                      { label: 'Match All', value: 'all' },
+                      { label: 'Match Any', value: 'any' }
+                    ]}
+                    selectedOption={stagedFilters.matchLogic || 'all'}
+                    onSelect={handleMatchLogicChange}
+                  />
+                  <Text className="text-slate-400 text-xs mt-2 mx-1 font-sansReg mb-4">
+                    {isMatchAny
+                      ? 'Shows transactions matching ANY selected category, tag, type, date, or amount group.'
+                      : 'Shows transactions matching ALL of your selected categories, tags, and type.'}
+                  </Text>
+                </Animated.View>
+              )}
             </Animated.View>
 
             {/* ─── Transaction Type ─── */}
-            <View>
-              <Text className="font-sansBold text-slate-500 mb-3">Type</Text>
-              <View className="flex-row gap-3">
-                {['all', 'Income', 'Expense'].map((type) => {
-                  const isActive = (stagedFilters.type || 'all') === type;
-                  return (
-                    <TouchableOpacity
-                      key={type}
-                      onPress={() => updateStaged('type', type)}
-                      className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-slate-700 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
-                    >
-                      <Text className={`font-sansMed capitalize ${isActive ? 'text-white' : 'text-slate-600'}`}>
-                        {type}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
+            <Animated.View layout={LinearTransition.duration(250)}>
+              <TouchableOpacity
+                onPress={() => setIsTypeSectionOpen(!isTypeSectionOpen)}
+                className="flex-row justify-between items-center mb-3"
+              >
+                <Text className="font-sansBold text-slate-500">Type</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-sansMed text-blue-600 text-sm capitalize">
+                    {stagedFilters.type || 'all'}
+                  </Text>
+                  <Ionicons name={isTypeSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.slate[400]} />
+                </View>
+              </TouchableOpacity>
+
+              {isTypeSectionOpen && (
+                <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)} className="mb-4">
+                  <View className="flex-row gap-3">
+                    {['all', 'Income', 'Expense'].map((type) => {
+                      const isActive = (stagedFilters.type || 'all') === type;
+                      return (
+                        <TouchableOpacity
+                          key={type}
+                          onPress={() => updateStaged('type', type)}
+                          className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-slate-700 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                        >
+                          <Text className={`font-sansMed capitalize ${isActive ? 'text-white' : 'text-slate-600'}`}>
+                            {type}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </Animated.View>
+              )}
+            </Animated.View>
 
             {/* ─── Date Range ─── */}
             <Animated.View layout={LinearTransition.duration(400)}>
