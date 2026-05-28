@@ -48,42 +48,36 @@ const Activity = () => {
   const [filters, setFilters] = useState({
     categories: [],
     tags: [],
-    dateRange: "all",
-    customRange: { start: null, end: null },
-    minAmount: "",
-    maxAmount: "",
-    type: "all"
+    dateRanges: [{ id: "default", type: "all", start: null, end: null }],
+    amountRanges: [{ id: "default", minAmount: "", maxAmount: "" }],
+    type: "all",
+    matchLogic: "all"
   });
 
   const [isSyncing, setIsSyncing] = useState(false);
 
   // --- SERVER SYNC LOGIC ---
   const applyFiltersToServer = useCallback(async () => {
+    const now = new Date();
+    const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+    const processedDateRanges = filters.dateRanges.map(dr => {
+      if (dr.type === "today") return { start: todayStr, end: todayStr };
+      if (["week", "month", "custom"].includes(dr.type) && dr.start) return { start: dr.start, end: dr.end };
+      return null;
+    }).filter(Boolean);
+
+    const processedAmountRanges = filters.amountRanges.filter(ar => ar.minAmount || ar.maxAmount);
+
     const serverFilters = {
       search: searchQuery,
       type: filters.type,
       categories: filters.categories,
-      minAmount: filters.minAmount,
-      maxAmount: filters.maxAmount,
       tags: filters.tags,
+      matchLogic: filters.matchLogic || 'all',
+      amountRanges: JSON.stringify(processedAmountRanges),
+      dateRanges: JSON.stringify(processedDateRanges),
     };
-
-    const now = new Date();
-    const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-
-    if (filters.dateRange === "today") {
-      serverFilters.startDate = todayStr;
-      serverFilters.endDate = todayStr;
-    } else if (filters.dateRange === "week" && filters.customRange.start) {
-       serverFilters.startDate = filters.customRange.start;
-       serverFilters.endDate = filters.customRange.end;
-    } else if (filters.dateRange === "month" && filters.customRange.start) {
-       serverFilters.startDate = filters.customRange.start;
-       serverFilters.endDate = filters.customRange.end;
-    } else if (filters.dateRange === "custom" && filters.customRange.start) {
-      serverFilters.startDate = filters.customRange.start;
-      serverFilters.endDate = filters.customRange.end;
-    }
 
     const { transactions: resultTransactions } = await loadData(serverFilters);
     if (resultTransactions) {
@@ -109,41 +103,65 @@ const Activity = () => {
         return false;
       }
 
-      // 2. Type Filter
-      if (filters.type !== "all" && txn.type !== filters.type) {
-        return false;
+      // 2. Amount Filter
+      const activeAmountRanges = filters.amountRanges.filter(ar => ar.minAmount || ar.maxAmount);
+      if (activeAmountRanges.length > 0) {
+        const absAmount = Math.abs(txn.amount);
+        const passedAmount = activeAmountRanges.some(ar => {
+          let p = true;
+          if (ar.minAmount && absAmount < parseFloat(ar.minAmount)) p = false;
+          if (ar.maxAmount && absAmount > parseFloat(ar.maxAmount)) p = false;
+          return p;
+        });
+        if (!passedAmount) return false;
       }
 
-      // 3. Category Filter
-      if (filters.categories.length > 0 && !filters.categories.includes(txn.category)) {
-        return false;
-      }
-
-      // 4. Amount Filter
-      const absAmount = Math.abs(txn.amount);
-      if (filters.minAmount && absAmount < parseFloat(filters.minAmount)) return false;
-      if (filters.maxAmount && absAmount > parseFloat(filters.maxAmount)) return false;
-
-      // 5. Date Filter (String based for reliability)
-      if (txn.date) {
+      // 3. Date Filter
+      const activeDateRanges = filters.dateRanges.filter(dr => dr.type !== "all");
+      if (activeDateRanges.length > 0) {
+        if (!txn.date) return false;
         const txnDateStr = typeof txn.date === 'string' ? txn.date.split('T')[0] : new Date(txn.date).toISOString().split('T')[0];
-        
         const now = new Date();
         const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
-        if (filters.dateRange === "today") {
-          if (txnDateStr !== todayStr) return false;
-        } else if (["custom", "week", "month"].includes(filters.dateRange) && filters.customRange.start) {
-          if (txnDateStr < filters.customRange.start) return false;
-          if (filters.customRange.end && txnDateStr > filters.customRange.end) return false;
-        }
+        const passedDate = activeDateRanges.some(dr => {
+          if (dr.type === "today") return txnDateStr === todayStr;
+          if (["custom", "week", "month"].includes(dr.type) && dr.start) {
+            if (txnDateStr < dr.start) return false;
+            if (dr.end && txnDateStr > dr.end) return false;
+            return true;
+          }
+          return false;
+        });
+        if (!passedDate) return false;
       }
 
-      // 6. Tags Filter
-      if (filters.tags && filters.tags.length > 0) {
-        if (!txn.tags || txn.tags.length === 0) return false;
-        const hasTag = txn.tags.some(tag => filters.tags.includes(tag.name));
-        if (!hasTag) return false;
+      // Taxonomy conditions (Type, Category, Tags)
+      const hasType = filters.type !== "all";
+      const hasCategories = filters.categories.length > 0;
+      const hasTags = filters.tags && filters.tags.length > 0;
+
+      const hasTaxonomyFilters = hasType || hasCategories || hasTags;
+
+      if (hasTaxonomyFilters) {
+        if (filters.matchLogic === 'any') {
+          let passedAny = false;
+          if (hasType && txn.type === filters.type) passedAny = true;
+          if (hasCategories && filters.categories.includes(txn.category)) passedAny = true;
+          if (hasTags && txn.tags && txn.tags.some(tag => filters.tags.includes(tag.name))) passedAny = true;
+
+          if (!passedAny) return false;
+        } else {
+          // Default Match ALL (AND)
+          if (hasType && txn.type !== filters.type) return false;
+          if (hasCategories && !filters.categories.includes(txn.category)) return false;
+          
+          if (hasTags) {
+            if (!txn.tags || txn.tags.length === 0) return false;
+            const hasTag = txn.tags.some(tag => filters.tags.includes(tag.name));
+            if (!hasTag) return false;
+          }
+        }
       }
 
       return true;
@@ -181,8 +199,7 @@ const Activity = () => {
     
     setFilters({
       ...filters,
-      dateRange: "month",
-      customRange: { start: fmt(startDate), end: fmt(endDate) }
+      dateRanges: [{ id: "default", type: "month", start: fmt(startDate), end: fmt(endDate) }]
     });
     // Modal stays open per user request
   };
@@ -196,18 +213,18 @@ const Activity = () => {
 
     setFilters({
       ...filters,
-      dateRange: "week",
-      customRange: { start: fmt(startDate), end: fmt(endDate) }
+      dateRanges: [{ id: "default", type: "week", start: fmt(startDate), end: fmt(endDate) }]
     });
     // Modal stays open per user request
   };
 
   const markedWeekDates = useMemo(() => {
-    if (filters.dateRange !== "week" || !filters.customRange.start || !filters.customRange.end) return {};
+    const dr = filters.dateRanges[0];
+    if (!dr || dr.type !== "week" || !dr.start || !dr.end) return {};
     
     // Check if the range is exactly 7 days to confirm it's a 'week' selection
-    const start = new Date(filters.customRange.start);
-    const end = new Date(filters.customRange.end);
+    const start = new Date(dr.start);
+    const end = new Date(dr.end);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
@@ -227,9 +244,9 @@ const Activity = () => {
         current.setDate(current.getDate() + 1);
     }
     return marked;
-  }, [filters.customRange, filters.dateRange]);
+  }, [filters.dateRanges]);
 
-  const hasActiveFilters = filters.categories.length > 0 || filters.minAmount || filters.maxAmount || filters.type !== "all" || searchQuery !== "" || (filters.dateRange === "custom" && (filters.customRange.start || filters.customRange.end));
+  const hasActiveFilters = filters.categories.length > 0 || filters.amountRanges.some(ar => ar.minAmount || ar.maxAmount) || filters.type !== "all" || searchQuery !== "" || filters.dateRanges.some(dr => dr.type !== "all");
 
   const dateFilters = [
     { label: "All", value: "all" },
@@ -270,11 +287,10 @@ const Activity = () => {
     setFilters({
       categories: [],
       tags: [],
-      dateRange: "all",
-      customRange: { start: null, end: null },
-      minAmount: "",
-      maxAmount: "",
-      type: "all"
+      dateRanges: [{ id: "default", type: "all", start: null, end: null }],
+      amountRanges: [{ id: "default", minAmount: "", maxAmount: "" }],
+      type: "all",
+      matchLogic: "all"
     });
     setSearchQuery("");
   };
