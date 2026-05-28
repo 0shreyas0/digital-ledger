@@ -3,8 +3,9 @@ import * as LucideIcons from 'lucide-react-native'
 import { View, Text } from 'react-native'
 import colors from 'tailwindcss/colors'
 
-const CardTitle = ({name="default", title, library="Ionicons"}) => {
+const CardTitle = ({name, title, library="Ionicons"}) => {
   const renderIcon = () => {
+    if (!name) return null;
     if (library === "Lucide") {
       const IconComponent = LucideIcons[name];
       if (IconComponent) {
@@ -23,7 +24,7 @@ const CardTitle = ({name="default", title, library="Ionicons"}) => {
   return (
     <View className="flex-row items-center">
       {renderIcon()}
-      <Text className="font-sansBold text-2xl text-slate-500 mt-[1] ml-2">{title}</Text>
+      <Text className={`font-sansBold text-2xl text-slate-500 mt-[1] ${name ? "ml-2" : ""}`}>{title}</Text>
     </View>
   )
 }
