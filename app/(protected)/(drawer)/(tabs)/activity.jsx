@@ -10,10 +10,12 @@ import {
 } from "react-native";
 import React, { useCallback, useState, useMemo, useEffect } from "react";
 import { useUser } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCategories } from "@/hooks/useCategories";
+import { useTags } from "@/hooks/useTags";
 import TransactionItem from "@/components/TransactionItem";
 import NoTransactionFound from "@/components/NoTransactionFound";
 import PageLoader from "@/components/PageLoader";
@@ -24,15 +26,18 @@ import SearchBar from "@/components/SearchBar";
 import TransactionFilter from "@/components/TransactionFilter";
 
 const Activity = () => {
+  const router = useRouter();
   const { user } = useUser();
   const { transactions: globalTransactions, isLoading, loadData, deleteTransaction: contextDeleteTransaction } = useTransactions();
   const { categories, loadCategories } = useCategories(user);
+  const { tags, loadTags } = useTags(user);
 
   const [localTransactions, setLocalTransactions] = useState([]);
 
   useEffect(() => {
     loadCategories();
-  }, [loadCategories]);
+    loadTags();
+  }, [loadCategories, loadTags]);
 
   // Sync with global transactions on initial load (when no filters)
   useEffect(() => {
@@ -42,6 +47,7 @@ const Activity = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     categories: [],
+    tags: [],
     dateRange: "all",
     customRange: { start: null, end: null },
     minAmount: "",
@@ -59,6 +65,7 @@ const Activity = () => {
       categories: filters.categories,
       minAmount: filters.minAmount,
       maxAmount: filters.maxAmount,
+      tags: filters.tags,
     };
 
     const now = new Date();
@@ -130,6 +137,13 @@ const Activity = () => {
           if (txnDateStr < filters.customRange.start) return false;
           if (filters.customRange.end && txnDateStr > filters.customRange.end) return false;
         }
+      }
+
+      // 6. Tags Filter
+      if (filters.tags && filters.tags.length > 0) {
+        if (!txn.tags || txn.tags.length === 0) return false;
+        const hasTag = txn.tags.some(tag => filters.tags.includes(tag.name));
+        if (!hasTag) return false;
       }
 
       return true;
@@ -255,6 +269,7 @@ const Activity = () => {
   const clearFilters = () => {
     setFilters({
       categories: [],
+      tags: [],
       dateRange: "all",
       customRange: { start: null, end: null },
       minAmount: "",
@@ -277,6 +292,7 @@ const Activity = () => {
           />
           <TransactionFilter
             categories={categories}
+            tags={tags}
             activeFilters={filters}
             onApply={setFilters}
             onClear={clearFilters}
@@ -396,6 +412,9 @@ const Activity = () => {
               item={item}
               onDelete={handleDelete}
               currency="₹"
+              onPressIcon={(txn) => {
+                router.push({ pathname: "/edit", params: { id: txn.transaction_id || txn.id } });
+              }}
             />
           )}
           ListEmptyComponent={

@@ -99,6 +99,9 @@ export default function Page() {
             item={item}
             onDelete={handleDelete}
             currency={currency}
+            onPressIcon={(txn) => {
+              router.push({ pathname: "/edit", params: { id: txn.transaction_id || txn.id } });
+            }}
           />
         )}
         ListEmptyComponent={<NoTransactionFound />}

@@ -12,9 +12,8 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import React, { useCallback, useState, useRef, useEffect } from "react";
-import { useRouter, useNavigation } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "@react-navigation/native";
 import { API_URL } from "@/constants/api";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import colors from "tailwindcss/colors";
@@ -41,14 +40,16 @@ const PASTEL_PALETTE = [
   "#FFD6A5", // Pastel Peach/Orange
 ];
 
-const CreateScreen = () => {
+const EditScreen = () => {
   const router = useRouter();
-  const navigation = useNavigation();
+  const { id } = useLocalSearchParams();
   const { user } = useUser();
-  const { categories, isLoading: isCategoriesLoading, loadCategories } =
-    useCategories(user);
+  
+  const { categories, isLoading: isCategoriesLoading, loadCategories } = useCategories(user);
   const { loadTags, tags, createTag, isSaving: isTagSaving } = useTags(user);
-  const { loadData } = useTransactions();
+  const { transactions, loadData } = useTransactions();
+
+  const [transaction, setTransaction] = useState(null);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -56,29 +57,58 @@ const CreateScreen = () => {
   const [isExpense, setIsExpense] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [currency] = useState("₹");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState("");
+  
   const [isModalVisible, setModalVisible] = useState(false);
   const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
   const [tagQuery, setTagQuery] = useState("");
   const [isTagFocused, setIsTagFocused] = useState(false);
+  
   const scrollViewRef = useRef(null);
   const tagInputRef = useRef(null);
 
-  const resetForm = useCallback(() => {
-    setTitle("");
-    setAmount("");
-    setSelectedCategory(null);
-    setIsExpense(true);
-    setDate(new Date().toISOString().split("T")[0]);
-    setSelectedTags([]);
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
+  // Load Categories & Tags
+  useEffect(() => {
+    if (user) {
       loadCategories();
       loadTags();
-    }, [loadCategories, loadTags]),
-  );
+    }
+  }, [user]);
+
+  // Find transaction to edit
+  useEffect(() => {
+    if (id && transactions.length > 0) {
+      const txn = transactions.find(t => t.transaction_id === id || t.id === id);
+      if (txn) {
+        setTransaction(txn);
+        setTitle(txn.title || "");
+        
+        const absAmount = Math.abs(parseFloat(txn.amount));
+        setAmount(isNaN(absAmount) ? "" : absAmount.toString());
+        
+        setIsExpense(parseFloat(txn.amount) < 0);
+        
+        const txnDateStr = typeof txn.date === "string" 
+          ? txn.date.split("T")[0] 
+          : new Date(txn.date).toISOString().split("T")[0];
+        setDate(txnDateStr);
+
+        // Normalize tags to { tag_id, tag_name, color }
+        const normalizedTags = txn.tags ? txn.tags.map(t => ({
+          tag_id: t.id,
+          tag_name: t.name,
+          color: t.color
+        })) : [];
+        setSelectedTags(normalizedTags);
+
+        // Find and select category
+        if (categories && categories.length > 0) {
+          const matched = categories.find(c => c.name === txn.category);
+          if (matched) setSelectedCategory(matched);
+        }
+      }
+    }
+  }, [id, transactions, categories]);
 
   const toggleModal = () => {
     setModalVisible((currentValue) => !currentValue);
@@ -110,8 +140,6 @@ const CreateScreen = () => {
         setTagQuery("");
         if (selectedTags.length < 5) {
           setSelectedTags([...selectedTags, created]);
-        } else {
-          Alert.alert("Tag Created", "Tag was created but could not be auto-selected because you have reached the 5-tag limit.");
         }
       }
     } catch (error) {
@@ -151,24 +179,6 @@ const CreateScreen = () => {
     }
   }, [shouldShowDropdown, filteredTags, tagQueryExists, isTagSaving, cleanedTagQuery]);
 
-  const prevAnimHeightRef = useRef(0);
-
-  useEffect(() => {
-    const id = dropdownHeightAnim.addListener(({ value }) => {
-      const delta = value - prevAnimHeightRef.current;
-      prevAnimHeightRef.current = value;
-      if (Math.abs(delta) > 0.1) {
-        const newY = scrollOffsetRef.current + delta;
-        scrollOffsetRef.current = newY; // sync immediately, don't wait for onScroll
-        scrollViewRef.current?.getScrollResponder()?.scrollTo({
-          y: newY,
-          animated: false,
-        });
-      }
-    });
-    return () => dropdownHeightAnim.removeListener(id);
-  }, []);
-
   useEffect(() => {
     const targetHeight = shouldShowDropdown ? contentHeightRef.current : 0;
 
@@ -185,7 +195,7 @@ const CreateScreen = () => {
     }).start();
   }, [shouldShowDropdown]);
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       return Alert.alert("Error", "Please enter a transaction title");
     }
@@ -203,17 +213,13 @@ const CreateScreen = () => {
         ? -Math.abs(parseFloat(amount))
         : Math.abs(parseFloat(amount));
 
-      const response = await fetch(`${API_URL}/transactions`, {
-        method: "POST",
+      const response = await fetch(`${API_URL}/transactions/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           user_id: user.id,
-          username: user.username || user.fullName || user.firstName,
-          email:
-            user?.primaryEmailAddress?.emailAddress ||
-            user?.emailAddresses?.[0]?.emailAddress,
           title,
           amount: formattedAmount,
           date,
@@ -226,47 +232,52 @@ const CreateScreen = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log(errorData);
-        throw new Error(
-          errorData.message ||
-          errorData.error ||
-          "Failed to create transaction entry",
-        );
+        throw new Error(errorData.message || "Failed to update transaction");
       }
 
-      // Refresh global context
       await loadData(true);
-
-      Alert.alert("Success", "Transaction created successfully");
-      resetForm();
+      Alert.alert("Success", "Transaction updated successfully");
       router.back();
     } catch (error) {
-      Alert.alert("Error", error.message || "Failed to create transaction");
-      console.log("Error creating transaction", error);
+      Alert.alert("Error", error.message || "Failed to update transaction");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleBackPress = () => {
+    Alert.alert(
+      "Discard Changes?",
+      "Are you sure you want to discard your changes?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Discard",
+          style: "destructive",
+          onPress: () => router.back(),
+        },
+      ],
+    );
+  };
+
+  if (!transaction) return <PageLoader />;
 
   return (
     <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between mx-6 my-3 pb-3 border-b-2 border-slate-300">
         <CirclePressable
           name={"arrow-back"}
-          onPress={() => {
-            router.back();
-          }}
+          onPress={handleBackPress}
         />
         <Text className="font-sansBold color-slate-500 text-2xl">
-          New Transaction
+          Edit Transaction
         </Text>
         <BluePressable
           name={"checkmark"}
           text={"Save"}
           direction="right"
           loadingText="Saving..."
-          onPress={handleCreate}
+          onPress={handleSave}
           isLoading={isLoading}
         />
       </View>
@@ -281,16 +292,15 @@ const CreateScreen = () => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-          <Ticket
-            borderColor="#94a3b8"
-            className="mx-5 gap-4"
-            perforationRadius={5}
-            cornerRadius={16}
-            cornerType="cutout"
-            semicircleRadius={16}
+        <Ticket
+          borderColor="#94a3b8"
+          className="mx-5 gap-4"
+          perforationRadius={5}
+          cornerRadius={16}
+          cornerType="cutout"
+          semicircleRadius={16}
           topTicketView={
             <>
-              {/* Grouped type selector and amount to reduce gap */}
               <View className="gap-2">
                 <View className="flex-row gap-3">
                   <TouchableOpacity
@@ -392,31 +402,7 @@ const CreateScreen = () => {
           }
           bottomTicketView={
             <>
-              {/* Lower Ticket Section: Tags */}
-              <View className="flex-row justify-between items-center pr-2">
-                <CardTitle title={"Tags"} />
-                <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert(
-                      "Reset Form",
-                      "Are you sure you want to reset the form?",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Reset",
-                          style: "destructive",
-                          onPress: () => {
-                            resetForm();
-                          },
-                        },
-                      ],
-                    );
-                  }}
-                  className="active:opacity-50 p-1"
-                >
-                  <Feather name="refresh-cw" size={20} color={colors.red[500]} strokeWidth={2.5} />
-                </TouchableOpacity>
-              </View>
+              <CardTitle title={"Tags"} />
               {selectedTags.length > 0 && (
                 <View className="flex-row flex-wrap gap-2 items-center mt-1 mb-1">
                   {selectedTags.map((tag) => (
@@ -438,7 +424,6 @@ const CreateScreen = () => {
                 </View>
               )}
 
-              {/* Suggestions list inline above input box */}
               <Animated.View
                 style={{
                   height: dropdownHeightAnim,
@@ -454,7 +439,6 @@ const CreateScreen = () => {
                   keyboardShouldPersistTaps="handled"
                   onContentSizeChange={handleContentSizeChange}
                 >
-                  {/* Create tag option */}
                   {cleanedTagQuery.length > 0 && !tagQueryExists && !isTagSaving && (
                     <Pressable
                       onPress={handleCreateTagOnTheFly}
@@ -467,7 +451,6 @@ const CreateScreen = () => {
                     </Pressable>
                   )}
 
-                  {/* Suggestions list */}
                   {filteredTags.map((tag) => (
                     <Pressable
                       key={tag.tag_id}
@@ -503,7 +486,6 @@ const CreateScreen = () => {
                         }, 150);
                       }}
                       onBlur={() => {
-                        // Small delay so taps on suggestion list are registered before blur hides it
                         setTimeout(() => setIsTagFocused(false), 200);
                       }}
                       style={{ paddingVertical: 0, includeFontPadding: false }}
@@ -514,9 +496,6 @@ const CreateScreen = () => {
             </>
           }
         />
-
-        {/* Actions Footer - Positioned Outside Ticket Card */}
-        <View className="mt-4" />
       </KeyboardAwareScrollView>
       <CategorySelectModal
         isVisible={isModalVisible}
@@ -538,4 +517,4 @@ const CreateScreen = () => {
   );
 };
 
-export default CreateScreen;
+export default EditScreen;

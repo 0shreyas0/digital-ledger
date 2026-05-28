@@ -7,9 +7,10 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useNavigation, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import colors from "tailwindcss/colors";
@@ -46,9 +47,11 @@ const TagsScreen = () => {
   const [tagName, setTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PALETTE[0]);
 
-  useEffect(() => {
-    loadTags();
-  }, [loadTags]);
+  useFocusEffect(
+    useCallback(() => {
+      loadTags();
+    }, [loadTags])
+  );
 
   const resetForm = () => {
     setTagName("");

@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
   TouchableOpacity, 
   ScrollView, 
-  TextInput 
+  TextInput,
+  Animated,
+  LayoutAnimation
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Modal from "react-native-modal";
@@ -12,6 +14,7 @@ import { Calendar } from "react-native-calendars";
 import colors from "tailwindcss/colors";
 import CloseButton from "./CloseButton";
 import SearchBar from "./SearchBar";
+import SegmentControl from "./SegmentControl";
 
 /**
  * TransactionFilter Component
@@ -19,21 +22,25 @@ import SearchBar from "./SearchBar";
  */
 const TransactionFilter = ({ 
   categories = [], 
+  tags = [],
   activeFilters = {}, 
   onApply,
   onClear
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
-  const [isCategorySearchVisible, setIsCategorySearchVisible] = useState(false);
-  const [categorySearch, setCategorySearch] = useState("");
+  const [activeFilterTab, setActiveFilterTab] = useState('categories'); // 'categories' or 'tags'
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Staged state (changes made inside modal before hitting Apply)
   const [stagedFilters, setStagedFilters] = useState(activeFilters);
+  const modalScrollViewRef = useRef(null);
 
   const hasActiveFilters = useMemo(() => {
     return (
       (activeFilters.categories && activeFilters.categories.length > 0) || 
+      (activeFilters.tags && activeFilters.tags.length > 0) ||
       (activeFilters.dateRange && activeFilters.dateRange !== "all") || 
       activeFilters.minAmount || 
       activeFilters.maxAmount || 
@@ -52,8 +59,11 @@ const TransactionFilter = ({
 
   const handleClear = () => {
     onClear();
+    setSearchQuery("");
+    setIsSearchVisible(false);
     setStagedFilters({
       categories: [],
+      tags: [],
       dateRange: "all",
       customRange: { start: null, end: null },
       minAmount: "",
@@ -68,6 +78,14 @@ const TransactionFilter = ({
       ? current.filter(c => c !== categoryName)
       : [...current, categoryName];
     updateStaged('categories', updated);
+  };
+
+  const toggleTag = (tagName) => {
+    const current = stagedFilters.tags || [];
+    const updated = current.includes(tagName)
+      ? current.filter(t => t !== tagName)
+      : [...current, tagName];
+    updateStaged('tags', updated);
   };
 
   const onDayPress = (day) => {
@@ -134,6 +152,7 @@ const TransactionFilter = ({
           </View>
 
           <ScrollView 
+            ref={modalScrollViewRef}
             showsVerticalScrollIndicator={false} 
             contentContainerStyle={{ paddingBottom: 40, gap: 24 }}
           >
@@ -195,44 +214,76 @@ const TransactionFilter = ({
               )}
             </View>
 
-            {/* Categories */}
+            {/* Categories & Tags Segmented Control */}
             <View>
               <View className="flex-row justify-between items-center mb-3">
-                <Text className="font-sansBold text-slate-500">Categories</Text>
-                <TouchableOpacity onPress={() => setIsCategorySearchVisible(!isCategorySearchVisible)}>
-                  <Ionicons name={isCategorySearchVisible ? "close-circle" : "search"} size={20} color={colors.slate[400]} />
+                <View className="flex-1 mr-4">
+                  <SegmentControl
+                    options={[
+                      { label: 'Categories', value: 'categories' },
+                      { label: 'Tags', value: 'tags' }
+                    ]}
+                    selectedOption={activeFilterTab}
+                    onSelect={(val) => {
+                      setSearchQuery('');
+                      setActiveFilterTab(val);
+                    }}
+                  />
+                </View>
+                <TouchableOpacity onPress={() => setIsSearchVisible(!isSearchVisible)}>
+                  <Ionicons name={isSearchVisible ? "close-circle" : "search"} size={20} color={colors.slate[400]} />
                 </TouchableOpacity>
               </View>
 
-              {isCategorySearchVisible && (
+              {isSearchVisible && (
                 <SearchBar
-                  placeholder="Search categories..."
-                  value={categorySearch}
-                  onChangeText={setCategorySearch}
+                  placeholder={activeFilterTab === 'categories' ? "Search categories..." : "Search tags..."}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
                   containerClassName="mb-4"
                 />
               )}
 
               <View style={{ height: 250 }} className="border border-slate-100 rounded-2xl bg-slate-50/50 p-2">
                 <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
-                  {categories
-                    .filter(c => c.category.toLowerCase().includes(categorySearch.toLowerCase()))
-                    .map((cat) => (
-                      <TouchableOpacity
-                        key={cat.category_id}
-                        onPress={() => toggleCategory(cat.category)}
-                        className={`flex-row items-center gap-3 px-4 py-3 mb-2 rounded-2xl border ${stagedFilters.categories?.includes(cat.category) ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-100'}`}
-                      >
-                        <Ionicons 
-                          name={cat.icon} 
-                          size={20} 
-                          color={stagedFilters.categories?.includes(cat.category) ? 'white' : colors.blue[500]} 
-                        />
-                        <Text className={`font-sansMed text-lg ${stagedFilters.categories?.includes(cat.category) ? 'text-white' : 'text-slate-700'}`}>
-                          {cat.category}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                  {activeFilterTab === 'categories' ? (
+                    categories
+                      .filter(c => c.category.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map((cat) => (
+                        <TouchableOpacity
+                          key={cat.category_id}
+                          onPress={() => toggleCategory(cat.category)}
+                          className={`flex-row items-center gap-3 px-4 py-3 mb-2 rounded-2xl border ${stagedFilters.categories?.includes(cat.category) ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-100'}`}
+                        >
+                          <Ionicons 
+                            name={cat.icon} 
+                            size={20} 
+                            color={stagedFilters.categories?.includes(cat.category) ? 'white' : colors.blue[500]} 
+                          />
+                          <Text className={`font-sansMed text-lg ${stagedFilters.categories?.includes(cat.category) ? 'text-white' : 'text-slate-700'}`}>
+                            {cat.category}
+                          </Text>
+                        </TouchableOpacity>
+                      ))
+                  ) : (
+                    tags
+                      .filter(t => t.tag_name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map((tag) => {
+                        const isSelected = stagedFilters.tags?.includes(tag.tag_name);
+                        return (
+                          <TouchableOpacity
+                            key={tag.tag_id}
+                            onPress={() => toggleTag(tag.tag_name)}
+                            style={isSelected ? { backgroundColor: tag.color, borderColor: tag.color } : {}}
+                            className={`flex-row items-center px-4 py-3 mb-2 rounded-2xl border ${isSelected ? '' : 'bg-white border-slate-100'}`}
+                          >
+                            <Text className={`font-sansMed text-lg ${isSelected ? 'text-slate-800' : 'text-slate-700'}`}>
+                              {tag.tag_name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })
+                  )}
                 </ScrollView>
               </View>
             </View>
