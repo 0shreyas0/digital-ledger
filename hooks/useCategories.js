@@ -105,6 +105,48 @@ export const useCategories = (user) => {
     [userId],
   );
 
+  const editCategory = useCallback(
+    async ({ categoryId, category, icon }) => {
+      if (!userId) throw new Error("User not loaded");
+
+      setIsSaving(true);
+      try {
+        const response = await fetch(`${API_URL}/categories/${categoryId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            category,
+            icon,
+          }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to update category");
+        }
+
+        setCategories((currentCategories) => {
+          return currentCategories.map((c) => 
+            c.category_id === categoryId 
+              ? { ...c, category: data.category, icon: data.icon } 
+              : c
+          ).sort((left, right) =>
+            left.category.localeCompare(right.category),
+          );
+        });
+
+        return data;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [userId],
+  );
+
   return {
     categories,
     isLoading,
@@ -112,6 +154,7 @@ export const useCategories = (user) => {
     deletingCategoryId,
     loadCategories,
     createCategory,
+    editCategory,
     deleteCategory,
   };
 };

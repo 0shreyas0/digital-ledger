@@ -33,11 +33,13 @@ const Category = () => {
     deletingCategoryId,
     loadCategories,
     createCategory,
+    editCategory,
     deleteCategory,
   } = useCategories(user);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState(DEFAULT_CATEGORY_ICON);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
 
   useEffect(() => {
     loadCategories();
@@ -46,27 +48,43 @@ const Category = () => {
   const resetForm = () => {
     setCategoryName("");
     setSelectedIcon(DEFAULT_CATEGORY_ICON);
+    setEditingCategoryId(null);
   };
 
   const toggleModal = () => {
     setIsModalVisible((currentValue) => !currentValue);
   };
 
-  const handleCreateCategory = async () => {
+  const handleSaveCategory = async () => {
     if (!categoryName.trim()) {
       return Alert.alert("Error", "Please enter a category name");
     }
 
     try {
-      await createCategory({
-        category: categoryName,
-        icon: selectedIcon,
-      });
+      if (editingCategoryId) {
+        await editCategory({
+          categoryId: editingCategoryId,
+          category: categoryName,
+          icon: selectedIcon,
+        });
+      } else {
+        await createCategory({
+          category: categoryName,
+          icon: selectedIcon,
+        });
+      }
       resetForm();
       toggleModal();
     } catch (error) {
-      Alert.alert("Error", error.message || "Failed to create category");
+      Alert.alert("Error", error.message || "Failed to save category");
     }
+  };
+
+  const handleEditIconPress = (item) => {
+    setEditingCategoryId(item.category_id);
+    setCategoryName(item.category);
+    setSelectedIcon(item.icon || DEFAULT_CATEGORY_ICON);
+    setIsModalVisible(true);
   };
 
   const handleDeleteCategory = (category) => {
@@ -105,7 +123,7 @@ const Category = () => {
           }}
         />
         <Text className="font-sansBold text-slate-500 text-2xl">Category</Text>
-        <BluePressable name={"add"} text={"Add"} onPress={toggleModal} />
+        <BluePressable name={"add"} text={"Add"} onPress={() => { resetForm(); setIsModalVisible(true); }} />
       </View>
       <View className="flex-1 mx-6">
         <FlatList
@@ -129,6 +147,7 @@ const Category = () => {
               isDeleting={deletingCategoryId === item.category_id}
               onDelete={handleDeleteCategory}
               onPress={() => router.push(`/category/${item.category_id}?name=${encodeURIComponent(item.category)}`)}
+              onEditIconPress={() => handleEditIconPress(item)}
             />
           )}
         />
@@ -145,7 +164,7 @@ const Category = () => {
       >
         <View className="bg-slate-50 rounded-t-3xl border-t border-l border-r border-slate-300 p-5 gap-5">
           <Text className="font-sansBold text-2xl text-slate-700">
-            New Category
+            {editingCategoryId ? "Edit Category" : "New Category"}
           </Text>
           <TextInput
             className="font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
@@ -199,7 +218,7 @@ const Category = () => {
               name={"checkmark"}
               text={"Save"}
               direction="right"
-              onPress={handleCreateCategory}
+              onPress={handleSaveCategory}
               isLoading={isSaving}
               loadingText="Saving..."
             />

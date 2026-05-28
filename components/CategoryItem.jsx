@@ -5,20 +5,20 @@ import colors from "tailwindcss/colors";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 
-const CategoryItem = ({ item, onDelete, isDeleting = false, onPress }) => {
+const CategoryItem = ({ item, onDelete, isDeleting = false, onPress, onEditIconPress }) => {
   return (
     <Pressable 
       onPress={onPress}
       className="flex-row items-center justify-between bg-slate-50 border border-slate-300 rounded-2xl px-4 py-4 active:bg-slate-200"
     >
       <View className="flex-row items-center gap-3 flex-1">
-        <View className="bg-blue-100 rounded-full p-3 active:bg-accent">
+        <TouchableOpacity onPress={onEditIconPress} className="bg-blue-100 rounded-full p-3 active:bg-accent">
           <Ionicons
             name={item.icon || DEFAULT_CATEGORY_ICON}
             size={20}
             color={colors.blue[600]}
           />
-        </View>
+        </TouchableOpacity>
         <View className="flex-1">
           <Text className="font-sansBold text-lg text-slate-700">
             {item.category}
