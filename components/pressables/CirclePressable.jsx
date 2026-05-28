@@ -9,7 +9,7 @@ const CirclePressable = ({
   className = "",
   size = 25,
   iconColor = colors.slate[500],
-  pressedIconColor = colors.slate[900],
+  pressedIconColor = '#000000',
   ...props
 }) => {
   return (

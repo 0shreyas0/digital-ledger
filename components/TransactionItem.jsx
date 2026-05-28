@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Pressable } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { formatDate } from "@/lib/utils.js";
@@ -18,16 +18,18 @@ const TransactionItem = ({ item, onDelete, currency, onPressIcon }) => {
         className="flex-row items-center justify-between"
       >
       <View className="flex-row flex-1 items-center">
-        <TouchableOpacity 
+        <Pressable 
           onPress={() => onPressIcon ? onPressIcon(item) : router.push(`/edit?id=${item.id}`)}
           className="h-25 w-25 p-3 mx-3 rounded-full bg-slate-200 active:bg-accent justify-center items-center"
         >
-          <Ionicons
-            size={25}
-            name={iconName}
-            color={isIncome ? "#22c55e" : "#ef4444"}
-          />
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <Ionicons
+              size={25}
+              name={iconName}
+              color={pressed ? "#000000" : (isIncome ? "#22c55e" : "#ef4444")}
+            />
+          )}
+        </Pressable>
         <View className="flex-col flex-1 mr-2 gap-1 justify-center">
           <Text className="font-sansBold">{item.title}</Text>
           <Text className="font-sansMed color-slate-400">{item.category}</Text>
@@ -53,7 +55,6 @@ const TransactionItem = ({ item, onDelete, currency, onPressIcon }) => {
           name="trash-outline"
           size={22}
           iconColor={colors.red[500]}
-          pressedIconColor={colors.red[700]}
         />
       </View>
     </View>

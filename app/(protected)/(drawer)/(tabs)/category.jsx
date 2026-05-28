@@ -40,6 +40,7 @@ const Category = () => {
   const [categoryName, setCategoryName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState(DEFAULT_CATEGORY_ICON);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editingCategoryOriginalName, setEditingCategoryOriginalName] = useState("");
 
   useEffect(() => {
     loadCategories();
@@ -49,6 +50,7 @@ const Category = () => {
     setCategoryName("");
     setSelectedIcon(DEFAULT_CATEGORY_ICON);
     setEditingCategoryId(null);
+    setEditingCategoryOriginalName("");
   };
 
   const toggleModal = () => {
@@ -83,6 +85,7 @@ const Category = () => {
   const handleEditIconPress = (item) => {
     setEditingCategoryId(item.category_id);
     setCategoryName(item.category);
+    setEditingCategoryOriginalName(item.category);
     setSelectedIcon(item.icon || DEFAULT_CATEGORY_ICON);
     setIsModalVisible(true);
   };
@@ -163,8 +166,14 @@ const Category = () => {
         style={{ justifyContent: "flex-end", margin: 0 }}
       >
         <View className="bg-slate-50 rounded-t-3xl border-t border-l border-r border-slate-300 p-5 gap-5">
-          <Text className="font-sansBold text-2xl text-slate-700">
-            {editingCategoryId ? "Edit Category" : "New Category"}
+          <Text className="font-sansBold text-2xl text-slate-700" numberOfLines={1}>
+            {editingCategoryId ? (
+              <Text>
+                Edit Category <Text className="text-slate-400">({editingCategoryOriginalName})</Text>
+              </Text>
+            ) : (
+              "New Category"
+            )}
           </Text>
           <TextInput
             className="font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
