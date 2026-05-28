@@ -8,6 +8,7 @@ import {
   Animated,
   ScrollView,
   LayoutAnimation,
+  findNodeHandle,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import React, { useCallback, useState, useRef, useEffect } from "react";
@@ -61,6 +62,7 @@ const CreateScreen = () => {
   const [tagQuery, setTagQuery] = useState("");
   const [isTagFocused, setIsTagFocused] = useState(false);
   const scrollViewRef = useRef(null);
+  const tagInputRef = useRef(null);
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -275,6 +277,7 @@ const CreateScreen = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableAutomaticScroll={false}
+        enableOnAndroid={true}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
@@ -392,7 +395,7 @@ const CreateScreen = () => {
               {/* Lower Ticket Section: Tags */}
               <CardTitle title={"Tags"} />
               {selectedTags.length > 0 && (
-                <View className="flex-row flex-wrap gap-2 items-center mb-3 mt-2">
+                <View className="flex-row flex-wrap gap-2 items-center mt-1 mb-1">
                   {selectedTags.map((tag) => (
                     <View
                       key={tag.tag_id}
@@ -462,6 +465,7 @@ const CreateScreen = () => {
                   <View className="flex-row border border-slate-400 rounded-lg px-4 py-4 bg-slate-50 items-center">
                     <Ionicons name="pricetag-outline" color={colors.slate[500]} size={22} />
                     <TextInput
+                      ref={tagInputRef}
                       className="flex-1 ml-6 font-sansMed text-xl leading-tight"
                       placeholder="Add tag..."
                       placeholderTextColor={colors.slate[400]}
@@ -470,8 +474,10 @@ const CreateScreen = () => {
                       onFocus={() => {
                         setIsTagFocused(true);
                         setTimeout(() => {
-                          scrollViewRef.current?.getScrollResponder()?.scrollToEnd({ animated: true });
-                        }, 100);
+                          scrollViewRef.current?.scrollToFocusedInput(
+                            findNodeHandle(tagInputRef.current)
+                          );
+                        }, 150);
                       }}
                       onBlur={() => {
                         // Small delay so taps on suggestion list are registered before blur hides it

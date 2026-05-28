@@ -26,6 +26,21 @@ const TransactionItem = ({ item, onDelete, currency }) => {
         <View className="flex-col flex-1 mr-2 gap-1 justify-center">
           <Text className="font-sansBold">{item.title}</Text>
           <Text className="font-sansMed color-slate-400">{item.category}</Text>
+          {item.tags && item.tags.length > 0 && (
+            <View className="flex-row flex-wrap gap-1 mt-1">
+              {item.tags.map((tag) => (
+                <View
+                  key={tag.id}
+                  style={{ backgroundColor: tag.color }}
+                  className="px-2 py-0.5 rounded-full"
+                >
+                  <Text className="text-[10px] font-sansBold text-slate-700">
+                    {tag.name}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </View>
       <View className="flex-row justify-between">
