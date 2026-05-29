@@ -7,11 +7,10 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-import React, { useCallback, useState } from "react";
-import { useNavigation, useRouter } from "expo-router";
+import React, { useCallback, useState, forwardRef, useImperativeHandle } from "react";
+import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import colors from "tailwindcss/colors";
 import CirclePressable from "@/components/pressables/CirclePressable";
@@ -30,7 +29,7 @@ const PALETTE = [
   "#FFD6A5", // Pastel Peach/Orange
 ];
 
-const TagsScreen = () => {
+const TagsView = forwardRef((props, ref) => {
   const router = useRouter();
   const { user } = useUser();
   const {
@@ -96,6 +95,10 @@ const TagsScreen = () => {
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    toggleModal
+  }));
+
   const handleCreateTag = async () => {
     if (!tagName.trim()) {
       return Alert.alert("Error", "Please enter a tag name");
@@ -107,7 +110,7 @@ const TagsScreen = () => {
         color: selectedColor,
       });
       resetForm();
-      toggleModal();
+      setIsModalVisible(false); // don't toggle, explicitly close to avoid discarding alert
     } catch (error) {
       Alert.alert("Error", error.message || "Failed to create tag");
     }
@@ -133,23 +136,13 @@ const TagsScreen = () => {
   if (isLoading) return <PageLoader />;
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between mx-6 my-3 pb-3 border-b-2 border-slate-300">
-        <CirclePressable
-          name={"arrow-back"}
-          onPress={() => {
-            router.back();
-          }}
-        />
-        <Text className="font-sansBold text-slate-500 text-2xl">Tags</Text>
-        <BluePressable name={"add"} text={"Add"} onPress={toggleModal} />
-      </View>
+    <View className="flex-1">
       <View className="flex-1 mx-6">
         <FlatList
           data={tags}
           keyExtractor={(item) => item.tag_id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 110, gap: 12 }}
+          contentContainerStyle={{ paddingTop: 12, paddingBottom: 110, gap: 12 }}
           ListEmptyComponent={
             <View className="bg-slate-50 rounded-2xl border border-slate-300 p-5">
               <Text className="font-sansBold text-xl text-slate-700">
@@ -248,6 +241,6 @@ const TagsScreen = () => {
       </Modal>
     </View>
   );
-};
+});
 
-export default TagsScreen;
+export default TagsView;

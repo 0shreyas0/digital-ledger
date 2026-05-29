@@ -9,7 +9,7 @@ const { Navigator } = createMaterialTopTabNavigator();
 const MaterialTopTabs = withLayoutContext(Navigator);
 
 // Tab order must match <MaterialTopTabs.Screen> order below
-const TAB_NAMES = ['index', 'activity', 'create', 'tags', 'category'];
+const TAB_NAMES = ['index', 'activity', 'create', 'social', 'fields'];
 
 const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
   const [tabBarWidth, setTabBarWidth] = useState(0);
@@ -267,20 +267,20 @@ const TabRoot = () => {
         }}
       />
       <MaterialTopTabs.Screen
-        name="tags"
+        name="social"
         listeners={{ focus: () => setSelectedIndex(3) }}
         options={{
-          title: "Tags",
+          title: "Social",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "pricetags" : "pricetags-outline"} size={20} color={color} />
+            <Ionicons name={focused ? "people" : "people-outline"} size={20} color={color} />
           )
         }}
       />
       <MaterialTopTabs.Screen
-        name="category"
+        name="fields"
         listeners={{ focus: () => setSelectedIndex(4) }}
         options={{
-          title: "Category",
+          title: "Fields",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "grid" : "grid-outline"} size={20} color={color} />
           )

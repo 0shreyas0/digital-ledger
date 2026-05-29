@@ -6,13 +6,12 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { useNavigation, useRouter } from "expo-router";
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import colors from "tailwindcss/colors";
-import CirclePressable from "@/components/pressables/CirclePressable";
 import BluePressable from "@/components/pressables/BluePressable";
 import PageLoader from "@/components/PageLoader";
 import CategoryItem from "@/components/CategoryItem";
@@ -22,9 +21,8 @@ import {
 } from "@/constants/categoryIcons";
 import { useCategories } from "@/hooks/useCategories";
 
-const Category = () => {
+const CategoryView = forwardRef((props, ref) => {
   const router = useRouter();
-  const navigation = useNavigation();
   const { user } = useUser();
   const {
     categories,
@@ -96,9 +94,14 @@ const Category = () => {
     if (isModalVisible) {
       handleBackdropPress();
     } else {
+      resetForm();
       setIsModalVisible(true);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    toggleModal
+  }));
 
   const handleSaveCategory = async () => {
     if (!categoryName.trim()) {
@@ -119,7 +122,7 @@ const Category = () => {
         });
       }
       resetForm();
-      toggleModal();
+      setIsModalVisible(false); // directly close
     } catch (error) {
       Alert.alert("Error", error.message || "Failed to save category");
     }
@@ -161,23 +164,13 @@ const Category = () => {
   if (isLoading) return <PageLoader />;
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between mx-6 my-3 pb-3 border-b-2 border-slate-300">
-        <CirclePressable
-          name={"arrow-back"}
-          onPress={() => {
-            router.back();
-          }}
-        />
-        <Text className="font-sansBold text-slate-500 text-2xl">Category</Text>
-        <BluePressable name={"add"} text={"Add"} onPress={() => { resetForm(); setIsModalVisible(true); }} />
-      </View>
+    <View className="flex-1">
       <View className="flex-1 mx-6">
         <FlatList
           data={categories}
           keyExtractor={(item) => item.category_id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 110, gap: 12 }}
+          contentContainerStyle={{ paddingTop: 12, paddingBottom: 110, gap: 12 }}
           ListEmptyComponent={
             <View className="bg-slate-50 rounded-2xl border border-slate-300 p-5">
               <Text className="font-sansBold text-xl text-slate-700">
@@ -280,6 +273,6 @@ const Category = () => {
       </Modal>
     </View>
   );
-};
+});
 
-export default Category;
+export default CategoryView;
