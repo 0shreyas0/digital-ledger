@@ -4,28 +4,73 @@ import { Tabs, usePathname } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 
+import { PanResponder } from 'react-native';
+
 // Tab order must match <Tabs.Screen> order below
 const TAB_NAMES = ['index', 'activity', 'create', 'tags', 'category'];
+
+const SwipeWrapper = ({ children, navigation }) => {
+  const state = navigation.getState();
+  const currentIndex = state?.index ?? 0;
+  const routes = state?.routes ?? [];
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        // Only trigger on horizontal swipes (horizontal travel > vertical travel)
+        const { dx, dy } = gestureState;
+        return Math.abs(dx) > 35 && Math.abs(dy) < 15;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        const { vx, dx } = gestureState;
+        if (dx < -80 && vx < -0.3) {
+          // Swiped left -> Go next
+          if (currentIndex < routes.length - 1) {
+            const nextRoute = routes[currentIndex + 1].name;
+            navigation.navigate(nextRoute);
+          }
+        } else if (dx > 80 && vx > 0.3) {
+          // Swiped right -> Go previous
+          if (currentIndex > 0) {
+            const prevRoute = routes[currentIndex - 1].name;
+            navigation.navigate(prevRoute);
+          }
+        }
+      },
+    })
+  ).current;
+
+  return (
+    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+      {children}
+    </View>
+  );
+};
 
 const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
   const [tabBarWidth, setTabBarWidth] = useState(0);
   const pillAnim = useRef(new Animated.Value(0)).current;
 
-  const tabWidth = tabBarWidth ? tabBarWidth / tabCount : 0;
-  const PILL_WIDTH = tabWidth ? tabWidth-12 : 0;
+  // Active area is the width of the tab bar minus the 16px padding on each side (32 total)
+  const activeAreaWidth = tabBarWidth ? tabBarWidth - 32 : 0;
+  const activeTabWidth = activeAreaWidth / tabCount;
+  
+  // Widen the pill by subtracting only 4px instead of 12px
+  const PILL_WIDTH = activeTabWidth + 6;
   const PILL_HEIGHT = 48;
-  const PILL_INSET = 6; // horizontal offset within the tab slot
+  const PILL_OFFSET_X = 13; // Centered offset: 16px padding - ((PILL_WIDTH - activeTabWidth) / 2) = 13px
 
   useEffect(() => {
     if (tabBarWidth > 0) {
       Animated.spring(pillAnim, {
-        toValue: selectedIndex * tabWidth,
+        toValue: PILL_OFFSET_X + selectedIndex * activeTabWidth,
         useNativeDriver: true,
         tension: 68,
         friction: 11,
       }).start();
     }
-  }, [selectedIndex, tabWidth, tabBarWidth]);
+  }, [selectedIndex, activeTabWidth, tabBarWidth]);
 
   const handleLayout = (event) => {
     const { width } = event.nativeEvent.layout;
@@ -35,12 +80,12 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
   return (
     <View style={StyleSheet.absoluteFillObject} onLayout={handleLayout}>
       <BlurView
-        tint={Platform.OS === 'ios' ? 'default' : 'light'}
+        tint='default'
         intensity={20}
         experimentalBlurMethod="dimezisBlurView"
         style={{
           ...StyleSheet.absoluteFillObject,
-          borderRadius: 36,
+          borderRadius: 34,
           overflow: 'hidden',
         }}
       />
@@ -52,13 +97,11 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
             position: 'absolute',
             top: '50%',
             marginTop: -(PILL_HEIGHT / 2),
-            left: PILL_INSET,
+            left: 0, // Position is fully handled via translateX animation offset
             width: PILL_WIDTH,
             height: PILL_HEIGHT,
             borderRadius: PILL_HEIGHT / 2,
-            backgroundColor: Platform.OS === 'ios'
-              ? 'rgba(255,255,255,0.55)'
-              : 'rgba(255,255,255,0.70)',
+            overflow: 'hidden', // Clips the inner BlurView to the pill's rounded shape
             shadowColor: '#007aff',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.10,
@@ -70,7 +113,24 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
               : 'rgba(255,255,255,0.8)',
             transform: [{ translateX: pillAnim }],
           }}
-        />
+        >
+          <BlurView
+            tint={Platform.OS === 'ios' ? 'systemUltraThinMaterialDark' : 'default'}
+            intensity={30}
+            experimentalBlurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFillObject}
+          />
+          <View
+            style={[
+              StyleSheet.absoluteFillObject,
+              {
+                backgroundColor: Platform.OS === 'ios'
+                  ? 'rgba(255,255,255,0.1)'
+                  : 'rgba(255,255,255,0.25)',
+              }
+            ]}
+          />
+        </Animated.View>
       )}
     </View>
   );
@@ -97,6 +157,9 @@ const TabRoot = () => {
       backBehavior='history'
       screenOptions={{
         headerShown: false,
+        screenLayout: ({ children, navigation }) => (
+          <SwipeWrapper navigation={navigation}>{children}</SwipeWrapper>
+        ),
         tabBarActiveTintColor: '#007aff',
         tabBarInactiveTintColor: '#000000',
         tabBarActiveBackgroundColor: 'transparent',
@@ -106,16 +169,16 @@ const TabRoot = () => {
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontFamily: 'sansMed',
-          fontSize: 11,
-          marginBottom: 4,
+          fontSize: 10,
+          marginBottom: 2,
         },
         tabBarStyle: {
           position: 'absolute',
           bottom: 20,
           left: 20,
           right: 20,
-          height: 72,
-          borderRadius: 36,
+          height: 68,
+          borderRadius: 34,
           backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255, 255, 255, 0.4)',
           borderWidth: 1.5,
           borderColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
@@ -124,9 +187,10 @@ const TabRoot = () => {
           shadowOpacity: 0.15,
           shadowRadius: 20,
           elevation: 0,
-          paddingTop: 8,
-          paddingBottom: 8,
+          paddingTop: 6,
+          paddingBottom: 6,
           marginHorizontal: 16,
+          paddingHorizontal: 16, // Shift spacing inside to keep horizontal icon positions unchanged
           borderTopWidth: 1.5,
           borderTopColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
         },
@@ -144,7 +208,7 @@ const TabRoot = () => {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "home" : "home-outline"} size={20} color={color} />
           )
         }}
       />
@@ -154,7 +218,7 @@ const TabRoot = () => {
         options={{
           title: "Activity",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "pulse" : "pulse-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "pulse" : "pulse-outline"} size={20} color={color} />
           )
         }}
       />
@@ -164,7 +228,7 @@ const TabRoot = () => {
         options={{
           title: "Create",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={20} color={color} />
           )
         }}
       />
@@ -174,7 +238,7 @@ const TabRoot = () => {
         options={{
           title: "Tags",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "pricetags" : "pricetags-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "pricetags" : "pricetags-outline"} size={20} color={color} />
           )
         }}
       />
@@ -184,7 +248,7 @@ const TabRoot = () => {
         options={{
           title: "Category",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "grid" : "grid-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "grid" : "grid-outline"} size={20} color={color} />
           )
         }}
       />
