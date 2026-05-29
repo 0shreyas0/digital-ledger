@@ -105,8 +105,8 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
       style={{
         position: 'absolute',
         bottom: 20,
-        left: 4,
-        right: 4,
+        left: 0,
+        right: 0,
         height: 68,
         borderRadius: 34,
         backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255, 255, 255, 0.4)',
@@ -160,13 +160,6 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
             extrapolate: 'clamp',
           });
 
-          // Text color interpolation still works since Animated.Text supports it in the style prop
-          const textColor = position.interpolate({
-            inputRange: [index - 1, index, index + 1],
-            outputRange: ['#000000', '#007aff', '#000000'],
-            extrapolate: 'clamp',
-          });
-
           return (
             <Pressable
               key={route.key}
@@ -181,14 +174,25 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
                   {options.tabBarIcon && options.tabBarIcon({ focused: true, color: '#007aff' })}
                 </Animated.View>
               </View>
-              <Animated.Text style={{ 
-                color: textColor, 
-                fontFamily: 'sansMed', 
-                fontSize: 10, 
-                marginTop: 2 
-              }}>
-                {label}
-              </Animated.Text>
+              <View style={{ marginTop: 2, alignItems: 'center', justifyContent: 'center' }}>
+                <Animated.Text style={{ 
+                  color: '#000000', 
+                  fontFamily: 'sansMed', 
+                  fontSize: 10, 
+                  opacity: inactiveOpacity 
+                }}>
+                  {label}
+                </Animated.Text>
+                <Animated.Text style={{ 
+                  position: 'absolute',
+                  color: '#007aff', 
+                  fontFamily: 'sansMed', 
+                  fontSize: 10, 
+                  opacity: activeOpacity 
+                }}>
+                  {label}
+                </Animated.Text>
+              </View>
             </Pressable>
           );
         })}
