@@ -160,20 +160,40 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
             extrapolate: 'clamp',
           });
 
+          const iconScale = position.interpolate({
+            inputRange: [
+              index - 1, 
+              index - 0.75, 
+              index - 0.25, 
+              index, 
+              index + 0.25, 
+              index + 0.75, 
+              index + 1
+            ],
+            outputRange: [1, 1.15, 0.75, 1, 0.75, 1.15, 1],
+            extrapolate: 'clamp',
+          });
+
           return (
             <Pressable
               key={route.key}
               onPress={onPress}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
             >
-              <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+              <Animated.View style={{ 
+                width: 24, 
+                height: 24, 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                transform: [{ scale: iconScale }]
+              }}>
                 <Animated.View style={{ position: 'absolute', opacity: inactiveOpacity }}>
                   {options.tabBarIcon && options.tabBarIcon({ focused: false, color: '#000000' })}
                 </Animated.View>
                 <Animated.View style={{ position: 'absolute', opacity: activeOpacity }}>
                   {options.tabBarIcon && options.tabBarIcon({ focused: true, color: '#007aff' })}
                 </Animated.View>
-              </View>
+              </Animated.View>
               <View style={{ marginTop: 2, alignItems: 'center', justifyContent: 'center' }}>
                 <Animated.Text style={{ 
                   color: '#000000', 
@@ -272,7 +292,7 @@ const TabRoot = () => {
         options={{
           title: "Social",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "people" : "people-outline"} size={20} color={color} />
+            <Ionicons name={focused ? "person" : "person-outline"} size={20} color={color} />
           )
         }}
       />

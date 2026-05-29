@@ -213,7 +213,8 @@ const CategoryView = forwardRef((props, ref) => {
             )}
           </Text>
           <TextInput
-            className="font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400"
+            className="font-sansReg bg-slate-50 rounded-2xl border border-slate-400"
+            style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: "center" }}
             value={categoryName}
             onChangeText={setCategoryName}
             placeholder="Category name"

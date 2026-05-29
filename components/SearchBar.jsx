@@ -18,6 +18,7 @@ const SearchBar = ({
         value={value}
         onChangeText={onChangeText}
         className="flex-1 ml-2 font-sansReg text-slate-700"
+        style={{ paddingVertical: 0, includeFontPadding: false, height: '100%', textAlignVertical: 'center' }}
         placeholderTextColor={placeholderTextColor}
       />
     </View>

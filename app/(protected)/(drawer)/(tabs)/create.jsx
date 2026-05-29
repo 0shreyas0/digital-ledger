@@ -9,6 +9,7 @@ import {
   ScrollView,
   LayoutAnimation,
   findNodeHandle,
+  Easing,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import React, { useCallback, useState, useRef, useEffect } from "react";
@@ -63,6 +64,51 @@ const CreateScreen = () => {
   const [isTagFocused, setIsTagFocused] = useState(false);
   const scrollViewRef = useRef(null);
   const tagInputRef = useRef(null);
+
+  const slideAnim = useRef(new Animated.Value(isExpense ? 0 : 1)).current;
+
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: isExpense ? 0 : 1,
+      useNativeDriver: false,
+      duration: 200,
+      easing: Easing.linear,
+    }).start();
+  }, [isExpense]);
+
+  const expenseBgTranslate = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'] // Slides out to the right (towards Income) when inactive
+  });
+  const expenseTextColor = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#ffffff', '#334155']
+  });
+  const expenseActiveOpacity = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0]
+  });
+  const expenseInactiveOpacity = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1]
+  });
+
+  const incomeBgTranslate = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['-100%', '0%'] // Slides in from the left (from Expense) when becoming active
+  });
+  const incomeTextColor = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#334155', '#ffffff']
+  });
+  const incomeInactiveOpacity = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0]
+  });
+  const incomeActiveOpacity = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1]
+  });
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -294,34 +340,51 @@ const CreateScreen = () => {
               <View className="gap-2">
                 <View className="flex-row gap-3">
                   <TouchableOpacity
-                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-slate-50 border border-slate-400 rounded-full active:opacity-70 overflow-hidden relative"
                     onPress={() => setIsExpense(true)}
                   >
-                    <Ionicons
-                      name="pricetag"
-                      size={16}
-                      color={isExpense ? "white" : "red"}
+                    <Animated.View 
+                      className="absolute inset-0 bg-slate-700" 
+                      style={{ transform: [{ translateX: expenseBgTranslate }] }} 
                     />
-                    <Text
-                      className={`font-sansMed text-lg ml-2 ${isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                    <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
+                      <Animated.View style={{ position: 'absolute', opacity: expenseInactiveOpacity }}>
+                        <Ionicons name="pricetag" size={16} color="red" />
+                      </Animated.View>
+                      <Animated.View style={{ position: 'absolute', opacity: expenseActiveOpacity }}>
+                        <Ionicons name="pricetag" size={16} color="white" />
+                      </Animated.View>
+                    </View>
+                    <Animated.Text
+                      className="font-sansMed text-lg ml-2"
+                      style={{ color: expenseTextColor }}
                     >
                       Expense
-                    </Text>
+                    </Animated.Text>
                   </TouchableOpacity>
+                  
                   <TouchableOpacity
-                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${!isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-slate-50 border border-slate-400 rounded-full active:opacity-70 overflow-hidden relative"
                     onPress={() => setIsExpense(false)}
                   >
-                    <Ionicons
-                      name="cash"
-                      size={16}
-                      color={!isExpense ? "white" : "#22c55e"}
+                    <Animated.View 
+                      className="absolute inset-0 bg-slate-700" 
+                      style={{ transform: [{ translateX: incomeBgTranslate }] }} 
                     />
-                    <Text
-                      className={`font-sansMed text-lg ml-2 ${!isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                    <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
+                      <Animated.View style={{ position: 'absolute', opacity: incomeInactiveOpacity }}>
+                        <Ionicons name="cash" size={16} color="#22c55e" />
+                      </Animated.View>
+                      <Animated.View style={{ position: 'absolute', opacity: incomeActiveOpacity }}>
+                        <Ionicons name="cash" size={16} color="white" />
+                      </Animated.View>
+                    </View>
+                    <Animated.Text
+                      className="font-sansMed text-lg ml-2"
+                      style={{ color: incomeTextColor }}
                     >
                       Income
-                    </Text>
+                    </Animated.Text>
                   </TouchableOpacity>
                 </View>
                 <View className="flex-row gap-3 items-center border-b border-b-slate-400">
@@ -368,12 +431,6 @@ const CreateScreen = () => {
               >
                 {({ pressed }) => (
                   <>
-                    <Text
-                      selectable={false}
-                      className={`font-sansMed ${pressed ? "text-slate-600" : selectedCategory ? "text-slate-600" : "text-slate-400"} text-lg`}
-                    >
-                      {selectedCategory ? selectedCategory.name : "Select Category"}
-                    </Text>
                     <Ionicons
                       name={selectedCategory ? (selectedCategory.icon || DEFAULT_CATEGORY_ICON) : "layers-outline"}
                       size={22}
@@ -385,6 +442,12 @@ const CreateScreen = () => {
                             : colors.slate[400]
                       }
                     />
+                    <Text
+                      selectable={false}
+                      className={`font-sansMed ${pressed ? "text-slate-600" : selectedCategory ? "text-slate-600" : "text-slate-400"} text-lg`}
+                    >
+                      {selectedCategory ? selectedCategory.name : "Select Category"}
+                    </Text>
                   </>
                 )}
               </Pressable>
@@ -439,78 +502,86 @@ const CreateScreen = () => {
               )}
 
               {/* Suggestions list inline above input box */}
-              <Animated.View
-                style={{
-                  height: dropdownHeightAnim,
-                  maxHeight: 147,
-                  opacity: tagDropdownAnim,
-                  marginBottom: 12,
-                  borderWidth: 1,
-                }}
-                className="border-slate-300 rounded-lg bg-white overflow-hidden"
-              >
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  keyboardShouldPersistTaps="handled"
-                  onContentSizeChange={handleContentSizeChange}
+              <View className="z-10 -mt-2">
+                <Animated.View
+                  style={{
+                    height: dropdownHeightAnim,
+                    maxHeight: 147,
+                    opacity: tagDropdownAnim,
+                    marginBottom: tagDropdownAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 12]
+                    }),
+                    borderWidth: tagDropdownAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 1]
+                    }),
+                  }}
+                  className="border-slate-300 rounded-lg bg-white overflow-hidden"
                 >
-                  {/* Create tag option */}
-                  {cleanedTagQuery.length > 0 && !tagQueryExists && !isTagSaving && (
-                    <Pressable
-                      onPress={handleCreateTagOnTheFly}
-                      className="flex-row items-center gap-2 p-3 border-b border-slate-100 bg-blue-50 active:bg-blue-100"
-                    >
-                      <Ionicons name="add-circle" size={18} color={colors.blue[500]} />
-                      <Text className="font-sansBold text-base text-blue-600">
-                        Create tag "{cleanedTagQuery}"
-                      </Text>
-                    </Pressable>
-                  )}
+                  <ScrollView
+                    nestedScrollEnabled={true}
+                    keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={handleContentSizeChange}
+                  >
+                    {/* Create tag option */}
+                    {cleanedTagQuery.length > 0 && !tagQueryExists && !isTagSaving && (
+                      <Pressable
+                        onPress={handleCreateTagOnTheFly}
+                        className="flex-row items-center gap-2 p-3 border-b border-slate-100 bg-blue-50 active:bg-blue-100"
+                      >
+                        <Ionicons name="add-circle" size={18} color={colors.blue[500]} />
+                        <Text className="font-sansBold text-base text-blue-600">
+                          Create tag "{cleanedTagQuery}"
+                        </Text>
+                      </Pressable>
+                    )}
 
-                  {/* Suggestions list */}
-                  {filteredTags.map((tag) => (
-                    <Pressable
-                      key={tag.tag_id}
-                      onPress={() => handleSelectTag(tag)}
-                      style={{ backgroundColor: tag.color }}
-                      className="flex-row items-center p-3 border-b border-white/50 active:opacity-75"
-                    >
-                      <Text className="font-sansBold text-base text-slate-800">
-                        {tag.tag_name}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </Animated.View>
+                    {/* Suggestions list */}
+                    {filteredTags.map((tag) => (
+                      <Pressable
+                        key={tag.tag_id}
+                        onPress={() => handleSelectTag(tag)}
+                        style={{ backgroundColor: tag.color }}
+                        className="flex-row items-center p-3 border-b border-white/50 active:opacity-75"
+                      >
+                        <Text className="font-sansBold text-base text-slate-800">
+                          {tag.tag_name}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </Animated.View>
 
-              {selectedTags.length < 5 && (
-                <View className="z-10 gap-3">
-                  <View className="flex-row border border-slate-400 rounded-lg px-4 py-4 bg-slate-50 items-center">
-                    <Ionicons name="pricetag-outline" color={colors.slate[500]} size={22} />
-                    <TextInput
-                      ref={tagInputRef}
-                      className="flex-1 ml-6 font-sansMed text-xl leading-tight"
-                      placeholder="Add tag..."
-                      placeholderTextColor={colors.slate[400]}
-                      value={tagQuery}
-                      onChangeText={setTagQuery}
-                      onFocus={() => {
-                        setIsTagFocused(true);
-                        setTimeout(() => {
-                          scrollViewRef.current?.scrollToFocusedInput(
-                            findNodeHandle(tagInputRef.current)
-                          );
-                        }, 150);
-                      }}
-                      onBlur={() => {
-                        // Small delay so taps on suggestion list are registered before blur hides it
-                        setTimeout(() => setIsTagFocused(false), 200);
-                      }}
-                      style={{ paddingVertical: 0, includeFontPadding: false }}
-                    />
+                {selectedTags.length < 5 && (
+                  <View className="mt-1">
+                    <View className="flex-row border border-slate-400 rounded-lg px-4 py-4 bg-slate-50 items-center">
+                      <Ionicons name="pricetag-outline" color={colors.slate[500]} size={22} />
+                      <TextInput
+                        ref={tagInputRef}
+                        className="flex-1 ml-6 font-sansMed text-xl leading-tight"
+                        placeholder="Add tag..."
+                        placeholderTextColor={colors.slate[400]}
+                        value={tagQuery}
+                        onChangeText={setTagQuery}
+                        onFocus={() => {
+                          setIsTagFocused(true);
+                          setTimeout(() => {
+                            scrollViewRef.current?.scrollToFocusedInput(
+                              findNodeHandle(tagInputRef.current)
+                            );
+                          }, 150);
+                        }}
+                        onBlur={() => {
+                          // Small delay so taps on suggestion list are registered before blur hides it
+                          setTimeout(() => setIsTagFocused(false), 200);
+                        }}
+                        style={{ paddingVertical: 0, includeFontPadding: false }}
+                      />
+                    </View>
                   </View>
-                </View>
-              )}
+                )}
+              </View>
             </>
           }
         />

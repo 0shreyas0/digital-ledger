@@ -74,6 +74,44 @@ export const useTags = (user) => {
     [user, userId],
   );
 
+  const editTag = useCallback(
+    async ({ tagId, tag_name, color }) => {
+      if (!userId) throw new Error("User not loaded");
+
+      setIsSaving(true);
+      try {
+        const response = await fetch(`${API_URL}/tags/${tagId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            tag_name,
+            color,
+          }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to update tag");
+        }
+
+        setTags((currentTags) =>
+          currentTags
+            .map((tag) => (tag.tag_id === tagId ? data : tag))
+            .sort((left, right) => left.tag_name.localeCompare(right.tag_name))
+        );
+
+        return data;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [userId]
+  );
+
   const deleteTag = useCallback(
     async (tagId) => {
       if (!userId) throw new Error("User not loaded");
@@ -110,6 +148,7 @@ export const useTags = (user) => {
     deletingTagId,
     loadTags,
     createTag,
+    editTag,
     deleteTag,
   };
 };

@@ -75,9 +75,11 @@ const EditScreen = () => {
     }
   }, [user]);
 
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   // Find transaction to edit
   useEffect(() => {
-    if (id && transactions.length > 0) {
+    if (id && transactions.length > 0 && !hasInitialized) {
       const txn = transactions.find(t => t.transaction_id === id || t.id === id);
       if (txn) {
         setTransaction(txn);
@@ -95,20 +97,25 @@ const EditScreen = () => {
 
         // Normalize tags to { tag_id, tag_name, color }
         const normalizedTags = txn.tags ? txn.tags.map(t => ({
-          tag_id: t.id,
-          tag_name: t.name,
+          tag_id: t.id || t.tag_id,
+          tag_name: t.name || t.tag_name,
           color: t.color
         })) : [];
         setSelectedTags(normalizedTags);
 
-        // Find and select category
-        if (categories && categories.length > 0) {
-          const matched = categories.find(c => c.name === txn.category);
-          if (matched) setSelectedCategory(matched);
+        // Reconstruct category from transaction data directly
+        if (txn.category) {
+          setSelectedCategory({
+            name: txn.category,
+            category_id: txn.category_id,
+            icon: txn.category_icon || "layers-outline"
+          });
         }
+        
+        setHasInitialized(true);
       }
     }
-  }, [id, transactions, categories]);
+  }, [id, transactions, hasInitialized]);
 
   const toggleModal = () => {
     setModalVisible((currentValue) => !currentValue);
@@ -424,75 +431,83 @@ const EditScreen = () => {
                 </View>
               )}
 
-              <Animated.View
-                style={{
-                  height: dropdownHeightAnim,
-                  maxHeight: 147,
-                  opacity: tagDropdownAnim,
-                  marginBottom: 12,
-                  borderWidth: 1,
-                }}
-                className="border-slate-300 rounded-lg bg-white overflow-hidden"
-              >
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  keyboardShouldPersistTaps="handled"
-                  onContentSizeChange={handleContentSizeChange}
+              <View className="z-10 -mt-2">
+                <Animated.View
+                  style={{
+                    height: dropdownHeightAnim,
+                    maxHeight: 147,
+                    opacity: tagDropdownAnim,
+                    marginBottom: tagDropdownAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 12]
+                    }),
+                    borderWidth: tagDropdownAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 1]
+                    }),
+                  }}
+                  className="border-slate-300 rounded-lg bg-white overflow-hidden"
                 >
-                  {cleanedTagQuery.length > 0 && !tagQueryExists && !isTagSaving && (
-                    <Pressable
-                      onPress={handleCreateTagOnTheFly}
-                      className="flex-row items-center gap-2 p-3 border-b border-slate-100 bg-blue-50 active:bg-blue-100"
-                    >
-                      <Ionicons name="add-circle" size={18} color={colors.blue[500]} />
-                      <Text className="font-sansBold text-base text-blue-600">
-                        Create tag "{cleanedTagQuery}"
-                      </Text>
-                    </Pressable>
-                  )}
+                  <ScrollView
+                    nestedScrollEnabled={true}
+                    keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={handleContentSizeChange}
+                  >
+                    {cleanedTagQuery.length > 0 && !tagQueryExists && !isTagSaving && (
+                      <Pressable
+                        onPress={handleCreateTagOnTheFly}
+                        className="flex-row items-center gap-2 p-3 border-b border-slate-100 bg-blue-50 active:bg-blue-100"
+                      >
+                        <Ionicons name="add-circle" size={18} color={colors.blue[500]} />
+                        <Text className="font-sansBold text-base text-blue-600">
+                          Create tag "{cleanedTagQuery}"
+                        </Text>
+                      </Pressable>
+                    )}
 
-                  {filteredTags.map((tag) => (
-                    <Pressable
-                      key={tag.tag_id}
-                      onPress={() => handleSelectTag(tag)}
-                      style={{ backgroundColor: tag.color }}
-                      className="flex-row items-center p-3 border-b border-white/50 active:opacity-75"
-                    >
-                      <Text className="font-sansBold text-base text-slate-800">
-                        {tag.tag_name}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </Animated.View>
+                    {filteredTags.map((tag) => (
+                      <Pressable
+                        key={tag.tag_id}
+                        onPress={() => handleSelectTag(tag)}
+                        style={{ backgroundColor: tag.color }}
+                        className="flex-row items-center p-3 border-b border-white/50 active:opacity-75"
+                      >
+                        <Text className="font-sansBold text-base text-slate-800">
+                          {tag.tag_name}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </Animated.View>
 
-              {selectedTags.length < 5 && (
-                <View className="z-10 gap-3">
-                  <View className="flex-row border border-slate-400 rounded-lg px-4 py-4 bg-slate-50 items-center">
-                    <Ionicons name="pricetag-outline" color={colors.slate[500]} size={22} />
-                    <TextInput
-                      ref={tagInputRef}
-                      className="flex-1 ml-6 font-sansMed text-xl leading-tight"
-                      placeholder="Add tag..."
-                      placeholderTextColor={colors.slate[400]}
-                      value={tagQuery}
-                      onChangeText={setTagQuery}
-                      onFocus={() => {
-                        setIsTagFocused(true);
-                        setTimeout(() => {
-                          scrollViewRef.current?.scrollToFocusedInput(
-                            findNodeHandle(tagInputRef.current)
-                          );
-                        }, 150);
-                      }}
-                      onBlur={() => {
-                        setTimeout(() => setIsTagFocused(false), 200);
-                      }}
-                      style={{ paddingVertical: 0, includeFontPadding: false }}
-                    />
+                {selectedTags.length < 5 && (
+                  <View className="mt-1">
+                    <View className="flex-row border border-slate-400 rounded-lg px-4 py-4 bg-slate-50 items-center">
+                      <Ionicons name="pricetag-outline" color={colors.slate[500]} size={22} />
+                      <TextInput
+                        ref={tagInputRef}
+                        className="flex-1 ml-6 font-sansMed text-xl leading-tight"
+                        placeholder="Add tag..."
+                        placeholderTextColor={colors.slate[400]}
+                        value={tagQuery}
+                        onChangeText={setTagQuery}
+                        onFocus={() => {
+                          setIsTagFocused(true);
+                          setTimeout(() => {
+                            scrollViewRef.current?.scrollToFocusedInput(
+                              findNodeHandle(tagInputRef.current)
+                            );
+                          }, 150);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setIsTagFocused(false), 200);
+                        }}
+                        style={{ paddingVertical: 0, includeFontPadding: false }}
+                      />
+                    </View>
                   </View>
-                </View>
-              )}
+                )}
+              </View>
             </>
           }
         />

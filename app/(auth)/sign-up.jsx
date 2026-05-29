@@ -128,8 +128,8 @@ export default function SignUpScreen() {
         </Text>
         <ErrorBanner error={error} setError={setError} />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
-          style={{ includeFontPadding: false }}
+          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
+          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
           autoCapitalize="none"
           value={username}
           placeholder="Enter username"
@@ -137,8 +137,8 @@ export default function SignUpScreen() {
           onChangeText={(value) => setUsername(value)}
         />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
-          style={{ includeFontPadding: false }}
+          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
+          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Enter email"
@@ -146,8 +146,8 @@ export default function SignUpScreen() {
           onChangeText={(email) => setEmailAddress(email)}
         />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
-          style={{ includeFontPadding: false }}
+          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
+          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
           value={password}
           placeholder="Enter password"
           placeholderTextColor="#64748b"

@@ -105,8 +105,8 @@ export default function Page() {
         </Text>
         <ErrorBanner error={error} setError={setError} />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
-          style={{ includeFontPadding: false }}
+          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
+          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
           autoCapitalize="none"
           value={identifier} // changed from email to indentifer
           placeholder="Enter username or email"
@@ -114,8 +114,8 @@ export default function Page() {
           onChangeText={(value) => setIdentifier(value)}
         />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-black"
-          style={{ includeFontPadding: false }}
+          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
+          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
           value={password}
           placeholder="Enter password"
           placeholderTextColor="#64748b"

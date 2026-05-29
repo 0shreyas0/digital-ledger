@@ -13,7 +13,7 @@ export default function FieldInputBox({name ="create-outline", placeholder="Plac
         placeholderTextColor={colors.slate[400]}
         value={value}
         onChangeText={onChangeText}
-        style={{paddingVertical: 0, includeFontPadding: false}}
+        style={{paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center'}}
       />
     </View>
   )

@@ -39,10 +39,12 @@ const TagsView = forwardRef((props, ref) => {
     deletingTagId,
     loadTags,
     createTag,
+    editTag,
     deleteTag,
   } = useTags(user);
   
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingTagId, setEditingTagId] = useState(null);
   const [tagName, setTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PALETTE[0]);
 
@@ -55,6 +57,7 @@ const TagsView = forwardRef((props, ref) => {
   const resetForm = () => {
     setTagName("");
     setSelectedColor(PALETTE[0]);
+    setEditingTagId(null);
   };
 
   const hasUnsavedChanges = () => {
@@ -99,20 +102,35 @@ const TagsView = forwardRef((props, ref) => {
     toggleModal
   }));
 
-  const handleCreateTag = async () => {
+  const openEditModal = (tag) => {
+    setEditingTagId(tag.tag_id);
+    setTagName(tag.tag_name);
+    setSelectedColor(tag.color);
+    setIsModalVisible(true);
+  };
+
+  const handleCreateOrUpdateTag = async () => {
     if (!tagName.trim()) {
       return Alert.alert("Error", "Please enter a tag name");
     }
 
     try {
-      await createTag({
-        tag_name: tagName,
-        color: selectedColor,
-      });
+      if (editingTagId) {
+        await editTag({
+          tagId: editingTagId,
+          tag_name: tagName,
+          color: selectedColor,
+        });
+      } else {
+        await createTag({
+          tag_name: tagName,
+          color: selectedColor,
+        });
+      }
       resetForm();
-      setIsModalVisible(false); // don't toggle, explicitly close to avoid discarding alert
+      setIsModalVisible(false);
     } catch (error) {
-      Alert.alert("Error", error.message || "Failed to create tag");
+      Alert.alert("Error", error.message || `Failed to ${editingTagId ? "update" : "create"} tag`);
     }
   };
 
@@ -163,6 +181,11 @@ const TagsView = forwardRef((props, ref) => {
               }}
               className="flex-row items-center justify-between rounded-2xl px-4 py-4 mb-2 active:opacity-70"
             >
+              <CirclePressable
+                name={"pencil"}
+                onPress={() => openEditModal(item)}
+                style={{ marginRight: 12 }}
+              />
               <View className="flex-1">
                 <Text className="font-sansBold text-lg text-slate-800">
                   {item.tag_name}
@@ -195,12 +218,13 @@ const TagsView = forwardRef((props, ref) => {
         <View className="bg-slate-50 rounded-t-3xl border-t border-l border-r border-slate-300 p-5 gap-5">
           <View className="flex-row justify-between items-center">
             <Text className="font-sansBold text-2xl text-slate-700">
-              New Tag
+              {editingTagId ? "Edit Tag" : "New Tag"}
             </Text>
             <CloseButton onPress={toggleModal} />
           </View>
           <TextInput
-            className="font-sansReg bg-slate-50 px-3 py-4 rounded-2xl border border-slate-400 text-lg"
+            className="font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-lg"
+            style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: "center" }}
             value={tagName}
             onChangeText={setTagName}
             placeholder="Tag name"
@@ -232,7 +256,7 @@ const TagsView = forwardRef((props, ref) => {
               name={"checkmark"}
               text={"Save"}
               direction="right"
-              onPress={handleCreateTag}
+              onPress={handleCreateOrUpdateTag}
               isLoading={isSaving}
               loadingText="Saving..."
             />
