@@ -58,8 +58,42 @@ const TagsScreen = () => {
     setSelectedColor(PALETTE[0]);
   };
 
+  const hasUnsavedChanges = () => {
+    return (
+      tagName.trim() !== "" ||
+      selectedColor !== PALETTE[0]
+    );
+  };
+
+  const handleBackdropPress = () => {
+    if (hasUnsavedChanges()) {
+      Alert.alert(
+        "Discard Changes?",
+        "Are you sure you want to discard your changes?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              resetForm();
+              setIsModalVisible(false);
+            },
+          },
+        ],
+      );
+    } else {
+      resetForm();
+      setIsModalVisible(false);
+    }
+  };
+
   const toggleModal = () => {
-    setIsModalVisible((currentValue) => !currentValue);
+    if (isModalVisible) {
+      handleBackdropPress();
+    } else {
+      setIsModalVisible(true);
+    }
   };
 
   const handleCreateTag = async () => {
@@ -115,7 +149,7 @@ const TagsScreen = () => {
           data={tags}
           keyExtractor={(item) => item.tag_id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20, gap: 12 }}
+          contentContainerStyle={{ paddingBottom: 110, gap: 12 }}
           ListEmptyComponent={
             <View className="bg-slate-50 rounded-2xl border border-slate-300 p-5">
               <Text className="font-sansBold text-xl text-slate-700">

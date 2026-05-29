@@ -91,7 +91,7 @@ export default function Page() {
       </View>
       <FlatList
         style={{ flex: 1, marginHorizontal: 20 }}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
         data={transactions.slice(0, 5)} // Only show recent ones on home
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (

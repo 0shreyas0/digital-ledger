@@ -422,7 +422,7 @@ const Activity = () => {
         <FlatList
           data={filteredTransactions}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}
           renderItem={({ item }) => (
             <TransactionItem
               item={item}

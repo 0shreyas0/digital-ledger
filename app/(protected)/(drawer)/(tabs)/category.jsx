@@ -41,6 +41,7 @@ const Category = () => {
   const [selectedIcon, setSelectedIcon] = useState(DEFAULT_CATEGORY_ICON);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [editingCategoryOriginalName, setEditingCategoryOriginalName] = useState("");
+  const [editingCategoryOriginalIcon, setEditingCategoryOriginalIcon] = useState(DEFAULT_CATEGORY_ICON);
 
   useEffect(() => {
     loadCategories();
@@ -51,10 +52,52 @@ const Category = () => {
     setSelectedIcon(DEFAULT_CATEGORY_ICON);
     setEditingCategoryId(null);
     setEditingCategoryOriginalName("");
+    setEditingCategoryOriginalIcon(DEFAULT_CATEGORY_ICON);
+  };
+
+  const hasUnsavedChanges = () => {
+    if (editingCategoryId) {
+      return (
+        categoryName !== editingCategoryOriginalName ||
+        selectedIcon !== editingCategoryOriginalIcon
+      );
+    } else {
+      return (
+        categoryName.trim() !== "" ||
+        selectedIcon !== DEFAULT_CATEGORY_ICON
+      );
+    }
+  };
+
+  const handleBackdropPress = () => {
+    if (hasUnsavedChanges()) {
+      Alert.alert(
+        "Discard Changes?",
+        "Are you sure you want to discard your changes?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              resetForm();
+              setIsModalVisible(false);
+            },
+          },
+        ],
+      );
+    } else {
+      resetForm();
+      setIsModalVisible(false);
+    }
   };
 
   const toggleModal = () => {
-    setIsModalVisible((currentValue) => !currentValue);
+    if (isModalVisible) {
+      handleBackdropPress();
+    } else {
+      setIsModalVisible(true);
+    }
   };
 
   const handleSaveCategory = async () => {
@@ -87,6 +130,7 @@ const Category = () => {
     setCategoryName(item.category);
     setEditingCategoryOriginalName(item.category);
     setSelectedIcon(item.icon || DEFAULT_CATEGORY_ICON);
+    setEditingCategoryOriginalIcon(item.icon || DEFAULT_CATEGORY_ICON);
     setIsModalVisible(true);
   };
 
@@ -133,7 +177,7 @@ const Category = () => {
           data={categories}
           keyExtractor={(item) => item.category_id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20, gap: 12 }}
+          contentContainerStyle={{ paddingBottom: 110, gap: 12 }}
           ListEmptyComponent={
             <View className="bg-slate-50 rounded-2xl border border-slate-300 p-5">
               <Text className="font-sansBold text-xl text-slate-700">

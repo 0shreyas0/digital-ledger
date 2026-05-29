@@ -273,7 +273,7 @@ const CreateScreen = () => {
       <KeyboardAwareScrollView
         ref={scrollViewRef}
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableAutomaticScroll={false}
