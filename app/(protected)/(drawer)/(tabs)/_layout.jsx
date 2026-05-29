@@ -1,52 +1,15 @@
-import { View, Pressable, Platform, StyleSheet, Animated, useWindowDimensions } from 'react-native'
+import { View, Platform, StyleSheet, Animated, Pressable, Text } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
-import { Tabs, usePathname } from 'expo-router'
+import { usePathname, withLayoutContext } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
-import { PanResponder } from 'react-native';
+const { Navigator } = createMaterialTopTabNavigator();
+const MaterialTopTabs = withLayoutContext(Navigator);
 
-// Tab order must match <Tabs.Screen> order below
+// Tab order must match <MaterialTopTabs.Screen> order below
 const TAB_NAMES = ['index', 'activity', 'create', 'tags', 'category'];
-
-const SwipeWrapper = ({ children, navigation }) => {
-  const state = navigation.getState();
-  const currentIndex = state?.index ?? 0;
-  const routes = state?.routes ?? [];
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // Only trigger on horizontal swipes (horizontal travel > vertical travel)
-        const { dx, dy } = gestureState;
-        return Math.abs(dx) > 35 && Math.abs(dy) < 15;
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        const { vx, dx } = gestureState;
-        if (dx < -80 && vx < -0.3) {
-          // Swiped left -> Go next
-          if (currentIndex < routes.length - 1) {
-            const nextRoute = routes[currentIndex + 1].name;
-            navigation.navigate(nextRoute);
-          }
-        } else if (dx > 80 && vx > 0.3) {
-          // Swiped right -> Go previous
-          if (currentIndex > 0) {
-            const prevRoute = routes[currentIndex - 1].name;
-            navigation.navigate(prevRoute);
-          }
-        }
-      },
-    })
-  ).current;
-
-  return (
-    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
-      {children}
-    </View>
-  );
-};
 
 const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
   const [tabBarWidth, setTabBarWidth] = useState(0);
@@ -136,6 +99,104 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
   );
 };
 
+const CustomTabBar = ({ state, descriptors, navigation, position }) => {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        bottom: 20,
+        left: 4,
+        right: 4,
+        height: 68,
+        borderRadius: 34,
+        backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255, 255, 255, 0.4)',
+        borderWidth: 1.5,
+        borderColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
+        shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        elevation: 0,
+        paddingTop: 6,
+        paddingBottom: 6,
+        marginHorizontal: 16,
+        paddingHorizontal: 16,
+        borderTopWidth: 1.5,
+        borderTopColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
+      }}
+    >
+      <AnimatedTabBarBackground
+        selectedIndex={state.index}
+        tabCount={state.routes.length}
+      />
+      <View style={{ flexDirection: 'row', flex: 1, zIndex: 1 }}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const label = options.title !== undefined ? options.title : route.name;
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          // Interpolate opacities for smooth cross-fading
+          const activeOpacity = position.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [0, 1, 0],
+            extrapolate: 'clamp',
+          });
+          
+          const inactiveOpacity = position.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [1, 0, 1],
+            extrapolate: 'clamp',
+          });
+
+          // Text color interpolation still works since Animated.Text supports it in the style prop
+          const textColor = position.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: ['#000000', '#007aff', '#000000'],
+            extrapolate: 'clamp',
+          });
+
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+                <Animated.View style={{ position: 'absolute', opacity: inactiveOpacity }}>
+                  {options.tabBarIcon && options.tabBarIcon({ focused: false, color: '#000000' })}
+                </Animated.View>
+                <Animated.View style={{ position: 'absolute', opacity: activeOpacity }}>
+                  {options.tabBarIcon && options.tabBarIcon({ focused: true, color: '#007aff' })}
+                </Animated.View>
+              </View>
+              <Animated.Text style={{ 
+                color: textColor, 
+                fontFamily: 'sansMed', 
+                fontSize: 10, 
+                marginTop: 2 
+              }}>
+                {label}
+              </Animated.Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+};
+
 const TabRoot = () => {
   const pathname = usePathname();
 
@@ -153,56 +214,25 @@ const TabRoot = () => {
   }, [pathname]);
 
   return (
-    <Tabs
-      backBehavior='history'
+    <MaterialTopTabs
+      tabBarPosition="bottom"
+      backBehavior="history"
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        headerShown: false,
-        screenLayout: ({ children, navigation }) => (
-          <SwipeWrapper navigation={navigation}>{children}</SwipeWrapper>
-        ),
+        swipeEnabled: true,
         tabBarActiveTintColor: '#007aff',
         tabBarInactiveTintColor: '#000000',
-        tabBarActiveBackgroundColor: 'transparent',
-        tabBarActiveIndicatorStyle: {
-          backgroundColor: 'transparent',
-        },
         tabBarShowLabel: true,
+        tabBarShowIcon: true,
+        tabBarIndicatorStyle: { display: 'none' }, // Hide default material swipe line
         tabBarLabelStyle: {
           fontFamily: 'sansMed',
           fontSize: 10,
           marginBottom: 2,
         },
-        tabBarStyle: {
-          position: 'absolute',
-          bottom: 20,
-          left: 20,
-          right: 20,
-          height: 68,
-          borderRadius: 34,
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255, 255, 255, 0.4)',
-          borderWidth: 1.5,
-          borderColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
-          shadowColor: '#0f172a',
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.15,
-          shadowRadius: 20,
-          elevation: 0,
-          paddingTop: 6,
-          paddingBottom: 6,
-          marginHorizontal: 16,
-          paddingHorizontal: 16, // Shift spacing inside to keep horizontal icon positions unchanged
-          borderTopWidth: 1.5,
-          borderTopColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
-        },
-        tabBarBackground: () => (
-          <AnimatedTabBarBackground
-            selectedIndex={selectedIndex}
-            tabCount={TAB_NAMES.length}
-          />
-        ),
       }}
     >
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="index"
         listeners={{ focus: () => setSelectedIndex(0) }}
         options={{
@@ -212,7 +242,7 @@ const TabRoot = () => {
           )
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="activity"
         listeners={{ focus: () => setSelectedIndex(1) }}
         options={{
@@ -222,7 +252,7 @@ const TabRoot = () => {
           )
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="create"
         listeners={{ focus: () => setSelectedIndex(2) }}
         options={{
@@ -232,7 +262,7 @@ const TabRoot = () => {
           )
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="tags"
         listeners={{ focus: () => setSelectedIndex(3) }}
         options={{
@@ -242,7 +272,7 @@ const TabRoot = () => {
           )
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="category"
         listeners={{ focus: () => setSelectedIndex(4) }}
         options={{
@@ -252,7 +282,7 @@ const TabRoot = () => {
           )
         }}
       />
-    </Tabs>
+    </MaterialTopTabs>
   )
 }
 
