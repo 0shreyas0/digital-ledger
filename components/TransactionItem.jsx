@@ -1,60 +1,62 @@
-import { View, Text, TouchableOpacity, Pressable } from "react-native";
+import { View, Text } from "react-native";
+import AppPressable from "@/components/pressables/AppPressable";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { formatDate } from "@/lib/utils.js";
 import CirclePressable from "@/components/pressables/CirclePressable";
-import colors from "tailwindcss/colors";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/context/ThemeContext";
 
 const TransactionItem = ({ item, onDelete, currency, onPressIcon }) => {
   const router = useRouter();
+  const { colors } = useTheme();
   const isIncome = parseFloat(item.amount) > 0;
   const iconName = item.icon || DEFAULT_CATEGORY_ICON;
 
   return (
-    <View className="bg-slate-50 p-3 py-6 my-3 rounded-2xl shadow-sm" key={item.id}> 
+    <View className="bg-card p-3 py-6 my-3 rounded-card shadow-sm   " key={item.id}> 
       <View
         className="flex-row items-center justify-between"
       >
       <View className="flex-row flex-1 items-center">
-        <Pressable 
+        <AppPressable 
           onPress={() => onPressIcon ? onPressIcon(item) : router.push(`/edit?id=${item.id}`)}
-          className="h-25 w-25 p-3 mx-3 rounded-full bg-slate-200 active:bg-accent justify-center items-center"
+          className="h-25 w-25 p-3 mx-3 rounded-full bg-surface justify-center items-center"
         >
           {({ pressed }) => (
             <Ionicons
               size={25}
               name={iconName}
-              color={pressed ? "#000000" : (isIncome ? "#22c55e" : "#ef4444")}
+              color={pressed ? "#000000" : (isIncome ? colors.green : colors.red)}
             />
           )}
-        </Pressable>
+        </AppPressable>
         <View className="flex-col flex-1 mr-2 gap-1 justify-center">
-          <Text className="font-sansBold">{item.title}</Text>
-          <Text className="font-sansMed color-slate-400">{item.category}</Text>
+          <Text className="font-sansBold text-textMain">{item.title}</Text>
+          <Text className="font-sansMed text-textMuted">{item.category}</Text>
         </View>
       </View>
       <View className="flex-row justify-between">
         <View className="flex-col items-end justify-center gap-1">
           <Text
             className="font-sansBold"
-            style={{ color: isIncome ? "#22c55e" : "#ef4444" }}
+            style={{ color: isIncome ? colors.green : colors.red }}
           >
             {isIncome ? "+" : "-"}
             {currency}
             {Math.abs(parseFloat(item.amount)).toFixed(2)}
           </Text>
-          <Text className="font-sansMed">{formatDate(item.created_at)}</Text>
+          <Text className="font-sansMed text-textMain">{formatDate(item.created_at)}</Text>
         </View>
-        <View className="border-l h-15 border-l-slate-300 mx-3">
+        <View className="border-l h-15 border-l-borderSubtle mx-3">
         </View>
         <CirclePressable
           className="self-center h-14 w-14 p-3 items-center justify-center"
           onPress={() => onDelete(item.id)}
           name="trash-outline"
           size={22}
-          iconColor={colors.red[500]}
+          iconColor={colors.red}
         />
       </View>
     </View>
@@ -67,7 +69,7 @@ const TransactionItem = ({ item, onDelete, currency, onPressIcon }) => {
               style={{ backgroundColor: tag.color }}
               className="px-2 py-1.5 rounded-full"
             >
-              <Text className="text-[10px] font-sansBold text-slate-700">
+              <Text className="text-[10px] font-sansBold text-textMain">
                 {tag.name}
               </Text>
             </View>

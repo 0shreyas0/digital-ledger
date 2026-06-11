@@ -4,13 +4,13 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
-  Pressable,
   Animated,
   ScrollView,
   LayoutAnimation,
   findNodeHandle,
   Easing,
 } from "react-native";
+import AppPressable from "@/components/pressables/AppPressable";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { useRouter, useNavigation } from "expo-router";
@@ -18,10 +18,10 @@ import { useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "@react-navigation/native";
 import { API_URL } from "@/constants/api";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import colors from "tailwindcss/colors";
+import { useTheme } from "@/context/ThemeContext";
 import CardTitle from "@/components/CardTitle";
 import FieldInputBox from "@/components/FieldInputBox";
-import CirclePressable from "@/components/pressables/CirclePressable";
+import NestedTopBar from "@/components/NestedTopBar";
 import BluePressable from "@/components/pressables/BluePressable";
 import PageLoader from "@/components/PageLoader";
 import { useCategories } from "@/hooks/useCategories";
@@ -46,6 +46,7 @@ const CreateScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { user } = useUser();
+  const { colors } = useTheme();
   const { categories, isLoading: isCategoriesLoading, loadCategories } =
     useCategories(user);
   const { loadTags, tags, createTag, isSaving: isTagSaving } = useTags(user);
@@ -82,7 +83,7 @@ const CreateScreen = () => {
   });
   const expenseTextColor = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#ffffff', '#334155']
+    outputRange: ['#ffffff', colors.textMain]
   });
   const expenseActiveOpacity = slideAnim.interpolate({
     inputRange: [0, 1],
@@ -99,7 +100,7 @@ const CreateScreen = () => {
   });
   const incomeTextColor = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#334155', '#ffffff']
+    outputRange: [colors.textMain, '#ffffff']
   });
   const incomeInactiveOpacity = slideAnim.interpolate({
     inputRange: [0, 1],
@@ -297,25 +298,20 @@ const CreateScreen = () => {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between mx-6 my-3 pb-3 border-b-2 border-slate-300">
-        <CirclePressable
-          name={"arrow-back"}
-          onPress={() => {
-            router.back();
-          }}
-        />
-        <Text className="font-sansBold color-slate-500 text-2xl">
-          New Transaction
-        </Text>
-        <BluePressable
-          name={"checkmark"}
-          text={"Save"}
-          direction="right"
-          loadingText="Saving..."
-          onPress={handleCreate}
-          isLoading={isLoading}
-        />
-      </View>
+      <NestedTopBar
+        title="New Transaction"
+        onBack={() => router.back()}
+        rightElement={
+          <BluePressable
+            name={"checkmark"}
+            text={"Save"}
+            direction="right"
+            loadingText="Saving..."
+            onPress={handleCreate}
+            isLoading={isLoading}
+          />
+        }
+      />
       <KeyboardAwareScrollView
         ref={scrollViewRef}
         className="flex-1"
@@ -328,7 +324,7 @@ const CreateScreen = () => {
         scrollEventThrottle={16}
       >
           <Ticket
-            borderColor="#94a3b8"
+            borderColor={colors.border}
             className="mx-6 gap-4"
             perforationRadius={5}
             cornerRadius={16}
@@ -336,7 +332,7 @@ const CreateScreen = () => {
             semicircleRadius={16}
             dividerAccessory={
               <View className="p-1">
-                <Ionicons name="star" size={20} color={colors.yellow[500]} />
+                <Ionicons name="star" size={20} color={colors.accent} />
               </View>
             }
             dividerLeftAccessory={
@@ -359,7 +355,7 @@ const CreateScreen = () => {
                 }}
                 className="active:opacity-50 p-1"
               >
-                <Feather name="refresh-cw" size={20} color={colors.red[500]} strokeWidth={2.5} />
+                <Feather name="refresh-cw" size={20} color={colors.red} strokeWidth={2.5} />
               </TouchableOpacity>
             }
           topTicketView={
@@ -369,11 +365,11 @@ const CreateScreen = () => {
               <View className="gap-2">
                 <View className="flex-row gap-3">
                   <TouchableOpacity
-                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-slate-50 border border-slate-400 rounded-full active:opacity-70 overflow-hidden relative"
+                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-surface border border-border rounded-full active:opacity-70 overflow-hidden relative"
                     onPress={() => setIsExpense(true)}
                   >
                     <Animated.View 
-                      className="absolute inset-0 bg-slate-700" 
+                      className="absolute inset-0 bg-segmentedControl" 
                       style={{ transform: [{ translateX: expenseBgTranslate }] }} 
                     />
                     <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
@@ -393,11 +389,11 @@ const CreateScreen = () => {
                   </TouchableOpacity>
                   
                   <TouchableOpacity
-                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-slate-50 border border-slate-400 rounded-full active:opacity-70 overflow-hidden relative"
+                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-surface border border-border rounded-full active:opacity-70 overflow-hidden relative"
                     onPress={() => setIsExpense(false)}
                   >
                     <Animated.View 
-                      className="absolute inset-0 bg-slate-700" 
+                      className="absolute inset-0 bg-segmentedControl" 
                       style={{ transform: [{ translateX: incomeBgTranslate }] }} 
                     />
                     <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
@@ -416,8 +412,8 @@ const CreateScreen = () => {
                     </Animated.Text>
                   </TouchableOpacity>
                 </View>
-                <View className="flex-row gap-3 items-center border-b border-b-slate-400">
-                  <Text className="font-sansBold text-5xl color-slate-700 leading-tight">
+                <View className="flex-row gap-3 items-center border-b border-b-border">
+                  <Text className="font-sansBold text-5xl text-textMain leading-tight">
                     {currency}
                   </Text>
                   <TextInput
@@ -425,7 +421,7 @@ const CreateScreen = () => {
                     value={amount}
                     onChangeText={setAmount}
                     placeholder="0.00"
-                    placeholderTextColor={colors.slate[400]}
+                    placeholderTextColor={colors.textMuted}
                     keyboardType="numeric"
                     style={{ paddingVertical: 0, includeFontPadding: false }}
                   />
@@ -433,19 +429,20 @@ const CreateScreen = () => {
               </View>
 
               <CardTitle title={"Date"} />
-              <Pressable
+              <AppPressable
                 onPress={() => setCalendarModalVisible(true)}
-                className="flex-row items-center gap-4 border border-slate-400 bg-slate-50 active:bg-accent py-3 px-5 rounded-full"
+                activeClassName="active:bg-borderSubtle"
+                className="flex-row items-center gap-4 border border-border bg-surface py-3 px-5 rounded-full"
               >
                 <Ionicons
                   name="calendar"
                   size={22}
-                  color={colors.blue[500]}
+                  color={colors.primary}
                 />
-                <Text className="font-sansMed text-slate-600 text-lg">
+                <Text className="font-sansMed text-textMain text-lg">
                   {date}
                 </Text>
-              </Pressable>
+              </AppPressable>
 
               <CardTitle title={"Title"} />
               <FieldInputBox
@@ -454,9 +451,10 @@ const CreateScreen = () => {
                 placeholder="Transaction title"
               />
               <CardTitle title={"Category"} />
-              <Pressable
+              <AppPressable
                 onPress={toggleModal}
-                className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
+                activeClassName="active:bg-borderSubtle"
+                className="flex-row items-center justify-center gap-4 border border-border bg-surface py-3 rounded-full"
               >
                 {({ pressed }) => (
                   <>
@@ -465,21 +463,21 @@ const CreateScreen = () => {
                       size={22}
                       color={
                         pressed
-                          ? colors.slate[600]
+                          ? colors.textMain
                           : selectedCategory
-                            ? (isExpense ? colors.red[500] : colors.green[500])
-                            : colors.slate[400]
+                            ? (isExpense ? colors.red : colors.green)
+                            : colors.textMuted
                       }
                     />
                     <Text
                       selectable={false}
-                      className={`font-sansMed ${pressed ? "text-slate-600" : selectedCategory ? "text-slate-600" : "text-slate-400"} text-lg`}
+                      className={`font-sansMed ${pressed ? "text-textMain" : selectedCategory ? "text-textMain" : "text-textMuted"} text-lg`}
                     >
                       {selectedCategory ? selectedCategory.name : "Select Category"}
                     </Text>
                   </>
                 )}
-              </Pressable>
+              </AppPressable>
               {/* </View> */}
             </>
           }
@@ -494,16 +492,16 @@ const CreateScreen = () => {
                   {selectedTags.map((tag) => (
                     <View
                       key={tag.tag_id}
-                      style={{ backgroundColor: tag.color, borderColor: colors.slate[300], borderWidth: 1 }}
+                      style={{ backgroundColor: tag.color, borderColor: colors.borderSubtle, borderWidth: 1 }}
                       className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full"
                     >
-                      <Text className="font-sansBold text-xs text-slate-800">
+                      <Text className="font-sansBold text-xs text-textMain">
                         {tag.tag_name}
                       </Text>
                       <TouchableOpacity
                         onPress={() => setSelectedTags((prev) => prev.filter((t) => t.tag_id !== tag.tag_id))}
                       >
-                        <Ionicons name="close-circle" size={14} color={colors.slate[800]} />
+                        <Ionicons name="close-circle" size={14} color={colors.textMain} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -526,7 +524,7 @@ const CreateScreen = () => {
                       outputRange: [0, 1]
                     }),
                   }}
-                  className="border-slate-300 rounded-lg bg-white overflow-hidden"
+                  className="border-borderSubtle rounded-lg bg-card overflow-hidden"
                 >
                   <ScrollView
                     nestedScrollEnabled={true}
@@ -535,42 +533,44 @@ const CreateScreen = () => {
                   >
                     {/* Create tag option */}
                     {cleanedTagQuery.length > 0 && !tagQueryExists && !isTagSaving && (
-                      <Pressable
+                      <AppPressable
                         onPress={handleCreateTagOnTheFly}
-                        className="flex-row items-center gap-2 p-3 border-b border-slate-100 bg-blue-50 active:bg-blue-100"
+                        activeClassName="active:bg-borderSubtle"
+                        className="flex-row items-center gap-2 p-3 border-b border-borderSubtle bg-surface"
                       >
-                        <Ionicons name="add-circle" size={18} color={colors.blue[500]} />
-                        <Text className="font-sansBold text-base text-blue-600">
+                        <Ionicons name="add-circle" size={18} color={colors.primary} />
+                        <Text className="font-sansBold text-base text-primary">
                           Create tag "{cleanedTagQuery}"
                         </Text>
-                      </Pressable>
+                      </AppPressable>
                     )}
 
                     {/* Suggestions list */}
                     {filteredTags.map((tag) => (
-                      <Pressable
+                      <AppPressable
                         key={tag.tag_id}
                         onPress={() => handleSelectTag(tag)}
                         style={{ backgroundColor: tag.color }}
-                        className="flex-row items-center p-3 border-b border-white/50 active:opacity-75"
+                        activeClassName="active:opacity-75"
+                        className="flex-row items-center p-3 border-b border-white/50"
                       >
-                        <Text className="font-sansBold text-base text-slate-800">
+                        <Text className="font-sansBold text-base text-textMain">
                           {tag.tag_name}
                         </Text>
-                      </Pressable>
+                      </AppPressable>
                     ))}
                   </ScrollView>
                 </Animated.View>
 
                 {selectedTags.length < 5 && (
                   <View className="mt-1">
-                    <View className="flex-row border border-slate-400 rounded-lg px-4 py-4 bg-slate-50 items-center">
-                      <Ionicons name="pricetag-outline" color={colors.slate[500]} size={22} />
+                    <View className="flex-row border border-border rounded-lg px-4 py-4 bg-surface items-center">
+                      <Ionicons name="pricetag-outline" color={colors.textMuted} size={22} />
                       <TextInput
                         ref={tagInputRef}
                         className="flex-1 ml-6 font-sansMed text-xl leading-tight"
                         placeholder="Add tag..."
-                        placeholderTextColor={colors.slate[400]}
+                        placeholderTextColor={colors.textMuted}
                         value={tagQuery}
                         onChangeText={setTagQuery}
                         onFocus={() => {

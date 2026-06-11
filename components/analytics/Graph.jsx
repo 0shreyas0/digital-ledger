@@ -28,7 +28,7 @@ const AnimatedLine   = Animated.createAnimatedComponent(Line);
 // Layout constants
 // ---------------------------------------------------------------------------
 const Y_AXIS_W = 44;
-const P_T      = 20;
+const P_T      = 10;
 const P_B      = 32;
 const P_L      = 6;
 const P_R      = 16;
@@ -55,20 +55,26 @@ const DUMMY_DATA = [
 // Pure helpers
 // ---------------------------------------------------------------------------
 
-/** Catmull-Rom → cubic Bézier */
-function buildPath(pts) {
+/** Catmull-Rom → cubic Bézier (curved) or straight line segments (spiky) */
+function buildPath(pts, spiky = false) {
   if (pts.length < 2) return '';
   let d = `M ${pts[0].px},${pts[0].py}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[Math.max(i - 1, 0)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(i + 2, pts.length - 1)];
-    const cp1x = p1.px + (p2.px - p0.px) / 6;
-    const cp1y = p1.py + (p2.py - p0.py) / 6;
-    const cp2x = p2.px - (p3.px - p1.px) / 6;
-    const cp2y = p2.py - (p3.py - p1.py) / 6;
-    d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.px},${p2.py}`;
+  if (spiky) {
+    for (let i = 1; i < pts.length; i++) {
+      d += ` L ${pts[i].px},${pts[i].py}`;
+    }
+  } else {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(i - 1, 0)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(i + 2, pts.length - 1)];
+      const cp1x = p1.px + (p2.px - p0.px) / 6;
+      const cp1y = p1.py + (p2.py - p0.py) / 6;
+      const cp2x = p2.px - (p3.px - p1.px) / 6;
+      const cp2y = p2.py - (p3.py - p1.py) / 6;
+      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.px},${p2.py}`;
+    }
   }
   return d;
 }
@@ -123,11 +129,13 @@ export default function Graph({
   currency = '₹',
   xLabel   = '',
   yLabel   = '',
+  title    = 'Balance History',
+  spiky    = false,
 }) {
   const colorScheme = useColorScheme();
   const theme = useMemo(() => buildTheme(colorScheme === 'dark'), [colorScheme]);
 
-  const PLOT_VIEW_W = width - Y_AXIS_W;
+  const PLOT_VIEW_W = width - Y_AXIS_W - 32;
   const IH          = height - P_T - P_B;
   const IW          = PLOT_VIEW_W  - P_L - P_R;
 
@@ -144,13 +152,19 @@ export default function Graph({
 
   // ── Data mapping ──────────────────────────────────────────────────────────
   const { mapped, yTicks } = useMemo(() => {
+    if (!data || data.length === 0) {
+      return { mapped: [], yTicks: [] };
+    }
     const xs = data.map(p => p.x), ys = data.map(p => p.y);
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const padY = (maxY - minY) * 0.12 || 100;
     const lo = minY - padY, hi = maxY + padY;
 
-    const sx = x => P_L + ((x - minX) / (maxX - minX || 1)) * IW;
+    const sx = x => {
+      if (maxX === minX) return P_L + IW / 2;
+      return P_L + ((x - minX) / (maxX - minX)) * IW;
+    };
     const sy = y => P_T + IH - ((y - lo)  / (hi - lo   || 1)) * IH;
 
     const mapped = data.map((p, i) => ({ ...p, index: i, px: sx(p.x), py: sy(p.y) }));
@@ -167,12 +181,15 @@ export default function Graph({
   }, [data, IW, IH]);
 
   const { lineD, areaD } = useMemo(() => {
-    const lineD = buildPath(mapped);
+    if (mapped.length < 2) {
+      return { lineD: '', areaD: '' };
+    }
+    const lineD = buildPath(mapped, spiky);
     const last  = mapped[mapped.length - 1];
     const first = mapped[0];
     const areaD = `${lineD} L ${last.px},${height - P_B} L ${first.px},${height - P_B} Z`;
     return { lineD, areaD };
-  }, [mapped, height]);
+  }, [mapped, height, spiky]);
 
   const xTickIndices = useMemo(() => {
     const step = Math.max(1, Math.ceil(data.length / MAX_X_TICKS));
@@ -227,7 +244,7 @@ export default function Graph({
 
   const ttStyle = useAnimatedStyle(() => {
     const left = activeX.value - TT_W / 2;
-    const top  = Math.max(4, activeY.value - TT_H - 14);
+    const top  = activeY.value - TT_H - 14;
     return {
       left,
       top,
@@ -289,17 +306,23 @@ export default function Graph({
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <GestureHandlerRootView className="w-full">
-      <View className="bg-slate-50 rounded-2xl p-4 w-full shadow-sm">
+      <View className="bg-card rounded-2xl p-4 w-full shadow-sm">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <View className="flex-row justify-between items-center mb-2 px-2">
-          {yLabel ? (
-            <Text className="text-slate-800 font-sansBold text-l">{yLabel}</Text>
+        <View className="flex-row justify-between items-center mb-3 px-2">
+          {title ? (
+            <Text className="text-textMain font-sansBold text-xl">{title}</Text>
           ) : <View />}
         </View>
 
         {/* ── Chart area ──────────────────────────────────────────────────── */}
-        <View style={{ flexDirection: 'row', height, overflow: 'hidden' }}>
+        <View style={{ flexDirection: 'column' }}>
+          {yLabel ? (
+            <Text className="text-textMuted font-sansMed text-sm mb-1 pl-2">
+              {yLabel}
+            </Text>
+          ) : null}
+          <View style={{ flexDirection: 'row', height }}>
 
           {/* ── Fixed Y-axis panel ──────────────────────────────────────── */}
           <Svg width={Y_AXIS_W} height={height}>
@@ -320,7 +343,7 @@ export default function Graph({
           </Svg>
 
           {/* ── Plot panel ────────────────────────────────────────────────── */}
-          <View style={{ flex: 1, height, position: 'relative', overflow: 'hidden' }}>
+          <View style={{ flex: 1, height, position: 'relative', zIndex: 10 }}>
             <GestureDetector gesture={composed}>
               <View style={{ width: PLOT_VIEW_W, height, position: 'relative' }}>
                 <Svg width={PLOT_VIEW_W} height={height}>
@@ -350,12 +373,14 @@ export default function Graph({
                   />
 
                   {/* Area fill + line */}
-                  <Path d={areaD} fill="url(#areaGrad)" />
-                  <Path
-                    d={lineD} fill="none"
-                    stroke={theme.primary} strokeWidth="2.5"
-                    strokeLinecap="round" strokeLinejoin="round"
-                  />
+                  {!!areaD && <Path d={areaD} fill="url(#areaGrad)" />}
+                  {!!lineD && (
+                    <Path
+                      d={lineD} fill="none"
+                      stroke={theme.primary} strokeWidth="2.5"
+                      strokeLinecap="round" strokeLinejoin="round"
+                    />
+                  )}
 
                   {/* Static dots */}
                   {mapped.map(p => (
@@ -369,7 +394,7 @@ export default function Graph({
                       x={mapped[i].px} y={height - P_B + 16}
                       fill={theme.label} fontSize="10" textAnchor="middle"
                     >
-                      {data[i].x}
+                      {data[i].label ?? data[i].x}
                     </SvgText>
                   ))}
 
@@ -391,19 +416,20 @@ export default function Graph({
 
                 {/* Floating tooltip */}
                 <Animated.View
+                  className="absolute items-center justify-center pointer-events-none"
                   style={[
                     {
-                      position: 'absolute',
-                      width: TT_W, height: TT_H,
-                      alignItems: 'center', justifyContent: 'center',
-                      pointerEvents: 'none',
+                      width: TT_W,
+                      height: TT_H,
+                      zIndex: 999,
+                      elevation: 999,
                     },
                     ttStyle,
                   ]}
                 >
-                  <View className="bg-slate-50 rounded px-2 py-1 shadow-sm">
-                    <Text className="text-slate-600 font-sansBold text-[12px]">
-                      ({displayPoint?.x ?? 0}, {currency}{(displayPoint?.y ?? 0).toLocaleString()})
+                  <View className="bg-surface rounded px-2 py-1 shadow-sm">
+                    <Text className="text-textMuted font-sansBold text-[12px]">
+                      {displayPoint?.label ?? displayPoint?.x ?? 0}: {currency}{(displayPoint?.y ?? 0).toLocaleString()}
                     </Text>
                   </View>
                 </Animated.View>
@@ -411,12 +437,12 @@ export default function Graph({
             </GestureDetector>
           </View>
         </View>
+      </View>
 
         {/* ── X-axis label ────────────────────────────────────────────────── */}
         {xLabel ? (
           <Text
-            style={{ marginTop: 5 }}
-            className="text-slate-800 font-sansBold text-l text-center"
+            className="text-textMuted font-sansMed text-sm text-center mt-1"
           >
             {xLabel}
           </Text>

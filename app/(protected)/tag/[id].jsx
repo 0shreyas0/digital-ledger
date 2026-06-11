@@ -10,7 +10,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import TransactionItem from "@/components/TransactionItem";
 import NoTransactionFound from "@/components/NoTransactionFound";
 import PageLoader from "@/components/PageLoader";
-import CirclePressable from "@/components/pressables/CirclePressable";
+import NestedTopBar from "@/components/NestedTopBar";
 
 const TagTransactions = () => {
   const router = useRouter();
@@ -37,17 +37,7 @@ const TagTransactions = () => {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-center gap-4 mx-6 my-3 pb-3 border-b-2 border-slate-300">
-        <CirclePressable
-          name={"arrow-back"}
-          onPress={() => {
-            router.back();
-          }}
-        />
-        <Text className="font-sansBold text-slate-500 text-2xl flex-1" numberOfLines={1}>
-          {decodeURIComponent(name)}
-        </Text>
-      </View>
+      <NestedTopBar title={decodeURIComponent(name)} />
 
       <FlatList
         data={filteredTransactions}

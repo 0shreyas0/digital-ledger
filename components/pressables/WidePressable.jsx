@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from 'react-native'
 import React from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import colors from 'tailwindcss/colors'
+import { useTheme } from '@/context/ThemeContext'
 
 const WidePressable = ({
   name,
@@ -13,13 +13,14 @@ const WidePressable = ({
   hasIcon = true,
   ...props
 }) => {
+  const { colors } = useTheme();
   return (
     <Pressable {...props} disabled={disabled}>
       {({ pressed }) => (
         <View
           className={`
             ${direction === "left" ? "flex-row" : "flex-row-reverse"}
-            ${isLoading ? "bg-slate-500" : pressed ? "bg-green-400" : "bg-blue-600"}
+            ${isLoading ? "bg-textMuted" : pressed ? "bg-accent" : "bg-primary"}
             py-3 px-4 rounded-full gap-2 items-center
           `}
         >
@@ -27,11 +28,11 @@ const WidePressable = ({
             <Ionicons
               name={name}
               size={25}
-              color={pressed ? colors.slate[900] : colors.slate[50]}
+              color={pressed ? colors.textMain : '#ffffff'}
             />
           )}
           <Text
-            className={`font-sansBold text-xl ${direction === "left" ? "mr-1" : "ml-1"} ${pressed ? "text-slate-900" : "text-slate-50"}`}
+            className={`font-sansBold text-xl ${direction === "left" ? "mr-1" : "ml-1"} ${pressed ? "text-textMain" : "text-white"}`}
           >
             {isLoading ? loadingText : text}
           </Text>

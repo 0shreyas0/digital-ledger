@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { TransactionProvider } from "@/context/TransactionContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import SafeScreen from "@/components/SafeScreen";
 import "@/global.css";
 
@@ -34,11 +35,13 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-      <TransactionProvider>
-        <SafeScreen>
-          <Slot />
-        </SafeScreen>
-      </TransactionProvider>
+      <ThemeProvider>
+        <TransactionProvider>
+          <SafeScreen>
+            <Slot />
+          </SafeScreen>
+        </TransactionProvider>
+      </ThemeProvider>
     </ClerkProvider>
   );
 }

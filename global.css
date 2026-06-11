@@ -3,44 +3,123 @@
 @tailwind utilities;
 
 @layer base {
-    /* Default (Light Mode) */
-    /* :root {
-        --color-primary: #8b593e;
-        --color-background: #fff8f3;
-        --color-text: #4a3428;
-        --color-textLight: #9a8478;
-        --color-border: #e5d3b7;
-        --color-card: #ffffff;
-    } */
-
-    /* Dark Mode */
-    /* .dark {
-        --color-primary: #d4a373;
-        --color-background: #1a120b;
-        --color-text: #f5ebe0;
-        --color-textLight: #d5bdaf;
-        --color-border: #3c2a21;
-        --color-card: #2c1e14;
-    } */
-
+    /* Fallback defaults (Defaults to Ice Light) */
     :root {
-        --color-primary: #5b8cf5; /*royal blue*/
-        --color-secondary: #7789ae; /*cyan*/
-        --color-background: #E3F2FD; /*light blue*/
-        --color-accent: #AEEA00; /*lime green*/
-        --color-border: #1E293B;
+        --color-primary: #5b8cf5; /* royal blue */
+        --color-secondary: #7789ae; /* slate blue */
+        --color-background: #E3F2FD; /* light blue */
+        --color-accent: #AEEA00; /* lime green */
+        --color-border: #94A3B8;
+        --color-borderSubtle: #CBD5E1;
         --color-danger: #EF4444;
         --color-dangerBox: #ffb3a6;
         --color-dangerBorder: #EF4444;
+        --color-card: #FFFFFF;
+        --color-surface: #F1F5F9;
+        --color-textMain: #0F172A;
+        --color-textMuted: #64748B;
+        --color-segmentedControl: #8e6f60;
     }
-    .dark {
-        --color-primary: #18467d; /*soft blue*/
-        --color-secondary: #22D3EE; /*bright cyan*/
+
+    /* ICE THEME */
+    .theme-ice {
+        --color-primary: #5b8cf5;
+        --color-secondary: #7789ae;
+        --color-background: #E3F2FD;
+        --color-accent: #AEEA00;
+        --color-border: #94A3B8;
+        --color-borderSubtle: #CBD5E1;
+        --color-danger: #EF4444;
+        --color-dangerBox: #ffb3a6;
+        --color-dangerBorder: #EF4444;
+        --color-card: #FFFFFF;
+        --color-surface: #F1F5F9;
+        --color-textMain: #0F172A;
+        --color-textMuted: #64748B;
+        --color-segmentedControl: #5b8cf5;
+    }
+    .theme-ice.dark {
+        --color-primary: #18467d;
+        --color-secondary: #22D3EE;
         --color-background: #020817;
-        --color-accent: #AEEA00; /*lime green*/
-        --color-border: #1E293B;
+        --color-accent: #AEEA00;
+        --color-border: #334155;
+        --color-borderSubtle: #1E293B;
         --color-danger: #7E1E1D;
-        --color-dangerBox: #EF4444;;
+        --color-dangerBox: #EF4444;
         --color-dangerBorder: #7E1E1D;
+        --color-card: #0F172A;
+        --color-surface: #1E293B;
+        --color-textMain: #F1F5F9;
+        --color-textMuted: #94A3B8;
+        --color-segmentedControl: #18467d;
+    }
+
+    /* COFFEE THEME */
+    .theme-coffee {
+        --color-primary: #8B593E;
+        --color-secondary: #9A8478;
+        --color-background: #FFF8F3;
+        --color-accent: #AEEA00;
+        --color-border: #C8B6A6;
+        --color-borderSubtle: #E7DEC8;
+        --color-danger: #E74C3C;
+        --color-dangerBox: #FFB3A6;
+        --color-dangerBorder: #E74C3C;
+        --color-card: #FFFFFF;
+        --color-surface: #FAF6F0;
+        --color-textMain: #4A3428;
+        --color-textMuted: #8D7B68;
+        --color-segmentedControl: #8B593E;
+    }
+    .theme-coffee.dark {
+        --color-primary: #4A3428;
+        --color-secondary: #8B593E;
+        --color-background: #1A120B;
+        --color-accent: #AEEA00;
+        --color-border: #5C4033;
+        --color-borderSubtle: #4A3428;
+        --color-danger: #C62828;
+        --color-dangerBox: #E74C3C;
+        --color-dangerBorder: #C62828;
+        --color-card: #2C1E14;
+        --color-surface: #3D2B1F;
+        --color-textMain: #FFF8F3;
+        --color-textMuted: #A9958B;
+        --color-segmentedControl: #4A3428;
+    }
+
+    /* PURPLE THEME */
+    .theme-purple {
+        --color-primary: #6A1B9A;
+        --color-secondary: #BA68C8;
+        --color-background: #F3E5F5;
+        --color-accent: #AEEA00;
+        --color-border: #D1C4E9;
+        --color-borderSubtle: #EDE7F6;
+        --color-danger: #D32F2F;
+        --color-dangerBox: #FFB3A6;
+        --color-dangerBorder: #D32F2F;
+        --color-card: #FFFFFF;
+        --color-surface: #FBF7FD;
+        --color-textMain: #3A105C;
+        --color-textMuted: #7E57C2;
+        --color-segmentedControl: #6A1B9A;
+    }
+    .theme-purple.dark {
+        --color-primary: #4A148C;
+        --color-secondary: #6A1B9A;
+        --color-background: #1A002C;
+        --color-accent: #AEEA00;
+        --color-border: #5E35B1;
+        --color-borderSubtle: #4A148C;
+        --color-danger: #C62828;
+        --color-dangerBox: #D32F2F;
+        --color-dangerBorder: #C62828;
+        --color-card: #25003F;
+        --color-surface: #37005B;
+        --color-textMain: #F3E5F5;
+        --color-textMuted: #B39DDB;
+        --color-segmentedControl: #4A148C;
     }
 }

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Dimensions,
 } from "react-native";
 import React, { useCallback, useState, useMemo, useEffect } from "react";
 import { useUser } from "@clerk/clerk-expo";
@@ -21,13 +22,17 @@ import NoTransactionFound from "@/components/NoTransactionFound";
 import PageLoader from "@/components/PageLoader";
 import CloseButton from "@/components/CloseButton";
 import Modal from "react-native-modal";
-import colors from "tailwindcss/colors";
+import { useTheme } from "@/context/ThemeContext";
 import SearchBar from "@/components/SearchBar";
 import TransactionFilter from "@/components/TransactionFilter";
+import AppPressable from "@/components/pressables/AppPressable";
+import Graph from "@/components/analytics/Graph";
+import BalanceCard from "@/components/BalanceCard";
 
 const Activity = () => {
   const router = useRouter();
   const { user } = useUser();
+  const { colors } = useTheme();
   const { transactions: globalTransactions, isLoading, loadData, deleteTransaction: contextDeleteTransaction } = useTransactions();
   const { categories, loadCategories } = useCategories(user);
   const { tags, loadTags } = useTags(user);
@@ -168,6 +173,61 @@ const Activity = () => {
     });
   }, [localTransactions, searchQuery, filters]);
 
+  const { width: screenWidth } = Dimensions.get("window");
+
+  const graphData = useMemo(() => {
+    if (!filteredTransactions || filteredTransactions.length === 0) return [];
+    
+    // Sort transactions oldest to newest
+    const sorted = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Group by date to prevent duplicate dates on the X-axis line chart and make it cleaner
+    const grouped = [];
+    sorted.forEach((txn) => {
+      const formattedDate = txn.date
+        ? new Date(txn.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+        : "";
+      
+      const lastGroup = grouped[grouped.length - 1];
+      if (lastGroup && lastGroup.dateStr === formattedDate) {
+        lastGroup.amount += Math.abs(txn.amount);
+      } else {
+        grouped.push({
+          dateStr: formattedDate,
+          amount: Math.abs(txn.amount),
+        });
+      }
+    });
+
+    let runningTotal = 0;
+    return grouped.map((group, index) => {
+      runningTotal += group.amount;
+      return {
+        x: index,
+        label: group.dateStr,
+        y: runningTotal,
+      };
+    });
+  }, [filteredTransactions]);
+
+  const querySummary = useMemo(() => {
+    let income = 0;
+    let expenses = 0;
+    filteredTransactions.forEach(txn => {
+      const amt = parseFloat(txn.amount || 0);
+      if (amt > 0) {
+        income += amt;
+      } else {
+        expenses += Math.abs(amt);
+      }
+    });
+    return {
+      balance: income - expenses,
+      income,
+      expenses
+    };
+  }, [filteredTransactions]);
+
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -236,7 +296,7 @@ const Activity = () => {
         const dateStr = current.getFullYear() + '-' + String(current.getMonth() + 1).padStart(2, '0') + '-' + String(current.getDate()).padStart(2, '0');
         marked[dateStr] = {
             selected: true,
-            color: colors.blue[600],
+            color: colors.primary,
             textColor: 'white',
             startingDay: i === 0,
             endingDay: i === 6
@@ -257,9 +317,15 @@ const Activity = () => {
 
   const handleQuickFilterPress = (value) => {
     if (value === "today") {
-      setFilters({ ...filters, dateRange: "today", customRange: { start: null, end: null } });
+      setFilters({
+        ...filters,
+        dateRanges: [{ id: "default", type: "today", start: null, end: null }]
+      });
     } else if (value === "all") {
-      setFilters({ ...filters, dateRange: "all", customRange: { start: null, end: null } });
+      setFilters({
+        ...filters,
+        dateRanges: [{ id: "default", type: "all", start: null, end: null }]
+      });
     } else if (value === "week") {
       setIsWeekPickerVisible(true);
     } else if (value === "month") {
@@ -320,20 +386,22 @@ const Activity = () => {
       <View className="mb-4">
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 10, flexGrow: 1, justifyContent: 'center' }}>
           {dateFilters.map((f) => (
-            <TouchableOpacity
+            <AppPressable
               key={f.value}
               onPress={() => handleQuickFilterPress(f.value)}
-              className={`px-5 py-2 rounded-full border ${filters.dateRange === f.value ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-200'}`}
+              className={`px-5 py-2 rounded-full border ${filters.dateRanges[0]?.type === f.value ? 'bg-segmentedControl border-segmentedControl' : 'bg-card border-borderSubtle'}`}
             >
-               <View className="flex-row items-center gap-1">
-                <Text className={`font-sansMed ${filters.dateRange === f.value ? 'text-white' : 'text-slate-600'}`}>
-                  {f.label}
-                </Text>
-                {(f.value === "week" || f.value === "month") && (
-                   <Ionicons name="chevron-down" size={12} color={filters.dateRange === f.value ? 'white' : colors.slate[400]} />
-                )}
-               </View>
-            </TouchableOpacity>
+               {({ pressed }) => (
+                 <View className="flex-row items-center gap-1">
+                  <Text className={`font-sansMed ${pressed ? 'text-black' : (filters.dateRanges[0]?.type === f.value ? 'text-white' : 'text-textMain')}`}>
+                    {f.label}
+                  </Text>
+                  {(f.value === "week" || f.value === "month") && (
+                     <Ionicons name="chevron-down" size={12} color={pressed ? 'black' : (filters.dateRanges[0]?.type === f.value ? 'white' : colors.textMuted)} />
+                  )}
+                 </View>
+               )}
+            </AppPressable>
           ))}
         </ScrollView>
       </View>
@@ -344,7 +412,7 @@ const Activity = () => {
         onBackdropPress={() => setIsWeekPickerVisible(false)}
         style={{ justifyContent: "flex-end", margin: 0 }}
       >
-         <View className="bg-white rounded-t-3xl p-6">
+         <View className="bg-card rounded-t-3xl p-6">
             <View className="flex-row justify-between items-center mb-4">
                 <Text className="font-sansBold text-xl">Select Start of Week</Text>
                 <CloseButton onPress={() => setIsWeekPickerVisible(false)} />
@@ -354,8 +422,8 @@ const Activity = () => {
                 markingType={'period'}
                 markedDates={markedWeekDates}
                 theme={{
-                    todayTextColor: colors.blue[600],
-                    selectedDayBackgroundColor: colors.blue[600],
+                    todayTextColor: colors.primary,
+                    selectedDayBackgroundColor: colors.primary,
                     textDayFontFamily: 'GoogleSans-Regular',
                     textMonthFontFamily: 'GoogleSans-Bold',
                     textDayHeaderFontFamily: 'GoogleSans-Medium',
@@ -370,14 +438,14 @@ const Activity = () => {
         onBackdropPress={() => setIsMonthPickerVisible(false)}
         style={{ justifyContent: "flex-end", margin: 0 }}
       >
-         <View className="bg-white rounded-t-3xl p-6">
+         <View className="bg-card rounded-t-3xl p-6">
             <View className="flex-row justify-between items-center mb-6">
                 <Text className="font-sansBold text-xl">Select Month & Year</Text>
                 <CloseButton onPress={() => setIsMonthPickerVisible(false)} />
             </View>
             
             <View className="items-center mb-6">
-                <View className="h-24 w-full border-y border-slate-100 items-center justify-center">
+                <View className="h-24 w-full border-y border-borderSubtle items-center justify-center">
                     <ScrollView 
                         ref={yearScrollRef}
                         showsVerticalScrollIndicator={false}
@@ -392,13 +460,13 @@ const Activity = () => {
                     >
                         {dialYears.map(y => (
                             <View key={y} style={{ height: 40 }} className="items-center justify-center w-40">
-                                <Text className={`font-sansBold text-2xl ${selectedYear === y ? 'text-slate-800' : 'text-slate-300'}`}>
+                                <Text className={`font-sansBold text-2xl ${selectedYear === y ? 'text-textMain' : 'text-borderSubtle'}`}>
                                     {y}
                                 </Text>
                             </View>
                         ))}
                     </ScrollView>
-                    <View className="absolute pointer-events-none h-1 w-12 bg-blue-600 bottom-0 rounded-full" />
+                    <View className="absolute pointer-events-none h-1 w-12 bg-primary bottom-0 rounded-full" />
                 </View>
             </View>
 
@@ -407,9 +475,9 @@ const Activity = () => {
                     <TouchableOpacity 
                         key={m} 
                         onPress={() => selectMonth(i, selectedYear)}
-                        className={`w-[31%] p-4 rounded-2xl items-center border ${filters.dateRange === "month" && filters.customRange.start?.split('-')[1] == String(i+1).padStart(2, '0') && filters.customRange.start?.split('-')[0] == selectedYear ? 'bg-slate-700 border-slate-700' : 'bg-slate-50 border-slate-100'}`}
+                        className={`w-[31%] p-4 rounded-2xl items-center border ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i+1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'bg-segmentedControl border-segmentedControl' : 'bg-surface border-borderSubtle'}`}
                     >
-                        <Text className={`font-sansMed ${filters.dateRange === "month" && filters.customRange.start?.split('-')[1] == String(i+1).padStart(2, '0') && filters.customRange.start?.split('-')[0] == selectedYear ? 'text-white' : 'text-slate-700'}`}>{m.slice(0, 3)}</Text>
+                        <Text className={`font-sansMed ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i+1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'text-white' : 'text-textMain'}`}>{m.slice(0, 3)}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -423,6 +491,29 @@ const Activity = () => {
           data={filteredTransactions}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}
+          ListHeaderComponent={
+            <View>
+              <BalanceCard
+                currency="₹"
+                summary={querySummary}
+                title="Net Balance"
+                className="mx-0"
+              />
+              {graphData.length > 1 ? (
+                <View className="mb-3 mt-2">
+                  <Graph
+                    data={graphData}
+                    width={screenWidth - 48}
+                    height={220}
+                    currency="₹"
+                    yLabel="Amount"
+                    xLabel="Time"
+                    spiky={true}
+                  />
+                </View>
+              ) : null}
+            </View>
+          }
           renderItem={({ item }) => (
             <TransactionItem
               item={item}

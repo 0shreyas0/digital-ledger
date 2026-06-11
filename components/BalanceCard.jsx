@@ -1,34 +1,49 @@
 import { View, Text } from "react-native";
 
-const BalanceCard = ({ currency, summary }) => {
-  // Use logical OR (||) to provide a fallback of 0 if data is missing
+const fmt = (value, currency) => {
+  const abs = Math.abs(parseFloat(value || 0)).toFixed(2);
+  const sign = parseFloat(value || 0) >= 0 ? "+" : "-";
+  return `${sign}${currency}${abs}`;
+};
+
+const BalanceCard = ({ currency = "$", summary, title = "Total Balance", className = "mx-6" }) => {
   const balance = parseFloat(summary?.balance || 0);
   const income = parseFloat(summary?.income || 0);
   const expenses = parseFloat(summary?.expenses || 0);
 
   return (
-    <View className="flex-col m-6 p-6 gap-6 bg-slate-50 rounded-2xl shadow-sm">
-      <View>
-        <Text className="font-sansBold text-lg color-slate-400 mb-3">Total Balance</Text>
-        <Text className="font-sansBold text-4xl">
-          {balance >= 0 ? "+" : "-"}{currency}{Math.abs(balance).toFixed(2)}
+    <View className={`${className} my-4 rounded-card bg-card shadow-sm`}>
+      {/* Balance hero */}
+      <View className="px-6 pt-6 pb-2">
+        <Text className="font-sansBold text-lg text-textMuted mb-2">
+          {title}
+        </Text>
+        <Text className="font-sansBold text-4xl text-textMain">
+          {fmt(balance, currency)}
         </Text>
       </View>
-      <View className="flex-row justify-between">
-        <View className="flex-col items-center gap-1">
-          <Text className="font-sansBold color-slate-400">Income</Text>
-          <Text className="font-sansBold text-xl color-green-500">
-            {income >= 0 ? "+" : "-"}{currency}{Math.abs(income).toFixed(2)}
+
+      {/* Income / Expenses row */}
+      <View className="flex-row px-6 py-5">
+        <View className="flex-1 gap-1">
+          <Text className="font-sansBold text-lg text-textMuted">
+            Income
+          </Text>
+          <Text className="font-sansBold text-xl text-green-500">
+            {fmt(income, currency)}
           </Text>
         </View>
-        <View className="flex-row">
-          <View className="border-l border-l-slate-300 mr-4"></View>
-          <View className="flex-col items-center gap-1">
-            <Text className="font-sansBold color-slate-400">Expenses</Text>
-            <Text className="font-sansBold text-lg color-red-500">
-              {expenses >= 0 ? "+" : "-"}{currency}{Math.abs(expenses).toFixed(2)}
-            </Text>
-          </View>
+
+        {/* Vertical divider */}
+        <View className="w-px bg-borderSubtle mx-4 self-stretch" />
+
+        <View className="flex-1 gap-1">
+          <Text className="font-sansBold text-lg text-textMuted">
+            Expenses
+          </Text>
+          <Text className="font-sansBold text-xl text-danger">
+            {fmt(expenses, currency)}
+          </Text>
         </View>
       </View>
     </View>

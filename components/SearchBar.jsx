@@ -1,25 +1,27 @@
 import React from 'react';
 import { View, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import colors from 'tailwindcss/colors';
+import { useTheme } from '@/context/ThemeContext';
 
 const SearchBar = ({ 
   value, 
   onChangeText, 
   placeholder = "Search...", 
   containerClassName = "",
-  placeholderTextColor = colors.slate[400]
+  placeholderTextColor
 }) => {
+  const { colors } = useTheme();
+
   return (
-    <View className={`flex-row items-center bg-slate-50 rounded-2xl px-4 h-14 border border-slate-400 ${containerClassName}`}>
-      <Ionicons name="search" size={20} color={colors.slate[400]} />
+    <View className={`flex-row items-center bg-surface rounded-input px-4 h-14 border border-border ${containerClassName}`}>
+      <Ionicons name="search" size={20} color={colors.textMuted} />
       <TextInput
         placeholder={placeholder}
         value={value}
         onChangeText={onChangeText}
-        className="flex-1 ml-2 font-sansReg text-slate-700"
-        style={{ paddingVertical: 0, includeFontPadding: false, height: '100%', textAlignVertical: 'center' }}
-        placeholderTextColor={placeholderTextColor}
+        className="flex-1 ml-2 font-sansReg text-textMain py-0 h-full"
+        style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+        placeholderTextColor={placeholderTextColor || colors.textMuted}
       />
     </View>
   );

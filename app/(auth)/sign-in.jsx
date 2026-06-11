@@ -1,12 +1,12 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import {
-  Pressable,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import AppPressable from "@/components/pressables/AppPressable";
 import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Image } from "expo-image";
@@ -62,7 +62,7 @@ export default function Page() {
         router.replace("/");
       }
     } catch (err) {
-      setError(geErrorMessage(err));
+      setError(getSignInErrorMessage(err));
     }
   };
 
@@ -105,8 +105,8 @@ export default function Page() {
         </Text>
         <ErrorBanner error={error} setError={setError} />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
-          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
+          className="w-full font-sansReg bg-surface rounded-input border border-border text-black py-4 px-3"
+          style={{ includeFontPadding: false, textAlignVertical: 'center' }}
           autoCapitalize="none"
           value={identifier} // changed from email to indentifer
           placeholder="Enter username or email"
@@ -117,13 +117,14 @@ export default function Page() {
           value={password}
           onChangeText={(password) => setPassword(password)}
         />
-        <Pressable
+        <AppPressable
           className="w-full"
+          activeClassName=""
           onPress={onSignInPress}
         >
           {({ pressed }) => (
             <View
-              className={`w-full items-center py-4 rounded-full ${
+              className={`w-full items-center py-4 rounded-button ${
                 pressed ? "bg-accent" : "bg-primary"
               }`}
               style={{ includeFontPadding: false }}
@@ -137,7 +138,7 @@ export default function Page() {
               </Text>
             </View>
           )}
-        </Pressable>
+        </AppPressable>
         <View className="gap-3 flex-row items-center">
           <Text className="font-sansReg">Don&apos;t have an account?</Text>
           <TouchableOpacity

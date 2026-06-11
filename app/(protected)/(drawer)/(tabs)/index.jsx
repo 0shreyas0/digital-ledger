@@ -72,7 +72,7 @@ export default function Page() {
               contentFit="contain"
             />
             <View>
-              <Text className="font-sansBold color-slate-400">Welcome,</Text>
+              <Text className="font-sansBold text-textMuted">Welcome,</Text>
               <Text className="font-sansMed">
                 {user.username}
               </Text>

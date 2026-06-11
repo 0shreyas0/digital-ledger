@@ -1,17 +1,20 @@
 import { Pressable } from 'react-native'
 import React from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import colors from 'tailwindcss/colors'
+import { useTheme } from '@/context/ThemeContext'
 
 const CirclePressable = ({
   name,
   onPress,
   className = "",
   size = 25,
-  iconColor = colors.slate[500],
+  iconColor,
   pressedIconColor = '#000000',
   ...props
 }) => {
+  const { colors } = useTheme();
+  const resolvedIconColor = iconColor || colors.textMuted;
+
   return (
     <Pressable
       {...props}
@@ -22,7 +25,7 @@ const CirclePressable = ({
         <Ionicons
           name={name}
           size={size}
-          color={pressed ? pressedIconColor : iconColor}
+          color={pressed ? pressedIconColor : resolvedIconColor}
         />
       )}
     </Pressable>

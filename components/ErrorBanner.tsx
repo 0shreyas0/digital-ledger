@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
+import AppPressable from '@/components/pressables/AppPressable';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -95,7 +96,7 @@ export default function ErrorBanner({ error, setError }: ErrorBannerProps) {
 
   return (
     <View
-      style={{ width: '100%', alignItems: 'flex-start' }}
+      className="w-full items-start"
       onLayout={(event) => {
         const { width } = event.nativeEvent.layout;
         if (width > 0) {
@@ -106,14 +107,13 @@ export default function ErrorBanner({ error, setError }: ErrorBannerProps) {
       {/* Invisible measurement view (absolute positioned so Y-axis layout constraints don't limit it) */}
       {!!error && (
         <View
-          style={{ position: 'absolute', width: '100%', opacity: 0, zIndex: -1000 }}
+          className="absolute w-full opacity-0 -z-[1000] border-l-4 border-l-dangerBorder bg-dangerBox flex-row items-center px-3 py-4 rounded-card"
           onLayout={(event) => {
             const { height } = event.nativeEvent.layout;
             if (height > 0) {
               setMeasuredHeight(height);
             }
           }}
-          className="border-l-4 border-l-red-500 bg-red-200 flex-row items-center px-3 py-4 rounded-2xl"
         >
           <Ionicons name="alert-circle" size={20} color="#ef4444" />
           <Text className="flex-1 font-sansReg pl-3 text-red-800" style={{ includeFontPadding: false }}>
@@ -125,19 +125,11 @@ export default function ErrorBanner({ error, setError }: ErrorBannerProps) {
 
       {/* Animated visible view */}
       <Animated.View
-        style={[
-          {
-            backgroundColor: '#fecaca', // bg-red-200
-            borderLeftWidth: 4,
-            borderLeftColor: '#ef4444', // border-l-red-500
-            borderRadius: 16,
-            overflow: 'hidden',
-          },
-          animatedStyle,
-        ]}
+        className="bg-dangerBox border-l-4 border-l-dangerBorder rounded-card overflow-hidden"
+        style={animatedStyle}
       >
         {!!currentError && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', height: '100%', width: parentWidth, paddingHorizontal: 12 }}>
+          <View className="flex-row items-center h-full px-3" style={{ width: parentWidth }}>
             <Ionicons name="alert-circle" size={20} color="#ef4444" />
             <Animated.View style={[{ flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: 12 }, textAnimatedStyle]}>
               <Text
@@ -147,9 +139,9 @@ export default function ErrorBanner({ error, setError }: ErrorBannerProps) {
               >
                 {currentError}
               </Text>
-              <Pressable onPress={() => setError('')} style={{ padding: 4 }}>
+              <AppPressable onPress={() => setError('')} activeClassName="" className="p-1">
                 <Ionicons name="close" size={20} color="#ef4444" />
-              </Pressable>
+              </AppPressable>
             </Animated.View>
           </View>
         )}

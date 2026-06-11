@@ -1,19 +1,21 @@
 import { TextInput, View } from 'react-native'
 import React from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import colors from 'tailwindcss/colors'
+import { useTheme } from '@/context/ThemeContext'
 
 export default function FieldInputBox({name ="create-outline", placeholder="Placeholder Text", value, onChangeText}) {
+  const { colors } = useTheme();
+
   return (
-    <View className="flex-row border border-slate-400 rounded-lg px-4 py-4">
-      <Ionicons name={name} color={colors.slate[500]} size={22} />
+    <View className="flex-row border border-border rounded-input px-4 py-4 bg-surface">
+      <Ionicons name={name} color={colors.textMuted} size={22} />
       <TextInput 
-        className="flex-1 ml-6 font-sansMed text-xl leading-tight"
+        className="flex-1 ml-6 font-sansMed text-xl leading-tight py-0 text-textMain"
         placeholder={placeholder}
-        placeholderTextColor={colors.slate[400]}
+        placeholderTextColor={colors.textMuted + "99"} /* dynamic transparency fallback */
         value={value}
         onChangeText={onChangeText}
-        style={{paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center'}}
+        style={{includeFontPadding: false, textAlignVertical: 'center'}}
       />
     </View>
   )

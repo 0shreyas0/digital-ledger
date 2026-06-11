@@ -5,7 +5,7 @@ const OTPInput = ({code, setCode}) => {
   return (
     <>
       <TextInput 
-        className="w-full bg-slate-50 px-3 py-4 rounded-2xl font-sansReg border border-slate-400"
+        className="w-full bg-surface px-3 py-4 rounded-2xl font-sansReg border border-border"
         value={code}
         placeholder="Verification Code"
         onChangeText={setCode}

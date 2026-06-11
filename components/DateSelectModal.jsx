@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import Modal from "react-native-modal";
 import { Calendar } from "react-native-calendars";
-import colors from "tailwindcss/colors";
+import { useTheme } from "@/context/ThemeContext";
 import CloseButton from "./CloseButton";
 
 const DateSelectModal = ({
@@ -11,6 +11,7 @@ const DateSelectModal = ({
   date,
   onSelectDate,
 }) => {
+  const { colors } = useTheme();
   return (
     <Modal
       isVisible={isVisible}
@@ -25,9 +26,9 @@ const DateSelectModal = ({
       animationOutTiming={300}
       avoidKeyboard={true}
     >
-      <View className="bg-white  h-[465px] rounded-t-3xl p-6 pb-6">
+      <View className="bg-card h-[465px] rounded-t-3xl p-6 pb-6">
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="font-sansBold text-2xl text-slate-800">Select Date</Text>
+          <Text className="font-sansBold text-2xl text-textMain">Select Date</Text>
           <CloseButton onPress={onClose} />
         </View>
         <Calendar
@@ -37,12 +38,12 @@ const DateSelectModal = ({
             onClose();
           }}
           markedDates={{
-            [date]: { selected: true, selectedColor: colors.slate[700] },
+            [date]: { selected: true, selectedColor: colors.textMain },
           }}
           theme={{
-            todayTextColor: colors.blue[600],
-            arrowColor: colors.blue[600],
-            monthTextColor: colors.slate[800],
+            todayTextColor: colors.primary,
+            arrowColor: colors.primary,
+            monthTextColor: colors.textMain,
             textDayFontFamily: "GoogleSans-Regular",
             textMonthFontFamily: "GoogleSans-Bold",
             textDayHeaderFontFamily: "GoogleSans-Medium",

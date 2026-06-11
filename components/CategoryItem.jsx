@@ -1,31 +1,35 @@
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
+import AppPressable from "@/components/pressables/AppPressable";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import colors from "tailwindcss/colors";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
+import { useTheme } from "@/context/ThemeContext";
 
 const CategoryItem = ({ item, onDelete, isDeleting = false, onPress, onEditIconPress }) => {
+  const { colors } = useTheme();
+
   return (
-    <Pressable 
+    <AppPressable 
       onPress={onPress}
-      className="flex-row items-center justify-between bg-slate-50 border border-slate-300 rounded-2xl px-4 py-4 active:bg-slate-200"
+      activeClassName="active:bg-surface"
+      className="flex-row items-center justify-between bg-card border border-borderSubtle rounded-card px-4 py-4"
     >
       <View className="flex-row items-center gap-3 flex-1">
-        <Pressable onPress={onEditIconPress} className="bg-blue-100 rounded-full p-3 active:bg-accent">
+        <AppPressable onPress={onEditIconPress} className="bg-primary/20 rounded-full p-3">
           {({ pressed }) => (
             <Ionicons
               name={item.icon || DEFAULT_CATEGORY_ICON}
               size={20}
-              color={pressed ? "#000000" : colors.blue[600]}
+              color={pressed ? "#000000" : colors.primary}
             />
           )}
-        </Pressable>
+        </AppPressable>
         <View className="flex-1">
-          <Text className="font-sansBold text-lg text-slate-700">
+          <Text className="font-sansBold text-lg text-textMain">
             {item.category}
           </Text>
-          <Text className="font-sansReg text-slate-500">
+          <Text className="font-sansReg text-textMuted">
             {item.transaction_count > 0
               ? `${item.transaction_count} transactions`
               : "No transactions yet"}
@@ -37,7 +41,7 @@ const CategoryItem = ({ item, onDelete, isDeleting = false, onPress, onEditIconP
         disabled={isDeleting}
         onPress={() => onDelete(item)}
       />
-    </Pressable>
+    </AppPressable>
   );
 };
 

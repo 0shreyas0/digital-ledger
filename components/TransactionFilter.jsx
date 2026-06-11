@@ -10,11 +10,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Modal from "react-native-modal";
 import { Calendar } from "react-native-calendars";
-import colors from "tailwindcss/colors";
+import { useTheme } from '@/context/ThemeContext';
 import CloseButton from "./CloseButton";
 import SearchBar from "./SearchBar";
 import SegmentControl from "./SegmentControl";
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+
+import AppPressable from './pressables/AppPressable';
 
 /**
  * TransactionFilter Component
@@ -49,6 +51,7 @@ const TransactionFilter = ({
   onApply,
   onClear
 }) => {
+  const { colors: themeColors } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeFilterTab, setActiveFilterTab] = useState('categories');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -173,20 +176,20 @@ const TransactionFilter = ({
     const range = activeDateRange;
     if (!range || !range.start) return {};
     let marked = {
-      [range.start]: { selected: true, startingDay: true, color: colors.blue[600], textColor: 'white' }
+      [range.start]: { selected: true, startingDay: true, color: themeColors.primary, textColor: 'white' }
     };
     if (range.end) {
-      marked[range.end] = { selected: true, endingDay: true, color: colors.blue[600], textColor: 'white' };
+      marked[range.end] = { selected: true, endingDay: true, color: themeColors.primary, textColor: 'white' };
       let current = new Date(range.start);
       const end = new Date(range.end);
       current.setDate(current.getDate() + 1);
       while (current < end) {
-        marked[current.toISOString().split('T')[0]] = { selected: true, color: colors.blue[100], textColor: colors.blue[600] };
+        marked[current.toISOString().split('T')[0]] = { selected: true, color: themeColors.background, textColor: themeColors.primary };
         current.setDate(current.getDate() + 1);
       }
     }
     return marked;
-  }, [activeDateRange]);
+  }, [activeDateRange, themeColors]);
 
   // ── Amount Range Helpers ────────────────────────────────────
   const activeAmountRange = useMemo(() =>
@@ -264,7 +267,7 @@ const TransactionFilter = ({
 
   return (
     <>
-      <TouchableOpacity 
+      <AppPressable 
         onPress={() => {
           setStagedFilters(activeFilters);
           const dr = (activeFilters.dateRanges || DEFAULT_DATE_RANGES)[0];
@@ -273,10 +276,10 @@ const TransactionFilter = ({
           setActiveAmountPillId(ar?.id || 'default');
           setIsModalVisible(true);
         }}
-        className={`w-14 h-14 items-center justify-center rounded-2xl ${hasActiveFilters ? 'bg-blue-600' : 'bg-slate-50 border border-slate-400'}`}
+        className={`w-14 h-14 items-center justify-center rounded-2xl ${hasActiveFilters ? 'bg-primary' : 'bg-surface border border-border'}`}
       >
-        <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : colors.slate[600]} />
-      </TouchableOpacity>
+        <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : themeColors.textMuted} />
+      </AppPressable>
 
       <Modal
         isVisible={isModalVisible}
@@ -286,9 +289,9 @@ const TransactionFilter = ({
         animationOut="slideOutDown"
         avoidKeyboard={true}
       >
-        <View className="bg-white rounded-t-3xl px-6 pb-6 pt-6 gap-6" style={{ height: '90%' }}>
+        <View className="bg-card rounded-t-3xl px-6 pb-6 pt-6 gap-6" style={{ height: '90%' }}>
           <View className="flex-row justify-between items-center">
-            <Text className="font-sansBold text-2xl text-slate-800">Filters</Text>
+            <Text className="font-sansBold text-2xl text-textMain">Filters</Text>
             <CloseButton onPress={() => setIsModalVisible(false)} />
           </View>
 
@@ -296,24 +299,23 @@ const TransactionFilter = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 40, gap: 24 }}
           >
-
             {/* ─── Matching Logic ─── */}
             <Animated.View layout={LinearTransition.duration(250)}>
               <TouchableOpacity
                 onPress={() => setIsMatchLogicSectionOpen(!isMatchLogicSectionOpen)}
                 className="flex-row justify-between items-center mb-3"
               >
-                <Text className="font-sansBold text-slate-500">Matching Logic</Text>
+                <Text className="font-sansBold text-textMuted">Matching Logic</Text>
                 <View className="flex-row items-center gap-2">
-                  <Text className="font-sansMed text-blue-600 text-sm">
+                  <Text className="font-sansMed text-primary text-sm">
                     {stagedFilters.matchLogic === 'any' ? 'Match Any' : 'Match All'}
                   </Text>
-                  <Ionicons name={isMatchLogicSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.slate[400]} />
+                  <Ionicons name={isMatchLogicSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
                 </View>
               </TouchableOpacity>
               
               {isMatchLogicSectionOpen && (
-                <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+                <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                   <SegmentControl
                     options={[
                       { label: 'Match All', value: 'all' },
@@ -322,7 +324,7 @@ const TransactionFilter = ({
                     selectedOption={stagedFilters.matchLogic || 'all'}
                     onSelect={handleMatchLogicChange}
                   />
-                  <Text className="text-slate-400 text-xs mt-2 mx-1 font-sansReg mb-4">
+                  <Text className="text-textMuted text-xs mt-2 mx-1 font-sansReg mb-4">
                     {isMatchAny
                       ? 'Shows transactions matching ANY selected category, tag, type, date, or amount group.'
                       : 'Shows transactions matching ALL of your selected categories, tags, and type.'}
@@ -337,27 +339,27 @@ const TransactionFilter = ({
                 onPress={() => setIsTypeSectionOpen(!isTypeSectionOpen)}
                 className="flex-row justify-between items-center mb-3"
               >
-                <Text className="font-sansBold text-slate-500">Type</Text>
+                <Text className="font-sansBold text-textMuted">Type</Text>
                 <View className="flex-row items-center gap-2">
-                  <Text className="font-sansMed text-blue-600 text-sm capitalize">
+                  <Text className="font-sansMed text-primary text-sm capitalize">
                     {stagedFilters.type || 'all'}
                   </Text>
-                  <Ionicons name={isTypeSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.slate[400]} />
+                  <Ionicons name={isTypeSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
                 </View>
               </TouchableOpacity>
 
               {isTypeSectionOpen && (
-                <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)} className="mb-4">
+                <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)} className="mb-4">
                   <View className="flex-row gap-3">
                     {['all', 'Income', 'Expense'].map((type) => {
                       const isActive = (stagedFilters.type || 'all') === type;
                       return (
                         <TouchableOpacity
-                          key={type}
-                          onPress={() => updateStaged('type', type)}
-                          className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-slate-700 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                           key={type}
+                           onPress={() => updateStaged('type', type)}
+                           className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-primary border-primary' : 'bg-surface border border-borderSubtle'}`}
                         >
-                          <Text className={`font-sansMed capitalize ${isActive ? 'text-white' : 'text-slate-600'}`}>
+                          <Text className={`font-sansMed capitalize ${isActive ? 'text-white' : 'text-textMuted'}`}>
                             {type}
                           </Text>
                         </TouchableOpacity>
@@ -369,56 +371,56 @@ const TransactionFilter = ({
             </Animated.View>
 
             {/* ─── Date Range ─── */}
-            <Animated.View layout={LinearTransition.duration(400)}>
+            <Animated.View layout={LinearTransition.duration(250)}>
               <TouchableOpacity
                 onPress={() => setIsDateSectionOpen(!isDateSectionOpen)}
                 className="flex-row justify-between items-center mb-3"
               >
-                <Text className="font-sansBold text-slate-500">Date Range</Text>
+                <Text className="font-sansBold text-textMuted">Date Range</Text>
                 <View className="flex-row items-center gap-2">
                   {canDeleteDatePill && isDateSectionOpen && (
-                    <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+                    <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                       <TouchableOpacity
                         onPress={deleteActiveDateGroup}
                         className="p-1"
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <Ionicons name="trash-outline" size={15} color={colors.red[400]} />
+                        <Ionicons name="trash-outline" size={15} color={themeColors.red} />
                       </TouchableOpacity>
                     </Animated.View>
                   )}
-                  <Ionicons name={isDateSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.slate[400]} />
+                  <Ionicons name={isDateSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
                 </View>
               </TouchableOpacity>
 
               {/* Date pills — only shown in Match Any mode */}
               {isMatchAny && (
-                <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+                <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
                     <View className="flex-row gap-2 pr-2">
                       {dateRanges.map((dr, idx) => {
                         const label = formatDateLabel(dr) || `Date ${idx + 1}`;
                         const isActive = dr.id === activeDatePillId;
                         return (
-                          <Animated.View key={dr.id} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} layout={LinearTransition.duration(200)}>
+                          <Animated.View key={dr.id} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)} layout={LinearTransition.duration(250)}>
                             <TouchableOpacity
                               onPress={() => { setActiveDatePillId(dr.id); setIsDateSectionOpen(true); }}
-                              className={`px-4 py-2 rounded-xl border ${isActive ? 'bg-slate-700 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                              className={`px-4 py-2 rounded-xl border ${isActive ? 'bg-primary border-primary' : 'bg-surface border border-borderSubtle'}`}
                             >
-                              <Text className={`font-sansMed text-sm ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                              <Text className={`font-sansMed text-sm ${isActive ? 'text-white' : 'text-textMuted'}`}>
                                 {label}
                               </Text>
                             </TouchableOpacity>
                           </Animated.View>
                         );
                       })}
-                      <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+                      <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                         <TouchableOpacity
                           onPress={addDateGroup}
-                          className="flex-row items-center gap-1 px-4 py-2 rounded-xl border border-dashed border-blue-300 bg-blue-50"
+                          className="flex-row items-center gap-1 px-4 py-2 rounded-xl border border-dashed border-primary bg-primary/10"
                         >
-                          <Ionicons name="add" size={14} color={colors.blue[500]} />
-                          <Text className="font-sansMed text-sm text-blue-500">Add Date</Text>
+                          <Ionicons name="add" size={14} color={themeColors.primary} />
+                          <Text className="font-sansMed text-sm text-primary">Add Date</Text>
                         </TouchableOpacity>
                       </Animated.View>
                     </View>
@@ -429,9 +431,9 @@ const TransactionFilter = ({
               {/* Calendar always shown when section is open */}
               {isDateSectionOpen && (
                 <Animated.View
-                  entering={FadeIn.duration(300)}
+                  entering={FadeIn.duration(250)}
                   exiting={FadeOut.duration(200)}
-                  className="border border-slate-100 rounded-3xl overflow-hidden bg-white"
+                  className="border border-borderSubtle rounded-3xl overflow-hidden bg-card"
                 >
                   <Calendar
                     markingType="period"
@@ -439,9 +441,9 @@ const TransactionFilter = ({
                     onDayPress={onDayPress}
                     theme={{
                       calendarBackground: 'transparent',
-                      selectedDayBackgroundColor: colors.blue[600],
-                      todayTextColor: colors.blue[600],
-                      dayTextColor: colors.slate[700],
+                      selectedDayBackgroundColor: themeColors.primary,
+                      todayTextColor: themeColors.primary,
+                      dayTextColor: themeColors.textMain,
                       textDayFontFamily: 'GoogleSans-Regular',
                       textMonthFontFamily: 'GoogleSans-Bold',
                       textDayHeaderFontFamily: 'GoogleSans-Medium',
@@ -452,56 +454,56 @@ const TransactionFilter = ({
             </Animated.View>
 
             {/* ─── Amount Range ─── */}
-            <Animated.View layout={LinearTransition.duration(400)}>
+            <Animated.View layout={LinearTransition.duration(250)}>
               <TouchableOpacity
                 onPress={() => setIsAmountSectionOpen(!isAmountSectionOpen)}
                 className="flex-row justify-between items-center mb-3"
               >
-                <Text className="font-sansBold text-slate-500">Amount Range</Text>
+                <Text className="font-sansBold text-textMuted">Amount Range</Text>
                 <View className="flex-row items-center gap-2">
                   {canDeleteAmountPill && isAmountSectionOpen && (
-                    <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+                    <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                       <TouchableOpacity
                         onPress={deleteActiveAmountGroup}
                         className="p-1"
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <Ionicons name="trash-outline" size={15} color={colors.red[400]} />
+                        <Ionicons name="trash-outline" size={15} color={themeColors.red} />
                       </TouchableOpacity>
                     </Animated.View>
                   )}
-                  <Ionicons name={isAmountSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.slate[400]} />
+                  <Ionicons name={isAmountSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
                 </View>
               </TouchableOpacity>
 
               {/* Amount pills — only shown in Match Any mode */}
               {isMatchAny && (
-                <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+                <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
                     <View className="flex-row gap-2 pr-2">
                       {amountRanges.map((ar, idx) => {
                         const label = formatAmountLabel(ar) || `Range ${idx + 1}`;
                         const isActive = ar.id === activeAmountPillId;
                         return (
-                          <Animated.View key={ar.id} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} layout={LinearTransition.duration(200)}>
+                          <Animated.View key={ar.id} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)} layout={LinearTransition.duration(250)}>
                             <TouchableOpacity
                               onPress={() => { setActiveAmountPillId(ar.id); setIsAmountSectionOpen(true); }}
-                              className={`px-4 py-2 rounded-xl border ${isActive ? 'bg-slate-700 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                              className={`px-4 py-2 rounded-xl border ${isActive ? 'bg-primary border-primary' : 'bg-surface border border-borderSubtle'}`}
                             >
-                              <Text className={`font-sansMed text-sm ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                              <Text className={`font-sansMed text-sm ${isActive ? 'text-white' : 'text-textMuted'}`}>
                                 {label}
                               </Text>
                             </TouchableOpacity>
                           </Animated.View>
                         );
                       })}
-                      <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+                      <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                         <TouchableOpacity
                           onPress={addAmountGroup}
-                          className="flex-row items-center gap-1 px-4 py-2 rounded-xl border border-dashed border-blue-300 bg-blue-50"
+                          className="flex-row items-center gap-1 px-4 py-2 rounded-xl border border-dashed border-primary bg-primary/10"
                         >
-                          <Ionicons name="add" size={14} color={colors.blue[500]} />
-                          <Text className="font-sansMed text-sm text-blue-500">Add Range</Text>
+                          <Ionicons name="add" size={14} color={themeColors.primary} />
+                          <Text className="font-sansMed text-sm text-primary">Add Range</Text>
                         </TouchableOpacity>
                       </Animated.View>
                     </View>
@@ -512,24 +514,26 @@ const TransactionFilter = ({
               {/* Amount inline editor */}
               {isAmountSectionOpen && (
                 <Animated.View
-                  entering={FadeIn.duration(300)}
+                  entering={FadeIn.duration(250)}
                   exiting={FadeOut.duration(200)}
                   className="flex-row items-center gap-3"
                 >
                   <TextInput
                     placeholder="Min"
                     keyboardType="numeric"
+                    placeholderTextColor={themeColors.textMuted}
                     value={activeAmountRange?.minAmount || ''}
                     onChangeText={(v) => updateActiveAmountRange({ minAmount: v })}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-sansReg"
+                    className="flex-1 bg-surface border border-borderSubtle rounded-xl px-4 py-3 font-sansReg text-textMain"
                   />
-                  <Text className="text-slate-400">—</Text>
+                  <Text className="text-textMuted">—</Text>
                   <TextInput
                     placeholder="Max"
                     keyboardType="numeric"
+                    placeholderTextColor={themeColors.textMuted}
                     value={activeAmountRange?.maxAmount || ''}
                     onChangeText={(v) => updateActiveAmountRange({ maxAmount: v })}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-sansReg"
+                    className="flex-1 bg-surface border border-borderSubtle rounded-xl px-4 py-3 font-sansReg text-textMain"
                   />
                 </Animated.View>
               )}
@@ -549,12 +553,12 @@ const TransactionFilter = ({
                   />
                 </View>
                 <TouchableOpacity onPress={() => setIsSearchVisible(!isSearchVisible)}>
-                  <Ionicons name={isSearchVisible ? 'close-circle' : 'search'} size={20} color={colors.slate[400]} />
+                  <Ionicons name={isSearchVisible ? 'close-circle' : 'search'} size={20} color={themeColors.textMuted} />
                 </TouchableOpacity>
               </View>
 
               {isSearchVisible && (
-                <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)}>
+                <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                   <SearchBar
                     placeholder={activeFilterTab === 'categories' ? 'Search categories...' : 'Search tags...'}
                     value={searchQuery}
@@ -567,27 +571,27 @@ const TransactionFilter = ({
               <Animated.View
                 layout={LinearTransition.duration(250)}
                 style={{ minHeight: 74, maxHeight: 258 }}
-                className="border border-slate-100 rounded-2xl bg-slate-50/50 p-2"
+                className="border border-borderSubtle rounded-2xl bg-surface/50 p-2"
               >
                 <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
                   {activeFilterTab === 'categories' ? (
                     filteredCategories.map((item) => (
                       <Animated.View
                         key={item.category_id}
-                        entering={FadeIn.duration(200)}
+                        entering={FadeIn.duration(250)}
                         exiting={FadeOut.duration(200)}
                         layout={LinearTransition.duration(250)}
                       >
                         <TouchableOpacity
                           onPress={() => toggleCategory(item.category)}
-                          className={`flex-row items-center gap-3 px-4 py-3 mb-2 rounded-2xl border ${stagedFilters.categories?.includes(item.category) ? 'bg-slate-700 border-slate-700' : 'bg-white border-slate-100'}`}
+                          className={`flex-row items-center gap-3 px-4 py-3 mb-2 rounded-2xl border ${stagedFilters.categories?.includes(item.category) ? 'bg-primary border-primary' : 'bg-card border-borderSubtle'}`}
                         >
                           <Ionicons
                             name={item.icon}
                             size={20}
-                            color={stagedFilters.categories?.includes(item.category) ? 'white' : colors.blue[500]}
+                            color={stagedFilters.categories?.includes(item.category) ? 'white' : themeColors.primary}
                           />
-                          <Text className={`font-sansMed text-lg ${stagedFilters.categories?.includes(item.category) ? 'text-white' : 'text-slate-700'}`}>
+                          <Text className={`font-sansMed text-lg ${stagedFilters.categories?.includes(item.category) ? 'text-white' : 'text-textMain'}`}>
                             {item.category}
                           </Text>
                         </TouchableOpacity>
@@ -599,16 +603,16 @@ const TransactionFilter = ({
                       return (
                         <Animated.View
                           key={item.tag_id}
-                          entering={FadeIn.duration(200)}
+                          entering={FadeIn.duration(250)}
                           exiting={FadeOut.duration(200)}
                           layout={LinearTransition.duration(250)}
                         >
                           <TouchableOpacity
                             onPress={() => toggleTag(item.tag_name)}
                             style={isSelected ? { backgroundColor: item.color, borderColor: item.color } : {}}
-                            className={`flex-row items-center px-4 py-3 mb-2 rounded-2xl border ${isSelected ? '' : 'bg-white border-slate-100'}`}
+                            className={`flex-row items-center px-4 py-3 mb-2 rounded-2xl border ${isSelected ? '' : 'bg-card border-borderSubtle'}`}
                           >
-                            <Text className={`font-sansMed text-lg ${isSelected ? 'text-slate-800' : 'text-slate-700'}`}>
+                            <Text className={`font-sansMed text-lg ${isSelected ? 'text-textMain' : 'text-textMain'}`}>
                               {item.tag_name}
                             </Text>
                           </TouchableOpacity>
@@ -628,7 +632,7 @@ const TransactionFilter = ({
 
           <TouchableOpacity
             onPress={handleApply}
-            className="bg-slate-700 py-4 rounded-2xl items-center"
+            className="bg-primary py-4 rounded-2xl items-center"
           >
             <Text className="text-white font-sansBold text-lg">Apply Filters</Text>
           </TouchableOpacity>

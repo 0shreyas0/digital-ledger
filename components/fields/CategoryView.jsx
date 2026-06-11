@@ -1,17 +1,17 @@
 import {
   Alert,
   FlatList,
-  Pressable,
   Text,
   TextInput,
   View,
 } from "react-native";
+import AppPressable from "@/components/pressables/AppPressable";
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
-import colors from "tailwindcss/colors";
+import { useTheme } from "@/context/ThemeContext";
 import BluePressable from "@/components/pressables/BluePressable";
 import PageLoader from "@/components/PageLoader";
 import CategoryItem from "@/components/CategoryItem";
@@ -24,6 +24,7 @@ import { useCategories } from "@/hooks/useCategories";
 const CategoryView = forwardRef((props, ref) => {
   const router = useRouter();
   const { user } = useUser();
+  const { colors } = useTheme();
   const {
     categories,
     isLoading,
@@ -172,11 +173,11 @@ const CategoryView = forwardRef((props, ref) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingTop: 12, paddingBottom: 110, gap: 12 }}
           ListEmptyComponent={
-            <View className="bg-slate-50 rounded-2xl border border-slate-300 p-5">
-              <Text className="font-sansBold text-xl text-slate-700">
+            <View className="bg-card rounded-card border border-borderSubtle p-5">
+              <Text className="font-sansBold text-xl text-textMain">
                 No categories yet
               </Text>
-              <Text className="font-sansReg text-slate-500 mt-2">
+              <Text className="font-sansReg text-textMuted mt-2">
                 Add your first category to use it while creating transactions.
               </Text>
             </View>
@@ -202,33 +203,33 @@ const CategoryView = forwardRef((props, ref) => {
         useNativeDriverForBackdrop={true}
         style={{ justifyContent: "flex-end", margin: 0 }}
       >
-        <View className="bg-slate-50 rounded-t-3xl border-t border-l border-r border-slate-300 p-5 gap-5">
-          <Text className="font-sansBold text-2xl text-slate-700" numberOfLines={1}>
+        <View className="bg-card rounded-t-3xl border-t border-l border-r border-borderSubtle p-5 gap-5 shadow-sm">
+          <Text className="font-sansBold text-2xl text-textMain" numberOfLines={1}>
             {editingCategoryId ? (
               <Text>
-                Edit Category <Text className="text-slate-400">({editingCategoryOriginalName})</Text>
+                Edit Category <Text className="text-textMuted">({editingCategoryOriginalName})</Text>
               </Text>
             ) : (
               "New Category"
             )}
           </Text>
           <TextInput
-            className="font-sansReg bg-slate-50 rounded-2xl border border-slate-400"
-            style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: "center" }}
+            className="font-sansReg bg-surface rounded-input border border-border text-textMain py-4 px-3"
+            style={{ includeFontPadding: false, textAlignVertical: "center" }}
             value={categoryName}
             onChangeText={setCategoryName}
             placeholder="Category name"
-            placeholderTextColor={colors.slate[400]}
+            placeholderTextColor={colors.textMuted}
           />
           <View className="flex-row items-center justify-between">
-            <Text className="font-sansMed text-slate-500">Choose an icon</Text>
+            <Text className="font-sansMed text-textMuted">Choose an icon</Text>
             <View className="flex-row items-center gap-2">
-              <Text className="font-sansReg text-slate-500">Selected</Text>
-              <View className="bg-blue-100 rounded-full p-2">
+              <Text className="font-sansReg text-textMuted">Selected</Text>
+              <View className="bg-primary/20 rounded-full p-2">
                 <Ionicons
                   name={selectedIcon}
                   size={18}
-                  color={colors.blue[600]}
+                  color={colors.primary}
                 />
               </View>
             </View>
@@ -238,10 +239,11 @@ const CategoryView = forwardRef((props, ref) => {
               const isSelected = selectedIcon === iconOption.icon;
 
               return (
-                <Pressable
+                <AppPressable
                   key={iconOption.id}
                   onPress={() => setSelectedIcon(iconOption.icon)}
-                  className={`w-[22%] items-center justify-center py-5 rounded-2xl border ${isSelected ? "bg-blue-600 border-blue-600" : "bg-slate-50 border-slate-300"}`}
+                  activeClassName=""
+                  className={`w-[22%] items-center justify-center py-5 rounded-2xl border ${isSelected ? "bg-primary border-primary" : "bg-surface border-borderSubtle"}`}
                 >
                   {({ pressed }) => (
                     <Ionicons
@@ -249,14 +251,14 @@ const CategoryView = forwardRef((props, ref) => {
                       size={24}
                       color={
                         isSelected
-                          ? colors.slate[50]
+                          ? colors.card
                           : pressed
-                            ? colors.slate[600]
-                            : colors.slate[700]
+                            ? colors.primary
+                            : colors.textMain
                       }
                     />
                   )}
-                </Pressable>
+                </AppPressable>
               );
             })}
           </View>

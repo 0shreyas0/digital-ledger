@@ -1,12 +1,13 @@
 import { View, ActivityIndicator } from "react-native";
-import { styles } from "@/assets/styles/home.styles.js";
-import { COLORS } from "@/constants/colors.js";
+import { useTheme } from "@/context/ThemeContext.jsx";
 import React from "react";
 
 const PageLoader = () => {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size={"large"} color={COLORS.primary} />
+    <View className="flex-1 justify-center items-center bg-background">
+      <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 };

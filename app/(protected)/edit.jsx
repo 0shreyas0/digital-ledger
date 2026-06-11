@@ -4,7 +4,6 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
-  Pressable,
   Animated,
   ScrollView,
   LayoutAnimation,
@@ -16,11 +15,12 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { API_URL } from "@/constants/api";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import colors from "tailwindcss/colors";
+import { useTheme } from "@/context/ThemeContext";
 import CardTitle from "@/components/CardTitle";
 import FieldInputBox from "@/components/FieldInputBox";
-import CirclePressable from "@/components/pressables/CirclePressable";
+import NestedTopBar from "@/components/NestedTopBar";
 import BluePressable from "@/components/pressables/BluePressable";
+import AppPressable from "@/components/pressables/AppPressable";
 import PageLoader from "@/components/PageLoader";
 import { useCategories } from "@/hooks/useCategories";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -44,6 +44,7 @@ const EditScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { user } = useUser();
+  const { colors } = useTheme();
   
   const { categories, isLoading: isCategoriesLoading, loadCategories } = useCategories(user);
   const { loadTags, tags, createTag, isSaving: isTagSaving } = useTags(user);
@@ -271,23 +272,20 @@ const EditScreen = () => {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between mx-6 my-3 pb-3 border-b-2 border-slate-300">
-        <CirclePressable
-          name={"arrow-back"}
-          onPress={handleBackPress}
-        />
-        <Text className="font-sansBold color-slate-500 text-2xl">
-          Edit Transaction
-        </Text>
-        <BluePressable
-          name={"checkmark"}
-          text={"Save"}
-          direction="right"
-          loadingText="Saving..."
-          onPress={handleSave}
-          isLoading={isLoading}
-        />
-      </View>
+      <NestedTopBar
+        title="Edit Transaction"
+        onBack={handleBackPress}
+        rightElement={
+          <BluePressable
+            name={"checkmark"}
+            text={"Save"}
+            direction="right"
+            loadingText="Saving..."
+            onPress={handleSave}
+            isLoading={isLoading}
+          />
+        }
+      />
       <KeyboardAwareScrollView
         ref={scrollViewRef}
         className="flex-1"
@@ -300,7 +298,7 @@ const EditScreen = () => {
         scrollEventThrottle={16}
       >
         <Ticket
-          borderColor="#94a3b8"
+          borderColor={colors.border}
           className="mx-5 gap-4"
           perforationRadius={5}
           cornerRadius={16}
@@ -310,8 +308,9 @@ const EditScreen = () => {
             <>
               <View className="gap-2">
                 <View className="flex-row gap-3">
-                  <TouchableOpacity
-                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                  <AppPressable
+                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${isExpense ? "bg-segmentedControl" : "bg-surface border border-border"} rounded-full`}
+                    activeClassName=""
                     onPress={() => setIsExpense(true)}
                   >
                     <Ionicons
@@ -320,13 +319,14 @@ const EditScreen = () => {
                       color={isExpense ? "white" : "red"}
                     />
                     <Text
-                      className={`font-sansMed text-lg ml-2 ${isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                      className={`font-sansMed text-lg ml-2 ${isExpense ? "text-white" : "text-textMain"}`}
                     >
                       Expense
                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${!isExpense ? " bg-slate-700" : "bg-slate-50 border border-slate-400"} rounded-full active:bg-accent`}
+                  </AppPressable>
+                  <AppPressable
+                    className={`flex-1 flex-row items-center justify-center p-2 py-3 ${!isExpense ? "bg-segmentedControl" : "bg-surface border border-border"} rounded-full`}
+                    activeClassName=""
                     onPress={() => setIsExpense(false)}
                   >
                     <Ionicons
@@ -335,42 +335,42 @@ const EditScreen = () => {
                       color={!isExpense ? "white" : "#22c55e"}
                     />
                     <Text
-                      className={`font-sansMed text-lg ml-2 ${!isExpense ? "text-white ml-2" : " text-slate-700"} `}
+                      className={`font-sansMed text-lg ml-2 ${!isExpense ? "text-white" : "text-textMain"}`}
                     >
                       Income
                     </Text>
-                  </TouchableOpacity>
+                  </AppPressable>
                 </View>
-                <View className="flex-row gap-3 items-center border-b border-b-slate-400">
-                  <Text className="font-sansBold text-5xl color-slate-700 leading-tight">
+                <View className="flex-row gap-3 items-center border-b border-b-border">
+                  <Text className="font-sansBold text-5xl text-textMain leading-tight">
                     {currency}
                   </Text>
                   <TextInput
-                    className="flex-1 font-sansBold text-5xl leading-tight h-16"
+                    className="flex-1 font-sansBold text-5xl leading-tight h-16 py-0"
                     value={amount}
                     onChangeText={setAmount}
                     placeholder="0.00"
-                    placeholderTextColor={colors.slate[400]}
+                    placeholderTextColor={colors.textMuted}
                     keyboardType="numeric"
-                    style={{ paddingVertical: 0, includeFontPadding: false }}
+                    style={{ includeFontPadding: false }}
                   />
                 </View>
               </View>
 
               <CardTitle title={"Date"} />
-              <Pressable
+              <AppPressable
                 onPress={() => setCalendarModalVisible(true)}
-                className="flex-row items-center gap-4 border border-slate-400 bg-slate-50 active:bg-accent py-3 px-5 rounded-full"
+                className="flex-row items-center gap-4 border border-border bg-surface active:bg-accent py-3 px-5 rounded-full"
               >
                 <Ionicons
                   name="calendar"
                   size={22}
-                  color={colors.blue[500]}
+                  color={colors.primary}
                 />
-                <Text className="font-sansMed text-slate-600 text-lg">
+                <Text className="font-sansMed text-textMain text-lg">
                   {date}
                 </Text>
-              </Pressable>
+              </AppPressable>
 
               <CardTitle title={"Title"} />
               <FieldInputBox
@@ -379,15 +379,16 @@ const EditScreen = () => {
                 placeholder="Transaction title"
               />
               <CardTitle title={"Category"} />
-              <Pressable
+              <AppPressable
                 onPress={toggleModal}
-                className="flex-row items-center justify-center gap-4 border border-slate-400 bg-slate-50 active:bg-slate-200 py-3 rounded-full"
+                activeClassName="active:bg-borderSubtle"
+                className="flex-row items-center justify-center gap-4 border border-border bg-surface py-3 rounded-full"
               >
                 {({ pressed }) => (
                   <>
                     <Text
                       selectable={false}
-                      className={`font-sansMed ${pressed ? "text-slate-600" : selectedCategory ? "text-slate-600" : "text-slate-400"} text-lg`}
+                      className={`font-sansMed ${pressed ? "text-textMain" : selectedCategory ? "text-textMain" : "text-textMuted"} text-lg`}
                     >
                       {selectedCategory ? selectedCategory.name : "Select Category"}
                     </Text>
@@ -396,15 +397,15 @@ const EditScreen = () => {
                       size={22}
                       color={
                         pressed
-                          ? colors.slate[600]
+                          ? colors.textMain
                           : selectedCategory
-                            ? (isExpense ? colors.red[500] : colors.green[500])
-                            : colors.slate[400]
+                            ? (isExpense ? colors.red : colors.green)
+                            : colors.textMuted
                       }
                     />
                   </>
                 )}
-              </Pressable>
+              </AppPressable>
             </>
           }
           bottomTicketView={
@@ -415,16 +416,16 @@ const EditScreen = () => {
                   {selectedTags.map((tag) => (
                     <View
                       key={tag.tag_id}
-                      style={{ backgroundColor: tag.color, borderColor: colors.slate[300], borderWidth: 1 }}
-                      className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full"
+                      className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-button border border-borderSubtle"
+                      style={{ backgroundColor: tag.color }}
                     >
-                      <Text className="font-sansBold text-xs text-slate-800">
+                      <Text className="font-sansBold text-xs text-textMain">
                         {tag.tag_name}
                       </Text>
                       <TouchableOpacity
                         onPress={() => setSelectedTags((prev) => prev.filter((t) => t.tag_id !== tag.tag_id))}
                       >
-                        <Ionicons name="close-circle" size={14} color={colors.slate[800]} />
+                        <Ionicons name="close-circle" size={14} color={colors.textMain} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -446,7 +447,7 @@ const EditScreen = () => {
                       outputRange: [0, 1]
                     }),
                   }}
-                  className="border-slate-300 rounded-lg bg-white overflow-hidden"
+                  className="border-borderSubtle rounded-lg bg-card overflow-hidden"
                 >
                   <ScrollView
                     nestedScrollEnabled={true}
@@ -454,41 +455,43 @@ const EditScreen = () => {
                     onContentSizeChange={handleContentSizeChange}
                   >
                     {cleanedTagQuery.length > 0 && !tagQueryExists && !isTagSaving && (
-                      <Pressable
+                      <AppPressable
                         onPress={handleCreateTagOnTheFly}
-                        className="flex-row items-center gap-2 p-3 border-b border-slate-100 bg-blue-50 active:bg-blue-100"
+                        activeClassName="active:bg-borderSubtle"
+                        className="flex-row items-center gap-2 p-3 border-b border-borderSubtle bg-surface"
                       >
-                        <Ionicons name="add-circle" size={18} color={colors.blue[500]} />
-                        <Text className="font-sansBold text-base text-blue-600">
+                        <Ionicons name="add-circle" size={18} color={colors.primary} />
+                        <Text className="font-sansBold text-base text-primary">
                           Create tag "{cleanedTagQuery}"
                         </Text>
-                      </Pressable>
+                      </AppPressable>
                     )}
 
                     {filteredTags.map((tag) => (
-                      <Pressable
+                      <AppPressable
                         key={tag.tag_id}
                         onPress={() => handleSelectTag(tag)}
                         style={{ backgroundColor: tag.color }}
-                        className="flex-row items-center p-3 border-b border-white/50 active:opacity-75"
+                        activeClassName="active:opacity-75"
+                        className="flex-row items-center p-3 border-b border-white/50"
                       >
-                        <Text className="font-sansBold text-base text-slate-800">
+                        <Text className="font-sansBold text-base text-textMain">
                           {tag.tag_name}
                         </Text>
-                      </Pressable>
+                      </AppPressable>
                     ))}
                   </ScrollView>
                 </Animated.View>
 
                 {selectedTags.length < 5 && (
                   <View className="mt-1">
-                    <View className="flex-row border border-slate-400 rounded-lg px-4 py-4 bg-slate-50 items-center">
-                      <Ionicons name="pricetag-outline" color={colors.slate[500]} size={22} />
+                    <View className="flex-row border border-border rounded-input px-4 py-4 bg-surface items-center">
+                      <Ionicons name="pricetag-outline" color={colors.textMuted} size={22} />
                       <TextInput
                         ref={tagInputRef}
-                        className="flex-1 ml-6 font-sansMed text-xl leading-tight"
+                        className="flex-1 ml-6 font-sansMed text-xl leading-tight py-0"
                         placeholder="Add tag..."
-                        placeholderTextColor={colors.slate[400]}
+                        placeholderTextColor={colors.textMuted}
                         value={tagQuery}
                         onChangeText={setTagQuery}
                         onFocus={() => {
@@ -502,7 +505,7 @@ const EditScreen = () => {
                         onBlur={() => {
                           setTimeout(() => setIsTagFocused(false), 200);
                         }}
-                        style={{ paddingVertical: 0, includeFontPadding: false }}
+                        style={{ includeFontPadding: false }}
                       />
                     </View>
                   </View>

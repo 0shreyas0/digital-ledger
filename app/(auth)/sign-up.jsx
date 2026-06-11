@@ -1,17 +1,15 @@
 import { useState } from "react";
 import {
-  Pressable,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import AppPressable from "@/components/pressables/AppPressable";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
 import { Image } from "expo-image";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { COLORS } from "@/constants/colors.js";
 import { getSignUpErrorMessage } from "@/lib/clerkErrorMessage";
 import ErrorBanner from "@/components/ErrorBanner";
 import OTPInput from "@/components/OTPInput";
@@ -27,7 +25,6 @@ export default function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const { colorScheme, toggleColorScheme } = useColorScheme();
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
@@ -78,7 +75,7 @@ export default function SignUpScreen() {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error(JSON.stringify(err, null, 2));
-      setError(getErrorMessage(err));
+      setError(getSignUpErrorMessage(err));
     }
   };
 
@@ -97,22 +94,23 @@ export default function SignUpScreen() {
           onChangeText={(code) => setCode(code)}
         /> */}
         <OTPInput code={code} setCode={setCode} />
-        <Pressable
+        <AppPressable
           className="w-full"
+          activeClassName=""
           onPress={onVerifyPress}
         >
           {({ pressed }) => (
             <View
               className={`w-full items-center py-3 rounded-full ${
-                pressed ? "bg-accent" : "bg-blue-500"
+                pressed ? "bg-accent" : "bg-primary"
               }`}
             >
-              <Text className={`font-sansBold text-lg ${pressed ? "text-black" : "text-slate-50"}`}>
+              <Text className={`font-sansBold text-lg ${pressed ? "text-black" : "text-white"}`}>
                 Verify
               </Text>
             </View>
           )}
-        </Pressable>
+        </AppPressable>
       </View>
     );
   }
@@ -139,8 +137,8 @@ export default function SignUpScreen() {
         </Text>
         <ErrorBanner error={error} setError={setError} />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
-          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
+          className="w-full font-sansReg bg-surface rounded-input border border-border text-black py-4 px-3"
+          style={{ includeFontPadding: false, textAlignVertical: 'center' }}
           autoCapitalize="none"
           value={username}
           placeholder="Enter username"
@@ -148,8 +146,8 @@ export default function SignUpScreen() {
           onChangeText={(value) => setUsername(value)}
         />
         <TextInput
-          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
-          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
+          className="w-full font-sansReg bg-surface rounded-input border border-border text-black py-4 px-3"
+          style={{ includeFontPadding: false, textAlignVertical: 'center' }}
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Enter email"
@@ -160,13 +158,14 @@ export default function SignUpScreen() {
           value={password}
           onChangeText={(password) => setPassword(password)}
         />
-        <Pressable
+        <AppPressable
           className="w-full"
+          activeClassName=""
           onPress={onSignUpPress}
         >
           {({ pressed }) => (
             <View
-              className={`w-full items-center py-4 rounded-full ${
+              className={`w-full items-center py-4 rounded-button ${
                 pressed ? "bg-accent" : "bg-primary"
               }`}
               style={{ includeFontPadding: false }}
@@ -180,7 +179,7 @@ export default function SignUpScreen() {
               </Text>
             </View>
           )}
-        </Pressable>
+        </AppPressable>
         <View className="gap-3 flex-row items-center">
           <Text className="font-sansReg">Already have an account?</Text>
           <TouchableOpacity
@@ -190,7 +189,7 @@ export default function SignUpScreen() {
             className="px-2 py-1" // padding so text has touch area
             activeOpacity={0.6} // optional for feedback
           >
-            <Text className="font-sansReg text-blue-700 underline">
+            <Text className="font-sansReg text-primary underline">
               Sign in
             </Text>
           </TouchableOpacity>

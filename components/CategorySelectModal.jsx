@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import AppPressable from "@/components/pressables/AppPressable";
 import Modal from "react-native-modal";
 import { Ionicons } from "@expo/vector-icons";
-import colors from "tailwindcss/colors";
+import { useTheme } from "@/context/ThemeContext";
 import CloseButton from "./CloseButton";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 
@@ -15,6 +16,7 @@ const CategorySelectModal = ({
   isCategoriesLoading,
   onAddCategoryPress,
 }) => {
+  const { colors } = useTheme();
   return (
     <Modal
       isVisible={isVisible}
@@ -30,14 +32,14 @@ const CategorySelectModal = ({
       style={{ justifyContent: "flex-end", margin: 0 }}
       avoidKeyboard={true}
     >
-      <View className="bg-white h-80 rounded-t-3xl border-t border-l border-r border-slate-200 p-6">
+      <View className="bg-card h-80 rounded-t-3xl border-t border-l border-r border-borderSubtle p-6">
         <View className="flex-row justify-between items-center mb-6">
-          <Text className="font-sansBold text-2xl text-slate-800">Select Category</Text>
+          <Text className="font-sansBold text-2xl text-textMain">Select Category</Text>
           <CloseButton onPress={onClose} />
         </View>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
           {categories.map((category) => (
-            <Pressable
+            <AppPressable
               key={category.category_id}
               onPress={() => {
                 onSelectCategory({
@@ -47,7 +49,7 @@ const CategorySelectModal = ({
                 });
                 onClose();
               }}
-              className={`flex-row py-2 gap-2 rounded-md pl-3 active:bg-accent ${selectedCategory?.name == category.category ? "bg-blue-500" : "bg-slate-50"}`}
+              className={`flex-row py-2 gap-2 rounded-md pl-3 ${selectedCategory?.name == category.category ? "bg-primary" : "bg-surface"}`}
             >
               {({ pressed }) => (
                 <>
@@ -58,25 +60,25 @@ const CategorySelectModal = ({
                       pressed
                         ? "black"
                         : selectedCategory?.name == category.category
-                          ? colors.slate[50]
-                          : colors.blue[500]
+                          ? '#ffffff'
+                          : colors.primary
                     }
                   />
                   <Text
-                    className={`${pressed ? "text-black" : selectedCategory?.name == category.category ? "text-slate-50" : "text-slate-700"} font-sansMed text-xl `}
+                    className={`${pressed ? "text-black" : selectedCategory?.name == category.category ? "text-white" : "text-textMain"} font-sansMed text-xl `}
                   >
                     {category.category}
                   </Text>
                 </>
               )}
-            </Pressable>
+            </AppPressable>
           ))}
           {isCategoriesLoading && categories.length === 0 ? (
             <View className="items-center py-4">
-              <ActivityIndicator color={colors.blue[500]} />
+              <ActivityIndicator color={colors.primary} />
             </View>
           ) : categories.length === 0 ? (
-            <Pressable
+            <AppPressable
               onPress={() => {
                 onClose();
                 onAddCategoryPress();
@@ -85,12 +87,12 @@ const CategorySelectModal = ({
             >
               {({ pressed }) => (
                 <Text
-                  className={`font-sansMed ${pressed ? "text-slate-500" : "text-blue-600"}`}
+                  className={`font-sansMed ${pressed ? "text-textMuted" : "text-primary"}`}
                 >
                   Add a category first
                 </Text>
               )}
-            </Pressable>
+            </AppPressable>
           ) : null}
         </ScrollView>
       </View>

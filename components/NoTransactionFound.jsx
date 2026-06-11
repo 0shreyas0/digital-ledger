@@ -1,29 +1,31 @@
-import { View, Text, TouchableOpacity, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import colors from "tailwindcss/colors";
+import { useTheme } from "@/context/ThemeContext";
+import AppPressable from "./pressables/AppPressable";
 
 const NoTransactionFound = ({ mode = "initial", onClear }) => {
   const router = useRouter();
+  const { colors } = useTheme();
   const isFilter = mode === "filter";
 
   return (
-    <View className="flex-col p-8 rounded-3xl bg-slate-50 border border-slate-200">
+    <View className="flex-col p-8 rounded-card bg-card border border-borderSubtle shadow-sm">
       <View className="items-center justify-center">
-        <View className="bg-slate-200/50 p-4 rounded-full mb-4">
+        <View className="bg-borderSubtle/50 p-4 rounded-full mb-4">
           <Ionicons
             name={isFilter ? "search-outline" : "receipt-outline"}
-            color={colors.slate[400]}
+            color={colors.textMuted}
             size={40}
           />
         </View>
 
-        <Text className="font-sansBold text-2xl text-slate-800 text-center">
+        <Text className="font-sansBold text-2xl text-textMain text-center">
           {isFilter ? "No Results Found" : "No Transactions yet"}
         </Text>
 
-        <Text className="font-sansMed text-base px-4 text-center mt-2 mb-6 text-slate-500">
+        <Text className="font-sansMed text-base px-4 text-center mt-2 mb-6 text-textMuted">
           {isFilter 
             ? "We couldn't find any matches. Try adjusting your filters or search terms." 
             : "Start tracking your finances by adding your first transaction today!"}
@@ -31,20 +33,26 @@ const NoTransactionFound = ({ mode = "initial", onClear }) => {
       </View>
 
       {isFilter ? (
-        <TouchableOpacity
+        <AppPressable
           onPress={onClear}
-          className="bg-slate-700 py-4 rounded-2xl items-center"
+          className="bg-textMain py-4 rounded-2xl items-center"
         >
-          <Text className="text-white font-sansBold text-lg">Clear Filters</Text>
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <Text className={`font-sansBold text-lg ${pressed ? "text-black" : "text-white"}`}>Clear Filters</Text>
+          )}
+        </AppPressable>
       ) : (
-        <TouchableOpacity
+        <AppPressable
           onPress={() => router.push("/create")}
-          className="flex-row bg-slate-700 justify-center py-4 rounded-2xl gap-2 items-center"
+          className="flex-row bg-primary justify-center py-4 rounded-2xl gap-2 items-center"
         >
-          <Ionicons name="add-circle" size={20} color="white" />
-          <Text className="font-sansBold text-white text-lg">Add Transaction</Text>
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <>
+              <Ionicons name="add-circle" size={20} color={pressed ? "black" : "white"} />
+              <Text className={`font-sansBold text-lg ${pressed ? "text-black" : "text-white"}`}>Add Transaction</Text>
+            </>
+          )}
+        </AppPressable>
       )}
     </View>
   );

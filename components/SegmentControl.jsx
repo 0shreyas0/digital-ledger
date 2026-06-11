@@ -5,10 +5,10 @@ const SegmentControl = ({
   options = [], 
   selectedOption, 
   onSelect,
-  activeBgColor = 'bg-slate-700',
+  activeBgColor = 'bg-segmentedControl',
   activeTextColor = 'text-white',
-  inactiveBgColor = 'bg-slate-50',
-  inactiveTextColor = 'text-slate-600',
+  inactiveBgColor = 'bg-surface',
+  inactiveTextColor = 'text-textMain',
   containerClassName = '',
   buttonClassName = ''
 }) => {
@@ -18,7 +18,7 @@ const SegmentControl = ({
   };
 
   return (
-    <View className={`flex-row p-1 bg-slate-100/80 rounded-2xl ${containerClassName}`}>
+    <View className={`flex-row p-1 bg-surface rounded-2xl ${containerClassName}`}>
       {options.map((option) => {
         const isSelected = option.value === selectedOption;
         return (
