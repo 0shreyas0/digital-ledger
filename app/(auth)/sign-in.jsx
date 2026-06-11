@@ -105,7 +105,7 @@ export default function Page() {
         </Text>
         <ErrorBanner error={error} setError={setError} />
         <TextInput
-          className="w-full font-sansReg bg-surface rounded-input border border-border text-black py-4 px-3"
+          className="w-full font-sansReg bg-surface rounded-input border border-border text-black h-14 px-3"
           style={{ includeFontPadding: false, textAlignVertical: 'center' }}
           autoCapitalize="none"
           value={identifier} // changed from email to indentifer

@@ -13,10 +13,10 @@ export default function PasswordInput({
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <View className="w-full justify-center">
+    <View className="w-full flex-row items-center bg-surface rounded-input border border-border pl-3 pr-2 h-14">
       <TextInput
-        className={`w-full bg-surface rounded-input border border-border text-black py-4 pl-3 pr-11 ${Platform.OS === 'ios' ? '' : 'font-sansReg'}`}
-        style={Platform.OS === 'ios' ? { fontFamily: 'System' } : { includeFontPadding: false, textAlignVertical: 'center' }}
+        className={`flex-1 text-black ${Platform.OS === 'ios' ? '' : 'font-sansReg'}`}
+        style={Platform.OS === 'ios' ? { fontFamily: 'System', paddingVertical: 0 } : { includeFontPadding: false, textAlignVertical: 'center', paddingVertical: 0 }}
         value={value}
         placeholder={placeholder}
         placeholderTextColor={placeholderTextColor}
@@ -27,7 +27,7 @@ export default function PasswordInput({
       />
       <TouchableOpacity
         onPress={() => setShowPassword(!showPassword)}
-        className="absolute right-3 h-[30px] w-[30px] justify-center items-center"
+        className="h-[30px] w-[30px] justify-center items-center ml-1"
         activeOpacity={0.7}
       >
         {showPassword ? (

@@ -15,7 +15,7 @@ import CloseButton from "./CloseButton";
 import SearchBar from "./SearchBar";
 import SegmentControl from "./SegmentControl";
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
-
+import CascadingDropdown from './CascadingDropdown';
 import AppPressable from './pressables/AppPressable';
 
 /**
@@ -300,99 +300,60 @@ const TransactionFilter = ({
             contentContainerStyle={{ paddingBottom: 40, gap: 24 }}
           >
             {/* ─── Matching Logic ─── */}
-            <Animated.View layout={LinearTransition.duration(250)}>
-              <TouchableOpacity
-                onPress={() => setIsMatchLogicSectionOpen(!isMatchLogicSectionOpen)}
-                className="flex-row justify-between items-center mb-3"
-              >
-                <Text className="font-sansBold text-textMuted">Matching Logic</Text>
-                <View className="flex-row items-center gap-2">
-                  <Text className="font-sansMed text-primary text-sm">
-                    {stagedFilters.matchLogic === 'any' ? 'Match Any' : 'Match All'}
-                  </Text>
-                  <Ionicons name={isMatchLogicSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
-                </View>
-              </TouchableOpacity>
-              
-              {isMatchLogicSectionOpen && (
-                <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
-                  <SegmentControl
-                    options={[
-                      { label: 'Match All', value: 'all' },
-                      { label: 'Match Any', value: 'any' }
-                    ]}
-                    selectedOption={stagedFilters.matchLogic || 'all'}
-                    onSelect={handleMatchLogicChange}
-                  />
-                  <Text className="text-textMuted text-xs mt-2 mx-1 font-sansReg mb-4">
-                    {isMatchAny
-                      ? 'Shows transactions matching ANY selected category, tag, type, date, or amount group.'
-                      : 'Shows transactions matching ALL of your selected categories, tags, and type.'}
-                  </Text>
-                </Animated.View>
-              )}
-            </Animated.View>
+            <CascadingDropdown
+              title="Matching Logic"
+              previewValue={stagedFilters.matchLogic === 'any' ? 'Match Any' : 'Match All'}
+              isOpen={isMatchLogicSectionOpen}
+              onToggle={() => setIsMatchLogicSectionOpen(!isMatchLogicSectionOpen)}
+            >
+              <SegmentControl
+                options={[
+                  { label: 'Match All', value: 'all' },
+                  { label: 'Match Any', value: 'any' }
+                ]}
+                selectedOption={stagedFilters.matchLogic || 'all'}
+                onSelect={handleMatchLogicChange}
+              />
+              <Text className="text-textMuted text-xs mt-2 mx-1 font-sansReg mb-4">
+                {isMatchAny
+                  ? 'Shows transactions matching ANY selected category, tag, type, date, or amount group.'
+                  : 'Shows transactions matching ALL of your selected categories, tags, and type.'}
+              </Text>
+            </CascadingDropdown>
 
             {/* ─── Transaction Type ─── */}
-            <Animated.View layout={LinearTransition.duration(250)}>
-              <TouchableOpacity
-                onPress={() => setIsTypeSectionOpen(!isTypeSectionOpen)}
-                className="flex-row justify-between items-center mb-3"
-              >
-                <Text className="font-sansBold text-textMuted">Type</Text>
-                <View className="flex-row items-center gap-2">
-                  <Text className="font-sansMed text-primary text-sm capitalize">
-                    {stagedFilters.type || 'all'}
-                  </Text>
-                  <Ionicons name={isTypeSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
-                </View>
-              </TouchableOpacity>
-
-              {isTypeSectionOpen && (
-                <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)} className="mb-4">
-                  <View className="flex-row gap-3">
-                    {['all', 'Income', 'Expense'].map((type) => {
-                      const isActive = (stagedFilters.type || 'all') === type;
-                      return (
-                        <TouchableOpacity
-                           key={type}
-                           onPress={() => updateStaged('type', type)}
-                           className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-primary border-primary' : 'bg-surface border border-borderSubtle'}`}
-                        >
-                          <Text className={`font-sansMed capitalize ${isActive ? 'text-white' : 'text-textMuted'}`}>
-                            {type}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </Animated.View>
-              )}
-            </Animated.View>
+            <CascadingDropdown
+              title="Type"
+              previewValue={stagedFilters.type || 'all'}
+              isOpen={isTypeSectionOpen}
+              onToggle={() => setIsTypeSectionOpen(!isTypeSectionOpen)}
+            >
+              <View className="flex-row gap-3 mb-4">
+                {['all', 'Income', 'Expense'].map((type) => {
+                  const isActive = (stagedFilters.type || 'all') === type;
+                  return (
+                    <TouchableOpacity
+                       key={type}
+                       onPress={() => updateStaged('type', type)}
+                       className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-primary border-primary' : 'bg-surface border border-borderSubtle'}`}
+                    >
+                      <Text className={`font-sansMed capitalize ${isActive ? 'text-white' : 'text-textMuted'}`}>
+                        {type}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </CascadingDropdown>
 
             {/* ─── Date Range ─── */}
-            <Animated.View layout={LinearTransition.duration(250)}>
-              <TouchableOpacity
-                onPress={() => setIsDateSectionOpen(!isDateSectionOpen)}
-                className="flex-row justify-between items-center mb-3"
-              >
-                <Text className="font-sansBold text-textMuted">Date Range</Text>
-                <View className="flex-row items-center gap-2">
-                  {canDeleteDatePill && isDateSectionOpen && (
-                    <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
-                      <TouchableOpacity
-                        onPress={deleteActiveDateGroup}
-                        className="p-1"
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Ionicons name="trash-outline" size={15} color={themeColors.red} />
-                      </TouchableOpacity>
-                    </Animated.View>
-                  )}
-                  <Ionicons name={isDateSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
-                </View>
-              </TouchableOpacity>
-
+            <CascadingDropdown
+              title="Date Range"
+              isOpen={isDateSectionOpen}
+              onToggle={() => setIsDateSectionOpen(!isDateSectionOpen)}
+              showDelete={canDeleteDatePill}
+              onDelete={deleteActiveDateGroup}
+            >
               {/* Date pills — only shown in Match Any mode */}
               {isMatchAny && (
                 <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
@@ -428,54 +389,35 @@ const TransactionFilter = ({
                 </Animated.View>
               )}
 
-              {/* Calendar always shown when section is open */}
-              {isDateSectionOpen && (
-                <Animated.View
-                  entering={FadeIn.duration(250)}
-                  exiting={FadeOut.duration(200)}
-                  className="border border-borderSubtle rounded-3xl overflow-hidden bg-card"
-                >
-                  <Calendar
-                    markingType="period"
-                    markedDates={markedDates}
-                    onDayPress={onDayPress}
-                    theme={{
-                      calendarBackground: 'transparent',
-                      selectedDayBackgroundColor: themeColors.primary,
-                      todayTextColor: themeColors.primary,
-                      dayTextColor: themeColors.textMain,
-                      textDayFontFamily: 'GoogleSans-Regular',
-                      textMonthFontFamily: 'GoogleSans-Bold',
-                      textDayHeaderFontFamily: 'GoogleSans-Medium',
-                    }}
-                  />
-                </Animated.View>
-              )}
-            </Animated.View>
+              {/* Calendar */}
+              <Animated.View
+                className="border border-borderSubtle rounded-3xl overflow-hidden bg-card"
+              >
+                <Calendar
+                  markingType="period"
+                  markedDates={markedDates}
+                  onDayPress={onDayPress}
+                  theme={{
+                    calendarBackground: 'transparent',
+                    selectedDayBackgroundColor: themeColors.primary,
+                    todayTextColor: themeColors.primary,
+                    dayTextColor: themeColors.textMain,
+                    textDayFontFamily: 'GoogleSans-Regular',
+                    textMonthFontFamily: 'GoogleSans-Bold',
+                    textDayHeaderFontFamily: 'GoogleSans-Medium',
+                  }}
+                />
+              </Animated.View>
+            </CascadingDropdown>
 
             {/* ─── Amount Range ─── */}
-            <Animated.View layout={LinearTransition.duration(250)}>
-              <TouchableOpacity
-                onPress={() => setIsAmountSectionOpen(!isAmountSectionOpen)}
-                className="flex-row justify-between items-center mb-3"
-              >
-                <Text className="font-sansBold text-textMuted">Amount Range</Text>
-                <View className="flex-row items-center gap-2">
-                  {canDeleteAmountPill && isAmountSectionOpen && (
-                    <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
-                      <TouchableOpacity
-                        onPress={deleteActiveAmountGroup}
-                        className="p-1"
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Ionicons name="trash-outline" size={15} color={themeColors.red} />
-                      </TouchableOpacity>
-                    </Animated.View>
-                  )}
-                  <Ionicons name={isAmountSectionOpen ? 'chevron-up' : 'chevron-down'} size={18} color={themeColors.textMuted} />
-                </View>
-              </TouchableOpacity>
-
+            <CascadingDropdown
+              title="Amount Range"
+              isOpen={isAmountSectionOpen}
+              onToggle={() => setIsAmountSectionOpen(!isAmountSectionOpen)}
+              showDelete={canDeleteAmountPill}
+              onDelete={deleteActiveAmountGroup}
+            >
               {/* Amount pills — only shown in Match Any mode */}
               {isMatchAny && (
                 <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
@@ -512,32 +454,26 @@ const TransactionFilter = ({
               )}
 
               {/* Amount inline editor */}
-              {isAmountSectionOpen && (
-                <Animated.View
-                  entering={FadeIn.duration(250)}
-                  exiting={FadeOut.duration(200)}
-                  className="flex-row items-center gap-3"
-                >
-                  <TextInput
-                    placeholder="Min"
-                    keyboardType="numeric"
-                    placeholderTextColor={themeColors.textMuted}
-                    value={activeAmountRange?.minAmount || ''}
-                    onChangeText={(v) => updateActiveAmountRange({ minAmount: v })}
-                    className="flex-1 bg-surface border border-borderSubtle rounded-xl px-4 py-3 font-sansReg text-textMain"
-                  />
-                  <Text className="text-textMuted">—</Text>
-                  <TextInput
-                    placeholder="Max"
-                    keyboardType="numeric"
-                    placeholderTextColor={themeColors.textMuted}
-                    value={activeAmountRange?.maxAmount || ''}
-                    onChangeText={(v) => updateActiveAmountRange({ maxAmount: v })}
-                    className="flex-1 bg-surface border border-borderSubtle rounded-xl px-4 py-3 font-sansReg text-textMain"
-                  />
-                </Animated.View>
-              )}
-            </Animated.View>
+              <View className="flex-row items-center gap-3">
+                <TextInput
+                  placeholder="Min"
+                  keyboardType="numeric"
+                  placeholderTextColor={themeColors.textMuted}
+                  value={activeAmountRange?.minAmount || ''}
+                  onChangeText={(v) => updateActiveAmountRange({ minAmount: v })}
+                  className="flex-1 bg-surface border border-borderSubtle rounded-xl px-4 py-3 font-sansReg text-textMain"
+                />
+                <Text className="text-textMuted">—</Text>
+                <TextInput
+                  placeholder="Max"
+                  keyboardType="numeric"
+                  placeholderTextColor={themeColors.textMuted}
+                  value={activeAmountRange?.maxAmount || ''}
+                  onChangeText={(v) => updateActiveAmountRange({ maxAmount: v })}
+                  className="flex-1 bg-surface border border-borderSubtle rounded-xl px-4 py-3 font-sansReg text-textMain"
+                />
+              </View>
+            </CascadingDropdown>
 
             {/* ─── Categories & Tags ─── */}
             <Animated.View layout={LinearTransition.duration(250)}>

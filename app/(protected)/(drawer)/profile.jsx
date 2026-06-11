@@ -8,6 +8,8 @@ import { Image } from 'expo-image';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import NestedTopBar from '@/components/NestedTopBar';
 import AppPressable from '@/components/pressables/AppPressable';
+import ClosedEyeIcon from '@/components/ClosedEyeIcon';
+import CascadingDropdown from '@/components/CascadingDropdown';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -16,10 +18,9 @@ export default function ProfileScreen() {
   const { colors } = useTheme();
 
   // Profile Form States
-  const [firstName, setFirstName] = useState(user?.firstName || '');
-  const [lastName, setLastName] = useState(user?.lastName || '');
   const [username, setUsername] = useState(user?.username || '');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [showProfileSection, setShowProfileSection] = useState(false);
 
   // Security Form States
   const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -40,16 +41,14 @@ export default function ProfileScreen() {
   }
 
   const handleUpdateProfile = async () => {
-    if (!firstName.trim()) {
-      Alert.alert('Error', 'First name cannot be empty');
+    if (!username.trim()) {
+      Alert.alert('Error', 'Username cannot be empty');
       return;
     }
     try {
       setIsUpdatingProfile(true);
       await user.update({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        username: username.trim() || undefined,
+        username: username.trim(),
       });
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (err) {
@@ -139,127 +138,101 @@ export default function ProfileScreen() {
         </View>
 
         {/* Profile Info Details Form */}
-        <View className="bg-card p-5 rounded-card gap-4 shadow-sm border border-borderSubtle">
-          <Text className="text-lg font-sansBold text-textMain">
-            Personal Details
-          </Text>
-
-          <View className="gap-3">
-            {/* First Name */}
-            <View className="gap-1.5">
-              <Text className="text-sm font-sansBold text-textMuted ml-1">First Name</Text>
-              <View className="flex-row border border-border rounded-input px-4 py-3 bg-surface items-center">
-                <Ionicons name="person-outline" color={colors.textMuted} size={20} />
-                <TextInput
-                  className="flex-1 ml-3 font-sansMed text-lg text-textMain py-1"
-                  placeholder="First name"
-                  placeholderTextColor={colors.textMuted + '80'}
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-                />
-              </View>
-            </View>
-
-            {/* Last Name */}
-            <View className="gap-1.5">
-              <Text className="text-sm font-sansBold text-textMuted ml-1">Last Name</Text>
-              <View className="flex-row border border-border rounded-input px-4 py-3 bg-surface items-center">
-                <Ionicons name="person-outline" color={colors.textMuted} size={20} />
-                <TextInput
-                  className="flex-1 ml-3 font-sansMed text-lg text-textMain py-1"
-                  placeholder="Last name"
-                  placeholderTextColor={colors.textMuted + '80'}
-                  value={lastName}
-                  onChangeText={setLastName}
-                  style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-                />
-              </View>
-            </View>
-
-            {/* Username */}
-            <View className="gap-1.5">
-              <Text className="text-sm font-sansBold text-textMuted ml-1">Username</Text>
-              <View className="flex-row border border-border rounded-input px-4 py-3 bg-surface items-center">
-                <Ionicons name="at-outline" color={colors.textMuted} size={20} />
-                <TextInput
-                  className="flex-1 ml-3 font-sansMed text-lg text-textMain py-1"
-                  placeholder="Username"
-                  placeholderTextColor={colors.textMuted + '80'}
-                  value={username}
-                  onChangeText={setUsername}
-                  style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-                />
-              </View>
-            </View>
-
-            {/* Email (Read only) */}
-            <View className="gap-1.5 opacity-60">
-              <Text className="text-sm font-sansBold text-textMuted ml-1">Email Address</Text>
-              <View className="flex-row border border-border rounded-input px-4 py-3 bg-surface/50 items-center">
-                <Ionicons name="mail-outline" color={colors.textMuted} size={20} />
-                <Text className="flex-1 ml-3 font-sansMed text-lg text-textMuted py-1">
-                  {user.primaryEmailAddress?.emailAddress}
+        <View className="bg-card p-5 rounded-card shadow-sm border border-borderSubtle">
+          <CascadingDropdown
+            title=""
+            isOpen={showProfileSection}
+            onToggle={() => setShowProfileSection(!showProfileSection)}
+            headerContent={
+              <View className="flex-row items-center gap-3">
+                <View className="p-2 rounded-full bg-surface border border-borderSubtle">
+                  <Ionicons name="person-outline" size={20} color={colors.primary} />
+                </View>
+                <Text className="text-lg font-sansBold text-textMain">
+                  Personal Details
                 </Text>
-                <Ionicons name="lock-closed-outline" color={colors.textMuted} size={18} />
               </View>
-            </View>
-          </View>
-
-          <AppPressable
-            className="w-full mt-2"
-            activeClassName=""
-            onPress={handleUpdateProfile}
-            disabled={isUpdatingProfile}
+            }
           >
-            {({ pressed }) => (
-              <View
-                className={`w-full flex-row justify-center items-center py-3.5 rounded-button gap-2 ${
-                  pressed ? 'bg-accent' : 'bg-primary'
-                }`}
-              >
-                {isUpdatingProfile ? (
-                  <ActivityIndicator size="small" color={pressed ? '#000000' : '#ffffff'} />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-sharp" size={20} color={pressed ? colors.textMain : '#ffffff'} />
-                    <Text
-                      className={`font-sansBold text-lg ${
-                        pressed ? 'text-textMain' : 'text-white'
-                      }`}
-                    >
-                      Save Changes
-                    </Text>
-                  </>
-                )}
+            <View className="gap-3 mt-2">
+              {/* Username */}
+              <View className="gap-1.5">
+                <Text className="text-sm font-sansBold text-textMuted ml-1">Username</Text>
+                <View className="flex-row border border-border rounded-input px-4 py-3 bg-surface items-center">
+                  <Ionicons name="at-outline" color={colors.textMuted} size={20} />
+                  <TextInput
+                    className="flex-1 ml-3 font-sansMed text-lg text-textMain py-1"
+                    placeholder="Username"
+                    placeholderTextColor={colors.textMuted + '80'}
+                    value={username}
+                    onChangeText={setUsername}
+                    style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+                  />
+                </View>
               </View>
-            )}
-          </AppPressable>
+
+              {/* Email (Read only) */}
+              <View className="gap-1.5 opacity-60">
+                <Text className="text-sm font-sansBold text-textMuted ml-1">Email Address</Text>
+                <View className="flex-row border border-border rounded-input px-4 py-3 bg-surface/50 items-center">
+                  <Ionicons name="mail-outline" color={colors.textMuted} size={20} />
+                  <Text className="flex-1 ml-3 font-sansMed text-lg text-textMuted py-1">
+                    {user.primaryEmailAddress?.emailAddress}
+                  </Text>
+                  <Ionicons name="lock-closed-outline" color={colors.textMuted} size={18} />
+                </View>
+              </View>
+
+              <AppPressable
+                className="w-full mt-2"
+                activeClassName=""
+                onPress={handleUpdateProfile}
+                disabled={isUpdatingProfile}
+              >
+                {({ pressed }) => (
+                  <View
+                    className={`w-full flex-row justify-center items-center py-3.5 rounded-button gap-2 ${
+                      pressed ? 'bg-accent' : 'bg-primary'
+                    }`}
+                  >
+                    {isUpdatingProfile ? (
+                      <ActivityIndicator size="small" color={pressed ? '#000000' : '#ffffff'} />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark-sharp" size={20} color={pressed ? colors.textMain : '#ffffff'} />
+                        <Text
+                          className={`font-sansBold text-lg ${
+                            pressed ? 'text-textMain' : 'text-white'
+                          }`}
+                        >
+                          Save Changes
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                )}
+              </AppPressable>
+            </View>
+          </CascadingDropdown>
         </View>
 
         {/* Security / Password section */}
-        <View className="bg-card p-5 rounded-card gap-4 shadow-sm border border-borderSubtle">
-          <TouchableOpacity
-            onPress={() => setShowPasswordSection(!showPasswordSection)}
-            className="flex-row justify-between items-center"
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-center gap-3">
-              <View className="p-2 rounded-full bg-surface border border-borderSubtle">
-                <Ionicons name="key-outline" size={20} color={colors.primary} />
+        <View className="bg-card p-5 rounded-card shadow-sm border border-borderSubtle">
+          <CascadingDropdown
+            title=""
+            isOpen={showPasswordSection}
+            onToggle={() => setShowPasswordSection(!showPasswordSection)}
+            headerContent={
+              <View className="flex-row items-center gap-3">
+                <View className="p-2 rounded-full bg-surface border border-borderSubtle">
+                  <Ionicons name="key-outline" size={20} color={colors.primary} />
+                </View>
+                <Text className="text-lg font-sansBold text-textMain">
+                  Change Password
+                </Text>
               </View>
-              <Text className="text-lg font-sansBold text-textMain">
-                Change Password
-              </Text>
-            </View>
-            <Ionicons
-              name={showPasswordSection ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color={colors.textMuted}
-            />
-          </TouchableOpacity>
-
-          {showPasswordSection && (
+            }
+          >
             <View className="gap-3 mt-2">
               {/* Current Password */}
               <View className="gap-1.5 relative justify-center">
@@ -279,7 +252,11 @@ export default function ProfileScreen() {
                     onPress={() => setShowCurrentPassword(!showCurrentPassword)}
                     className="absolute right-4"
                   >
-                    <Ionicons name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textMuted} />
+                    {showCurrentPassword ? (
+                      <Ionicons name="eye-outline" size={20} color={colors.textMuted} />
+                    ) : (
+                      <ClosedEyeIcon size={20} color={colors.textMuted} />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -302,7 +279,11 @@ export default function ProfileScreen() {
                     onPress={() => setShowNewPassword(!showNewPassword)}
                     className="absolute right-4"
                   >
-                    <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textMuted} />
+                    {showNewPassword ? (
+                      <Ionicons name="eye-outline" size={20} color={colors.textMuted} />
+                    ) : (
+                      <ClosedEyeIcon size={20} color={colors.textMuted} />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -325,7 +306,11 @@ export default function ProfileScreen() {
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4"
                   >
-                    <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textMuted} />
+                    {showConfirmPassword ? (
+                      <Ionicons name="eye-outline" size={20} color={colors.textMuted} />
+                    ) : (
+                      <ClosedEyeIcon size={20} color={colors.textMuted} />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -360,25 +345,28 @@ export default function ProfileScreen() {
                 )}
               </AppPressable>
             </View>
-          )}
+          </CascadingDropdown>
         </View>
 
-        {/* Danger Zone / Logout */}
-        <View className="bg-card p-5 rounded-card gap-4 shadow-sm border border-borderSubtle">
-          <Text className="text-lg font-sansBold text-textMain">
-            Account Actions
-          </Text>
-          <TouchableOpacity
-            onPress={handleLogout}
-            className="flex-row items-center justify-center py-4 bg-red/10 border border-red rounded-full gap-2"
-            activeOpacity={0.7}
-          >
-            <Ionicons name="log-out-outline" size={22} color={colors.red} />
-            <Text className="font-sansBold text-lg text-red">
-              Logout Account
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* Logout Button */}
+        <AppPressable
+          className="w-full"
+          activeClassName=""
+          onPress={handleLogout}
+        >
+          {({ pressed }) => (
+            <View
+              className={`w-full flex-row justify-center items-center py-4 rounded-button gap-2 ${
+                pressed ? 'opacity-80' : 'bg-danger'
+              }`}
+            >
+              <Ionicons name="log-out-outline" size={22} color="#ffffff" />
+              <Text className="font-sansBold text-lg text-white">
+                Logout
+              </Text>
+            </View>
+          )}
+        </AppPressable>
 
       </KeyboardAwareScrollView>
     </View>
