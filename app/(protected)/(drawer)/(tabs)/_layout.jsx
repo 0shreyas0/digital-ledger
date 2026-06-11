@@ -1,4 +1,4 @@
-import { View, Platform, StyleSheet, Animated, Pressable, Text } from 'react-native'
+import { View, Platform, StyleSheet, Animated, Pressable, Easing } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
 import { usePathname, withLayoutContext } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons';
@@ -8,32 +8,160 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 const { Navigator } = createMaterialTopTabNavigator();
 const MaterialTopTabs = withLayoutContext(Navigator);
 
-// Tab order must match <MaterialTopTabs.Screen> order below
 const TAB_NAMES = ['index', 'activity', 'create', 'social', 'fields'];
 
-const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
-  const [tabBarWidth, setTabBarWidth] = useState(0);
-  const pillAnim = useRef(new Animated.Value(0)).current;
+// const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
+//   const [tabBarWidth, setTabBarWidth] = useState(0);
+//   const pillAnim = useRef(new Animated.Value(0)).current;
 
-  // Active area is the width of the tab bar minus the 16px padding on each side (32 total)
+//   // Active area is the width minus the 16px padding on each side (32 total)
+//   const activeAreaWidth = tabBarWidth ? tabBarWidth - 32 : 0;
+//   const activeTabWidth = activeAreaWidth / tabCount;
+
+//   const EXTRA_WIDTH = 26;
+  
+//   const PILL_WIDTH = activeTabWidth + EXTRA_WIDTH;
+//   const PILL_HEIGHT = 62;
+  
+//   // FIXED: Changed 14 back to 16 to match paddingHorizontal perfectly
+//   // Centered offset: 16px padding - (20 / 2) = 16 - 10 = 6px
+//   const PILL_OFFSET_X = 16 - (EXTRA_WIDTH / 2); 
+
+//   useEffect(() => {
+//     if (tabBarWidth > 0) {
+//       Animated.spring(pillAnim, {
+//         toValue: PILL_OFFSET_X + selectedIndex * activeTabWidth,
+//         useNativeDriver: true,
+//         tension: 68,
+//         friction: 11,
+//       }).start();
+//     }
+//   }, [selectedIndex, activeTabWidth, tabBarWidth]);
+
+//   const handleLayout = (event) => {
+//     const { width } = event.nativeEvent.layout;
+//     setTabBarWidth(width);
+//   };
+
+//   return (
+//     <View style={StyleSheet.absoluteFillObject} onLayout={handleLayout}>
+//       <BlurView
+//         tint='default'
+//         intensity={20}
+//         experimentalBlurMethod="dimezisBlurView"
+//         style={{
+//           ...StyleSheet.absoluteFillObject,
+//           borderRadius: 36, // Match outer container
+//           overflow: 'hidden',
+//         }}
+//       />
+//       {tabBarWidth > 0 && (
+//         <Animated.View
+//           pointerEvents="none"
+//           style={{
+//             position: 'absolute',
+//             top: '50%',
+//             marginTop: -(PILL_HEIGHT / 2),
+//             left: 0, 
+//             width: PILL_WIDTH,
+//             height: PILL_HEIGHT,
+//             borderRadius: PILL_HEIGHT / 2,
+//             overflow: 'hidden', 
+//             shadowColor: '#007aff',
+//             shadowOffset: { width: 0, height: 2 },
+//             shadowOpacity: 0.10,
+//             shadowRadius: 8,
+//             borderWidth: 1,
+//             borderColor: Platform.OS === 'ios'
+//               ? 'rgba(255,255,255,0.6)'
+//               : 'rgba(255,255,255,0.8)',
+//             transform: [{ translateX: pillAnim }],
+//           }}
+//         >
+//           <BlurView
+//             tint= 'systemUltraThinMaterialDark'
+//             intensity={30}
+//             experimentalBlurMethod="dimezisBlurView"
+//             style={StyleSheet.absoluteFillObject}
+//           />
+//           <View
+//             style={[
+//               StyleSheet.absoluteFillObject,
+//               {
+//                 backgroundColor: Platform.OS === 'ios'
+//                   ? 'rgba(255,255,255,0.1)'
+//                   : 'rgba(255,255,255,0.25)',
+//               }
+//             ]}
+//           />
+//         </Animated.View>
+//       )}
+//     </View>
+//   );
+// };
+
+const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim }) => {
+  const [tabBarWidth, setTabBarWidth] = useState(0);
+
+  // Active area is the width minus the 16px padding on each side (32 total)
   const activeAreaWidth = tabBarWidth ? tabBarWidth - 32 : 0;
   const activeTabWidth = activeAreaWidth / tabCount;
-  
-  // Widen the pill by subtracting only 4px instead of 12px
-  const PILL_WIDTH = activeTabWidth + 6;
-  const PILL_HEIGHT = 48;
-  const PILL_OFFSET_X = 13; // Centered offset: 16px padding - ((PILL_WIDTH - activeTabWidth) / 2) = 13px
 
-  useEffect(() => {
-    if (tabBarWidth > 0) {
-      Animated.spring(pillAnim, {
-        toValue: PILL_OFFSET_X + selectedIndex * activeTabWidth,
-        useNativeDriver: true,
-        tension: 68,
-        friction: 11,
-      }).start();
+  const EXTRA_WIDTH = 26;
+  const PILL_WIDTH = activeTabWidth + EXTRA_WIDTH;
+  const PILL_HEIGHT = 62;
+  
+  // Centered offset: 16px padding - (20 / 2) = 16 - 10 = 6px
+  const PILL_OFFSET_X = 16 - (EXTRA_WIDTH / 2); 
+
+  // Dynamically generate the interpolation arrays based on tabCount
+  const positionInput = [];
+  const translateXOutput = [];
+  const scaleXOutput = [];
+
+  for (let i = 0; i < tabCount; i++) {
+    // Resting points (Exactly on a tab)
+    positionInput.push(i);
+    translateXOutput.push(PILL_OFFSET_X + i * activeTabWidth);
+    scaleXOutput.push(1); // Normal width at rest
+
+    if (i < tabCount - 1) {
+      // Quarter-ramp up: pill starts widening early
+      positionInput.push(i + 0.25);
+      translateXOutput.push(PILL_OFFSET_X + (i + 0.25) * activeTabWidth);
+      scaleXOutput.push(1.25);
+
+      // Peak stretch at the halfway point between tabs
+      positionInput.push(i + 0.5);
+      translateXOutput.push(PILL_OFFSET_X + (i + 0.5) * activeTabWidth);
+      scaleXOutput.push(1.5); // Stretch 50% wider at peak drag
+
+      // Quarter-ramp down: pill narrows as it lands
+      positionInput.push(i + 0.75);
+      translateXOutput.push(PILL_OFFSET_X + (i + 0.75) * activeTabWidth);
+      scaleXOutput.push(1.25);
     }
-  }, [selectedIndex, activeTabWidth, tabBarWidth]);
+  }
+
+  // Create the exact values linked to the user's swipe gesture
+  const translateX = position && positionInput.length ? position.interpolate({
+    inputRange: positionInput,
+    outputRange: translateXOutput,
+    extrapolate: 'clamp',
+  }) : 0;
+
+  const scaleX = position && positionInput.length ? position.interpolate({
+    inputRange: positionInput,
+    outputRange: scaleXOutput,
+    extrapolate: 'clamp',
+  }) : 1;
+
+  // Simple linear scaling: 0 (rest) -> 1, 1 (fully pressed) -> 1.15 (scaled up)
+  const pillPressScale = pressAnim ? pressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.15],
+    extrapolate: 'clamp',
+  }) : 1;
 
   const handleLayout = (event) => {
     const { width } = event.nativeEvent.layout;
@@ -41,18 +169,18 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
   };
 
   return (
-    <View style={StyleSheet.absoluteFillObject} onLayout={handleLayout}>
+    <View style={StyleSheet.absoluteFillObject} onLayout={handleLayout} pointerEvents="none">
       <BlurView
         tint='default'
         intensity={20}
         experimentalBlurMethod="dimezisBlurView"
         style={{
           ...StyleSheet.absoluteFillObject,
-          borderRadius: 34,
+          borderRadius: 36, 
           overflow: 'hidden',
         }}
       />
-      {/* Sliding pill */}
+      
       {tabBarWidth > 0 && (
         <Animated.View
           pointerEvents="none"
@@ -60,25 +188,25 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
             position: 'absolute',
             top: '50%',
             marginTop: -(PILL_HEIGHT / 2),
-            left: 0, // Position is fully handled via translateX animation offset
+            left: 0, 
             width: PILL_WIDTH,
             height: PILL_HEIGHT,
             borderRadius: PILL_HEIGHT / 2,
-            overflow: 'hidden', // Clips the inner BlurView to the pill's rounded shape
+            overflow: 'hidden', 
             shadowColor: '#007aff',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.10,
             shadowRadius: 8,
-            // Border for glass edge
             borderWidth: 1,
             borderColor: Platform.OS === 'ios'
               ? 'rgba(255,255,255,0.6)'
               : 'rgba(255,255,255,0.8)',
-            transform: [{ translateX: pillAnim }],
+            // scaleX = swipe stretch on drag; pillPressScale = responsive hold/tap scale
+            transform: [{ translateX }, { scaleX }, { scale: pillPressScale }],
           }}
         >
           <BlurView
-            tint={Platform.OS === 'ios' ? 'systemUltraThinMaterialDark' : 'default'}
+            tint= 'systemUltraThinMaterialDark'
             intensity={30}
             experimentalBlurMethod="dimezisBlurView"
             style={StyleSheet.absoluteFillObject}
@@ -100,6 +228,9 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount }) => {
 };
 
 const CustomTabBar = ({ state, descriptors, navigation, position }) => {
+  // Drives the pill scale-up/scale-down animation
+  const pressAnim = useRef(new Animated.Value(0)).current;
+
   return (
     <View
       style={{
@@ -107,8 +238,8 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
         bottom: 20,
         left: 0,
         right: 0,
-        height: 68,
-        borderRadius: 34,
+        height: 72, // FIXED: 60px pill + 6px top pad + 6px bottom pad = 72
+        borderRadius: 36, // FIXED: Keep it perfectly rounded (72/2)
         backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255, 255, 255, 0.4)',
         borderWidth: 1.5,
         borderColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
@@ -128,12 +259,32 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
       <AnimatedTabBarBackground
         selectedIndex={state.index}
         tabCount={state.routes.length}
+        position={position}
+        pressAnim={pressAnim}
       />
       <View style={{ flexDirection: 'row', flex: 1, zIndex: 1 }}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const label = options.title !== undefined ? options.title : route.name;
           const isFocused = state.index === index;
+
+          const onPressIn = () => {
+            Animated.spring(pressAnim, {
+              toValue: 1,
+              useNativeDriver: true,
+              tension: 250,
+              friction: 15,
+            }).start();
+          };
+
+          const onPressOut = () => {
+            Animated.spring(pressAnim, {
+              toValue: 0,
+              useNativeDriver: true,
+              tension: 200,
+              friction: 15,
+            }).start();
+          };
 
           const onPress = () => {
             const event = navigation.emit({
@@ -147,13 +298,12 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
             }
           };
 
-          // Interpolate opacities for smooth cross-fading
           const activeOpacity = position.interpolate({
             inputRange: [index - 1, index, index + 1],
             outputRange: [0, 1, 0],
             extrapolate: 'clamp',
           });
-          
+
           const inactiveOpacity = position.interpolate({
             inputRange: [index - 1, index, index + 1],
             outputRange: [1, 0, 1],
@@ -162,12 +312,12 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
 
           const iconScale = position.interpolate({
             inputRange: [
-              index - 1, 
-              index - 0.75, 
-              index - 0.25, 
-              index, 
-              index + 0.25, 
-              index + 0.75, 
+              index - 1,
+              index - 0.75,
+              index - 0.25,
+              index,
+              index + 0.25,
+              index + 0.75,
               index + 1
             ],
             outputRange: [1, 1.15, 0.75, 1, 0.75, 1.15, 1],
@@ -177,13 +327,15 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
           return (
             <Pressable
               key={route.key}
+              onPressIn={onPressIn}
+              onPressOut={onPressOut}
               onPress={onPress}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Animated.View style={{ 
-                width: 24, 
-                height: 24, 
-                alignItems: 'center', 
+              <Animated.View style={{
+                width: 24,
+                height: 24,
+                alignItems: 'center',
                 justifyContent: 'center',
                 transform: [{ scale: iconScale }]
               }}>
@@ -195,20 +347,20 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
                 </Animated.View>
               </Animated.View>
               <View style={{ marginTop: 2, alignItems: 'center', justifyContent: 'center' }}>
-                <Animated.Text style={{ 
-                  color: '#000000', 
-                  fontFamily: 'sansMed', 
-                  fontSize: 10, 
-                  opacity: inactiveOpacity 
+                <Animated.Text style={{
+                  color: '#000000',
+                  fontFamily: 'sansMed',
+                  fontSize: 10,
+                  opacity: inactiveOpacity
                 }}>
                   {label}
                 </Animated.Text>
-                <Animated.Text style={{ 
+                <Animated.Text style={{
                   position: 'absolute',
-                  color: '#007aff', 
-                  fontFamily: 'sansMed', 
-                  fontSize: 10, 
-                  opacity: activeOpacity 
+                  color: '#007aff',
+                  fontFamily: 'sansMed',
+                  fontSize: 10,
+                  opacity: activeOpacity
                 }}>
                   {label}
                 </Animated.Text>
@@ -224,7 +376,6 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
 const TabRoot = () => {
   const pathname = usePathname();
 
-  // Derive selected index from pathname
   const getIndex = (path) => {
     if (path === '/' || path === '/index') return 0;
     const found = TAB_NAMES.findIndex(n => path.includes(n));
@@ -248,7 +399,7 @@ const TabRoot = () => {
         tabBarInactiveTintColor: '#000000',
         tabBarShowLabel: true,
         tabBarShowIcon: true,
-        tabBarIndicatorStyle: { display: 'none' }, // Hide default material swipe line
+        tabBarIndicatorStyle: { display: 'none' }, 
         tabBarLabelStyle: {
           fontFamily: 'sansMed',
           fontSize: 10,
@@ -292,7 +443,7 @@ const TabRoot = () => {
         options={{
           title: "Social",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "person" : "person-outline"} size={20} color={color} />
+            <Ionicons name={focused ? "people" : "people-outline"} size={20} color={color} />
           )
         }}
       />

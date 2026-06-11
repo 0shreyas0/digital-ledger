@@ -21,6 +21,8 @@ export default function Ticket({
   numPerforations = 18,
   topTicketView = null,
   bottomTicketView = null,
+  dividerAccessory = null,
+  dividerLeftAccessory = null,
   cornerType = "cutout", // "cutout" | "curved"
   style = {},
   className = "",
@@ -237,7 +239,7 @@ export default function Ticket({
         {topTicketView || bottomTicketView ? (
           <>
             {topTicketView}
-            <Ticket.Divider />
+            <Ticket.Divider rightAccessory={dividerAccessory} leftAccessory={dividerLeftAccessory} />
             {bottomTicketView}
           </>
         ) : (
@@ -306,7 +308,7 @@ export default function Ticket({
   );
 }
 
-function TicketDivider({ style = {}, lineStyle = {}, ...props }) {
+function TicketDivider({ style = {}, lineStyle = {}, rightAccessory = null, leftAccessory = null, ...props }) {
   const {
     borderColor,
     screenBackgroundColor,
@@ -402,6 +404,20 @@ function TicketDivider({ style = {}, lineStyle = {}, ...props }) {
           }}
         />
       </View>
+
+      {/* Custom Right Accessory */}
+      {rightAccessory && (
+        <View style={{ position: "absolute", right: -padding - 16, top: -14, zIndex: 100 }}>
+          {rightAccessory}
+        </View>
+      )}
+
+      {/* Custom Left Accessory */}
+      {leftAccessory && (
+        <View style={{ position: "absolute", left: -padding - 16, top: -14, zIndex: 100 }}>
+          {leftAccessory}
+        </View>
+      )}
     </View>
   );
 }

@@ -329,13 +329,42 @@ const CreateScreen = () => {
       >
           <Ticket
             borderColor="#94a3b8"
-            className="mx-5 gap-4"
+            className="mx-6 gap-4"
             perforationRadius={5}
             cornerRadius={16}
             cornerType="cutout"
             semicircleRadius={16}
+            dividerAccessory={
+              <View className="p-1">
+                <Ionicons name="star" size={20} color={colors.yellow[500]} />
+              </View>
+            }
+            dividerLeftAccessory={
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    "Reset Form",
+                    "Are you sure you want to reset the form?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Reset",
+                        style: "destructive",
+                        onPress: () => {
+                          resetForm();
+                        },
+                      },
+                    ],
+                  );
+                }}
+                className="active:opacity-50 p-1"
+              >
+                <Feather name="refresh-cw" size={20} color={colors.red[500]} strokeWidth={2.5} />
+              </TouchableOpacity>
+            }
           topTicketView={
             <>
+            {/* <View> */}
               {/* Grouped type selector and amount to reduce gap */}
               <View className="gap-2">
                 <View className="flex-row gap-3">
@@ -451,6 +480,7 @@ const CreateScreen = () => {
                   </>
                 )}
               </Pressable>
+              {/* </View> */}
             </>
           }
           bottomTicketView={
@@ -458,27 +488,6 @@ const CreateScreen = () => {
               {/* Lower Ticket Section: Tags */}
               <View className="flex-row justify-between items-center pr-2">
                 <CardTitle title={"Tags"} />
-                <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert(
-                      "Reset Form",
-                      "Are you sure you want to reset the form?",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Reset",
-                          style: "destructive",
-                          onPress: () => {
-                            resetForm();
-                          },
-                        },
-                      ],
-                    );
-                  }}
-                  className="active:opacity-50 p-1"
-                >
-                  <Feather name="refresh-cw" size={20} color={colors.red[500]} strokeWidth={2.5} />
-                </TouchableOpacity>
               </View>
               {selectedTags.length > 0 && (
                 <View className="flex-row flex-wrap gap-2 items-center mt-1 mb-1">

@@ -15,6 +15,7 @@ import { COLORS } from "@/constants/colors.js";
 import { getSignUpErrorMessage } from "@/lib/clerkErrorMessage";
 import ErrorBanner from "@/components/ErrorBanner";
 import OTPInput from "@/components/OTPInput";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -96,12 +97,22 @@ export default function SignUpScreen() {
           onChangeText={(code) => setCode(code)}
         /> */}
         <OTPInput code={code} setCode={setCode} />
-        <TouchableOpacity
-          className="bg-blue-500 hover:bg-lime-400 w-full items-center py-3 rounded-full"
+        <Pressable
+          className="w-full"
           onPress={onVerifyPress}
         >
-          <Text className="text-slate-50 font-sansBold text-lg">Verify</Text>
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <View
+              className={`w-full items-center py-3 rounded-full ${
+                pressed ? "bg-accent" : "bg-blue-500"
+              }`}
+            >
+              <Text className={`font-sansBold text-lg ${pressed ? "text-black" : "text-slate-50"}`}>
+                Verify
+              </Text>
+            </View>
+          )}
+        </Pressable>
       </View>
     );
   }
@@ -145,27 +156,36 @@ export default function SignUpScreen() {
           placeholderTextColor="#64748b"
           onChangeText={(email) => setEmailAddress(email)}
         />
-        <TextInput
-          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
-          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
+        <PasswordInput
           value={password}
-          placeholder="Enter password"
-          placeholderTextColor="#64748b"
-          secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />
-        <TouchableOpacity
-          className="bg-primary w-full items-center py-4 rounded-full"
-          style={{ includeFontPadding: false }}
+        <Pressable
+          className="w-full"
           onPress={onSignUpPress}
         >
-          <Text className="font-sansBold text-2xl text-white">Sign Up</Text>
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <View
+              className={`w-full items-center py-4 rounded-full ${
+                pressed ? "bg-accent" : "bg-primary"
+              }`}
+              style={{ includeFontPadding: false }}
+            >
+              <Text
+                className={`font-sansBold text-2xl ${
+                  pressed ? "text-black" : "text-white"
+                }`}
+              >
+                Sign Up
+              </Text>
+            </View>
+          )}
+        </Pressable>
         <View className="gap-3 flex-row items-center">
           <Text className="font-sansReg">Already have an account?</Text>
           <TouchableOpacity
             onPress={() => {
-              router.push("/sign-in");
+              router.navigate("/sign-in");
             }}
             className="px-2 py-1" // padding so text has touch area
             activeOpacity={0.6} // optional for feedback

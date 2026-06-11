@@ -10,11 +10,11 @@ import {
 import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
 import { getSignInErrorMessage } from "@/lib/clerkErrorMessage";
 import ErrorBanner from "@/components/ErrorBanner";
 import OTPInput from "@/components/OTPInput";
 import WidePressable from "@/components/pressables/WidePressable";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -113,27 +113,36 @@ export default function Page() {
           placeholderTextColor="#64748b"
           onChangeText={(value) => setIdentifier(value)}
         />
-        <TextInput
-          className="w-full font-sansReg bg-slate-50 rounded-2xl border border-slate-400 text-black"
-          style={{ paddingVertical: 16, paddingHorizontal: 12, includeFontPadding: false, textAlignVertical: 'center' }}
+        <PasswordInput
           value={password}
-          placeholder="Enter password"
-          placeholderTextColor="#64748b"
-          secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />
-        <TouchableOpacity
-          className="bg-primary w-full items-center py-4 rounded-full"
-          style={{ includeFontPadding: false }}
+        <Pressable
+          className="w-full"
           onPress={onSignInPress}
         >
-          <Text className="font-sansBold text-2xl text-white">Sign In</Text>
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <View
+              className={`w-full items-center py-4 rounded-full ${
+                pressed ? "bg-accent" : "bg-primary"
+              }`}
+              style={{ includeFontPadding: false }}
+            >
+              <Text
+                className={`font-sansBold text-2xl ${
+                  pressed ? "text-black" : "text-white"
+                }`}
+              >
+                Sign In
+              </Text>
+            </View>
+          )}
+        </Pressable>
         <View className="gap-3 flex-row items-center">
-          <Text className="font-sansReg">Dont&apos;t have an account?</Text>
+          <Text className="font-sansReg">Don&apos;t have an account?</Text>
           <TouchableOpacity
             onPress={() => {
-              router.push("/sign-up");
+              router.navigate("/sign-up");
             }}
             className="px-2 py-1" // padding so text has touch area
             activeOpacity={0.6} // optional for feedback
