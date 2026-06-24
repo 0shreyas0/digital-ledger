@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
+import SafeScreen from '@/components/SafeScreen';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -36,7 +37,7 @@ export default function SettingsScreen() {
   }, [themeMode]);
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeScreen>
       {/* Top Header Bar */}
       <NestedTopBar title="Settings" />
 
@@ -139,6 +140,6 @@ export default function SettingsScreen() {
       </View>
 
     </ScrollView>
-  </View>
+  </SafeScreen>
   );
 }

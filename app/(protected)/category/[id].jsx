@@ -11,6 +11,7 @@ import TransactionItem from "@/components/TransactionItem";
 import NoTransactionFound from "@/components/NoTransactionFound";
 import PageLoader from "@/components/PageLoader";
 import NestedTopBar from "@/components/NestedTopBar";
+import SafeScreen from "@/components/SafeScreen";
 
 const CategoryTransactions = () => {
   const router = useRouter();
@@ -34,7 +35,7 @@ const CategoryTransactions = () => {
   if (isLoading) return <PageLoader />;
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeScreen>
       <NestedTopBar title={decodeURIComponent(name)} />
 
       <FlatList
@@ -54,7 +55,7 @@ const CategoryTransactions = () => {
           </View>
         }
       />
-    </View>
+    </SafeScreen>
   );
 };
 

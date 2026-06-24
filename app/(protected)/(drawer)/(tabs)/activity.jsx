@@ -28,6 +28,7 @@ import TransactionFilter from "@/components/TransactionFilter";
 import AppPressable from "@/components/pressables/AppPressable";
 import Graph from "@/components/analytics/Graph";
 import BalanceCard from "@/components/BalanceCard";
+import SafeScreen from "@/components/SafeScreen";
 
 const Activity = () => {
   const router = useRouter();
@@ -362,7 +363,7 @@ const Activity = () => {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeScreen>
       {/* Header & Search */}
       <View className="px-6 pt-4 pb-6">
         <View className="flex-row items-center gap-3">
@@ -540,7 +541,7 @@ const Activity = () => {
           }
         />
       )}
-      </View>
+    </SafeScreen>
   );
 };
 

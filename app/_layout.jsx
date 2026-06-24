@@ -6,7 +6,7 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { TransactionProvider } from "@/context/TransactionContext";
 import { ThemeProvider } from "@/context/ThemeContext";
-import SafeScreen from "@/components/SafeScreen";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "@/global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -37,9 +37,9 @@ export default function RootLayout() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
       <ThemeProvider>
         <TransactionProvider>
-          <SafeScreen>
+          <SafeAreaProvider>
             <Slot />
-          </SafeScreen>
+          </SafeAreaProvider>
         </TransactionProvider>
       </ThemeProvider>
     </ClerkProvider>

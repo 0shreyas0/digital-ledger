@@ -11,6 +11,8 @@ import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
+import NativeBottomSheet from "@/components/NativeBottomSheet";
+
 import { useTheme } from "@/context/ThemeContext";
 import BluePressable from "@/components/pressables/BluePressable";
 import PageLoader from "@/components/PageLoader";
@@ -19,6 +21,7 @@ import {
   CATEGORY_ICON_OPTIONS,
   DEFAULT_CATEGORY_ICON,
 } from "@/constants/categoryIcons";
+import CloseButton from "@/components/CloseButton";
 import { useCategories } from "@/hooks/useCategories";
 
 const CategoryView = forwardRef((props, ref) => {
@@ -68,13 +71,25 @@ const CategoryView = forwardRef((props, ref) => {
     }
   };
 
+  // Reactive: used to block native sheet dismiss when edits are in progress
+  const unsavedChanges = editingCategoryId
+    ? (categoryName !== editingCategoryOriginalName || selectedIcon !== editingCategoryOriginalIcon)
+    : (categoryName.trim() !== "" || selectedIcon !== DEFAULT_CATEGORY_ICON);
+
   const handleBackdropPress = () => {
+    // Only fires when there are NO unsaved changes (preventNativeDismiss blocks it otherwise)
+    resetForm();
+    setIsModalVisible(false);
+  };
+
+  // X button: sheet is still open, show alert first then close
+  const handleCloseButtonPress = () => {
     if (hasUnsavedChanges()) {
       Alert.alert(
         "Discard Changes?",
         "Are you sure you want to discard your changes?",
         [
-          { text: "Cancel", style: "cancel" },
+          { text: "Cancel", style: "cancel" }, // sheet stays open
           {
             text: "Discard",
             style: "destructive",
@@ -93,7 +108,7 @@ const CategoryView = forwardRef((props, ref) => {
 
   const toggleModal = () => {
     if (isModalVisible) {
-      handleBackdropPress();
+      handleCloseButtonPress();
     } else {
       resetForm();
       setIsModalVisible(true);
@@ -193,17 +208,13 @@ const CategoryView = forwardRef((props, ref) => {
           )}
         />
       </View>
-      <Modal
+      <NativeBottomSheet
         isVisible={isModalVisible}
-        onBackdropPress={toggleModal}
-        backdropColor="transparent"
-        animationIn="slideInUp"
-        animationOut="slideOutDown"
-        useNativeDriver={true}
-        useNativeDriverForBackdrop={true}
-        style={{ justifyContent: "flex-end", margin: 0 }}
+        onClose={handleBackdropPress}
+        snapPoint="70%"
+        preventNativeDismiss={unsavedChanges}
       >
-        <View className="bg-card rounded-t-3xl border-t border-l border-r border-borderSubtle p-5 gap-5 shadow-sm">
+        <View className="flex-row justify-between items-center mb-5">
           <Text className="font-sansBold text-2xl text-textMain" numberOfLines={1}>
             {editingCategoryId ? (
               <Text>
@@ -213,67 +224,59 @@ const CategoryView = forwardRef((props, ref) => {
               "New Category"
             )}
           </Text>
-          <TextInput
-            className="font-sansReg bg-surface rounded-input border border-border text-textMain py-4 px-3"
-            style={{ includeFontPadding: false, textAlignVertical: "center" }}
-            value={categoryName}
-            onChangeText={setCategoryName}
-            placeholder="Category name"
-            placeholderTextColor={colors.textMuted}
-          />
-          <View className="flex-row items-center justify-between">
-            <Text className="font-sansMed text-textMuted">Choose an icon</Text>
-            <View className="flex-row items-center gap-2">
-              <Text className="font-sansReg text-textMuted">Selected</Text>
-              <View className="bg-primary/20 rounded-full p-2">
-                <Ionicons
-                  name={selectedIcon}
-                  size={18}
-                  color={colors.primary}
-                />
-              </View>
+          <CloseButton onPress={toggleModal} />
+        </View>
+        <TextInput
+          className="font-sansReg bg-surface rounded-input border border-border text-textMain py-4 px-3"
+          style={{ includeFontPadding: false, textAlignVertical: "center" }}
+          value={categoryName}
+          onChangeText={setCategoryName}
+          placeholder="Category name"
+          placeholderTextColor={colors.textMuted}
+        />
+        <View className="flex-row items-center justify-between mt-4">
+          <Text className="font-sansMed text-textMuted">Choose an icon</Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="font-sansReg text-textMuted">Selected</Text>
+            <View className="bg-primary/20 rounded-full p-2">
+              <Ionicons name={selectedIcon} size={18} color={colors.primary} />
             </View>
           </View>
-          <View className="flex-row flex-wrap gap-3 justify-between">
-            {CATEGORY_ICON_OPTIONS.map((iconOption) => {
-              const isSelected = selectedIcon === iconOption.icon;
-
-              return (
-                <AppPressable
-                  key={iconOption.id}
-                  onPress={() => setSelectedIcon(iconOption.icon)}
-                  activeClassName=""
-                  className={`w-[22%] items-center justify-center py-5 rounded-2xl border ${isSelected ? "bg-primary border-primary" : "bg-surface border-borderSubtle"}`}
-                >
-                  {({ pressed }) => (
-                    <Ionicons
-                      name={iconOption.icon}
-                      size={24}
-                      color={
-                        isSelected
-                          ? colors.card
-                          : pressed
-                            ? colors.primary
-                            : colors.textMain
-                      }
-                    />
-                  )}
-                </AppPressable>
-              );
-            })}
-          </View>
-          <View className="flex-row justify-end">
-            <BluePressable
-              name={"checkmark"}
-              text={"Save"}
-              direction="right"
-              onPress={handleSaveCategory}
-              isLoading={isSaving}
-              loadingText="Saving..."
-            />
-          </View>
         </View>
-      </Modal>
+        <View className="flex-row flex-wrap gap-3 justify-between mt-4">
+          {CATEGORY_ICON_OPTIONS.map((iconOption) => {
+            const isSelected = selectedIcon === iconOption.icon;
+            return (
+              <AppPressable
+                key={iconOption.id}
+                onPress={() => setSelectedIcon(iconOption.icon)}
+                activeClassName=""
+                className={`w-[22%] items-center justify-center py-5 rounded-2xl border ${
+                  isSelected ? "bg-primary border-primary" : "bg-surface border-borderSubtle"
+                }`}
+              >
+                {({ pressed }) => (
+                  <Ionicons
+                    name={iconOption.icon}
+                    size={24}
+                    color={isSelected ? colors.card : pressed ? colors.primary : colors.textMain}
+                  />
+                )}
+              </AppPressable>
+            );
+          })}
+        </View>
+        <View className="flex-row justify-end mt-5">
+          <BluePressable
+            name={"checkmark"}
+            text={"Save"}
+            direction="right"
+            onPress={handleSaveCategory}
+            isLoading={isSaving}
+            loadingText="Saving..."
+          />
+        </View>
+      </NativeBottomSheet>
     </View>
   );
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Alert, ActivityIndicator, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import SafeScreen from '@/components/SafeScreen';
 import { useUser, useClerk } from '@clerk/clerk-expo';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,9 +35,9 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <View className="flex-1 justify-center items-center bg-background">
+      <SafeScreen className="justify-center items-center">
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      </SafeScreen>
     );
   }
 
@@ -106,7 +107,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeScreen>
       <NestedTopBar title="Profile" />
 
       <KeyboardAwareScrollView
@@ -369,6 +370,6 @@ export default function ProfileScreen() {
         </AppPressable>
 
       </KeyboardAwareScrollView>
-    </View>
+    </SafeScreen>
   );
 }

@@ -1,9 +1,10 @@
 import { View, Platform, StyleSheet, Animated, Pressable, Easing } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
 import { usePathname, withLayoutContext } from 'expo-router'
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { createMaterialTopTabNavigator } from "expo-router/js-top-tabs";
 
 const { Navigator } = createMaterialTopTabNavigator();
 const MaterialTopTabs = withLayoutContext(Navigator);
@@ -373,7 +374,7 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
   );
 };
 
-const TabRoot = () => {
+const AndroidTabs = () => {
   const pathname = usePathname();
 
   const getIndex = (path) => {
@@ -459,6 +460,40 @@ const TabRoot = () => {
       />
     </MaterialTopTabs>
   )
+}
+
+const IosTabs = () => {
+  return (
+    <NativeTabs>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="house.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="activity">
+        <NativeTabs.Trigger.Label>Activity</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="waveform.path.ecg" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="create">
+        <NativeTabs.Trigger.Label>Create</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="plus.circle.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="social">
+        <NativeTabs.Trigger.Label>Social</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.2.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="fields">
+        <NativeTabs.Trigger.Label>Fields</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="square.grid.3x3.fill" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
+  );
+};
+
+const TabRoot = () => {
+  if (Platform.OS === 'ios') {
+    return <IosTabs />;
+  }
+  return <AndroidTabs />;
 }
 
 export default TabRoot

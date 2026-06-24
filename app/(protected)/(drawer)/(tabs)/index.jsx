@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import {
   Alert,
   FlatList,
@@ -17,6 +17,7 @@ import BalanceCard from "@/components/BalanceCard";
 import TransactionItem from "@/components/TransactionItem";
 import NoTransactionFound from "@/components/NoTransactionFound";
 import BluePressable from "@/components/pressables/BluePressable";
+import SafeScreen from "@/components/SafeScreen";
 
 export default function Page() {
   const { user } = useUser();
@@ -62,7 +63,7 @@ export default function Page() {
   if (isLoading && !refreshing && transactions.length === 0) return <PageLoader />;
 
   return (
-    <View className="bg-background flex-1">
+    <SafeScreen>
       <View>
         <View className="flex-row justify-between">
           <View className="flex-row items-center gap-3 px-4 pt-2">
@@ -110,6 +111,6 @@ export default function Page() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
-    </View>
+    </SafeScreen>
   );
 }

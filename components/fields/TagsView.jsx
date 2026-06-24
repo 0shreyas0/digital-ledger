@@ -10,8 +10,10 @@ import AppPressable from "@/components/pressables/AppPressable";
 import React, { useCallback, useState, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import Modal from "react-native-modal";
+import NativeBottomSheet from "@/components/NativeBottomSheet";
+
 import { useTheme } from "@/context/ThemeContext";
 import CirclePressable from "@/components/pressables/CirclePressable";
 import BluePressable from "@/components/pressables/BluePressable";
@@ -48,6 +50,9 @@ const TagsView = forwardRef((props, ref) => {
   const [editingTagId, setEditingTagId] = useState(null);
   const [tagName, setTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PALETTE[0]);
+  // Track original values so we can detect real changes in edit mode
+  const [originalTagName, setOriginalTagName] = useState("");
+  const [originalTagColor, setOriginalTagColor] = useState(PALETTE[0]);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,23 +63,37 @@ const TagsView = forwardRef((props, ref) => {
   const resetForm = () => {
     setTagName("");
     setSelectedColor(PALETTE[0]);
+    setOriginalTagName("");
+    setOriginalTagColor(PALETTE[0]);
     setEditingTagId(null);
   };
 
   const hasUnsavedChanges = () => {
-    return (
-      tagName.trim() !== "" ||
-      selectedColor !== PALETTE[0]
-    );
+    if (editingTagId) {
+      return tagName !== originalTagName || selectedColor !== originalTagColor;
+    }
+    return tagName.trim() !== "" || selectedColor !== PALETTE[0];
   };
 
+  // Reactive: compare against originals so edit mode doesn't lock immediately
+  const unsavedChanges = editingTagId
+    ? (tagName !== originalTagName || selectedColor !== originalTagColor)
+    : (tagName.trim() !== "" || selectedColor !== PALETTE[0]);
+
   const handleBackdropPress = () => {
+    // Only fires when there are NO unsaved changes (preventNativeDismiss blocks it otherwise)
+    resetForm();
+    setIsModalVisible(false);
+  };
+
+  // X button: sheet is still open, show alert first then close
+  const handleCloseButtonPress = () => {
     if (hasUnsavedChanges()) {
       Alert.alert(
         "Discard Changes?",
         "Are you sure you want to discard your changes?",
         [
-          { text: "Cancel", style: "cancel" },
+          { text: "Cancel", style: "cancel" }, // sheet stays open
           {
             text: "Discard",
             style: "destructive",
@@ -93,7 +112,7 @@ const TagsView = forwardRef((props, ref) => {
 
   const toggleModal = () => {
     if (isModalVisible) {
-      handleBackdropPress();
+      handleCloseButtonPress();
     } else {
       setIsModalVisible(true);
     }
@@ -107,6 +126,8 @@ const TagsView = forwardRef((props, ref) => {
     setEditingTagId(tag.tag_id);
     setTagName(tag.tag_name);
     setSelectedColor(tag.color);
+    setOriginalTagName(tag.tag_name);
+    setOriginalTagColor(tag.color);
     setIsModalVisible(true);
   };
 
@@ -179,11 +200,17 @@ const TagsView = forwardRef((props, ref) => {
               activeClassName="active:opacity-70"
               style={{ backgroundColor: item.color }}
             >
-              <CirclePressable
-                name={"pencil"}
-                onPress={() => openEditModal(item)}
-                className="mr-3"
-              />
+              {/* stopPropagation wrapper so pencil press doesn't also navigate */}
+              <View
+                onStartShouldSetResponder={() => true}
+                onTouchEnd={(e) => e.stopPropagation()}
+              >
+                <CirclePressable
+                  name={"pencil"}
+                  onPress={() => openEditModal(item)}
+                  className="mr-3"
+                />
+              </View>
               <View className="flex-1">
                 <Text className="font-sansBold text-lg text-textMain">
                   {item.tag_name}
@@ -203,64 +230,58 @@ const TagsView = forwardRef((props, ref) => {
           )}
         />
       </View>
-      <Modal
+      <NativeBottomSheet
         isVisible={isModalVisible}
-        onBackdropPress={toggleModal}
-        backdropColor="transparent"
-        animationIn="slideInUp"
-        animationOut="slideOutDown"
-        useNativeDriver={true}
-        useNativeDriverForBackdrop={true}
-        style={{ justifyContent: "flex-end", margin: 0 }}
+        onClose={handleBackdropPress}
+        snapPoint="55%"
+        preventNativeDismiss={unsavedChanges}
       >
-        <View className="bg-surface rounded-t-3xl border-t border-l border-r border-borderSubtle p-5 gap-5">
-          <View className="flex-row justify-between items-center">
-            <Text className="font-sansBold text-2xl text-textMain">
-              {editingTagId ? "Edit Tag" : "New Tag"}
-            </Text>
-            <CloseButton onPress={toggleModal} />
-          </View>
-          <TextInput
-            className="font-sansReg bg-surface rounded-input border border-border text-lg py-4 px-3"
-            style={{ includeFontPadding: false, textAlignVertical: "center" }}
-            value={tagName}
-            onChangeText={setTagName}
-            placeholder="Tag name"
-            placeholderTextColor={colors.textMuted}
-            maxLength={25}
-          />
-          <View>
-            <Text className="font-sansMed text-textMuted mb-3">Choose color</Text>
-            <View className="flex-row justify-between">
-              {PALETTE.map((color) => {
-                const isSelected = selectedColor === color;
-                return (
-                  <TouchableOpacity
-                    key={color}
-                    onPress={() => setSelectedColor(color)}
-                    style={{
-                      backgroundColor: color,
-                      borderColor: isSelected ? "#000" : "transparent",
-                      borderWidth: isSelected ? 3 : 0,
-                    }}
-                    className="w-10 h-10 rounded-full"
-                  />
-                );
-              })}
-            </View>
-          </View>
-          <View className="flex-row justify-end mt-2">
-            <BluePressable
-              name={"checkmark"}
-              text={"Save"}
-              direction="right"
-              onPress={handleCreateOrUpdateTag}
-              isLoading={isSaving}
-              loadingText="Saving..."
-            />
+        <View className="flex-row justify-between items-center mb-5">
+          <Text className="font-sansBold text-2xl text-textMain">
+            {editingTagId ? "Edit Tag" : "New Tag"}
+          </Text>
+          <CloseButton onPress={toggleModal} />
+        </View>
+        <TextInput
+          className="font-sansReg bg-surface rounded-input border border-border text-lg py-4 px-3"
+          style={{ includeFontPadding: false, textAlignVertical: "center" }}
+          value={tagName}
+          onChangeText={setTagName}
+          placeholder="Tag name"
+          placeholderTextColor={colors.textMuted}
+          maxLength={25}
+        />
+        <View className="mt-4">
+          <Text className="font-sansMed text-textMuted mb-3">Choose color</Text>
+          <View className="flex-row justify-between">
+            {PALETTE.map((color) => {
+              const isSelected = selectedColor === color;
+              return (
+                <TouchableOpacity
+                  key={color}
+                  onPress={() => setSelectedColor(color)}
+                  style={{
+                    backgroundColor: color,
+                    borderColor: isSelected ? "#000" : "transparent",
+                    borderWidth: isSelected ? 3 : 0,
+                  }}
+                  className="w-10 h-10 rounded-full"
+                />
+              );
+            })}
           </View>
         </View>
-      </Modal>
+        <View className="flex-row justify-end mt-5">
+          <BluePressable
+            name={"checkmark"}
+            text={"Save"}
+            direction="right"
+            onPress={handleCreateOrUpdateTag}
+            isLoading={isSaving}
+            loadingText="Saving..."
+          />
+        </View>
+      </NativeBottomSheet>
     </View>
   );
 });

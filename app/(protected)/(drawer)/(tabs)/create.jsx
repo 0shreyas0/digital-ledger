@@ -9,13 +9,17 @@ import {
   LayoutAnimation,
   findNodeHandle,
   Easing,
+  Platform,
 } from "react-native";
 import AppPressable from "@/components/pressables/AppPressable";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import SafeScreen from "@/components/SafeScreen";
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { useRouter, useNavigation } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
+import DateTimePicker from "@expo/ui/community/datetime-picker";
+import { MenuView } from "@expo/ui/community/menu";
 import { API_URL } from "@/constants/api";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
@@ -297,7 +301,7 @@ const CreateScreen = () => {
 
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeScreen>
       <NestedTopBar
         title="New Transaction"
         onBack={() => router.back()}
@@ -336,82 +340,107 @@ const CreateScreen = () => {
               </View>
             }
             dividerLeftAccessory={
-              <TouchableOpacity
-                onPress={() => {
-                  Alert.alert(
-                    "Reset Form",
-                    "Are you sure you want to reset the form?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Reset",
-                        style: "destructive",
-                        onPress: () => {
-                          resetForm();
-                        },
+              Platform.OS === 'ios' ? (
+                <MenuView
+                  title="Are you sure you want to reset the form?"
+                  onPressAction={({ nativeEvent }) => {
+                    if (nativeEvent.event === 'reset') {
+                      resetForm();
+                    }
+                  }}
+                  actions={[
+                    {
+                      id: 'reset',
+                      title: 'Reset Form',
+                      image: 'arrow.clockwise',
+                      attributes: {
+                        destructive: true,
                       },
-                    ],
-                  );
-                }}
-                className="active:opacity-50 p-1"
-              >
-                <Feather name="refresh-cw" size={20} color={colors.red} strokeWidth={2.5} />
-              </TouchableOpacity>
+                    },
+                  ]}
+                >
+                  <View className="active:opacity-50 p-1">
+                    <Feather name="refresh-cw" size={20} color={colors.red} strokeWidth={2.5} />
+                  </View>
+                </MenuView>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => {
+                    Alert.alert(
+                      "Reset Form",
+                      "Are you sure you want to reset the form?",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Reset",
+                          style: "destructive",
+                          onPress: () => {
+                            resetForm();
+                          },
+                        },
+                      ],
+                    );
+                  }}
+                  className="active:opacity-50 p-1"
+                >
+                  <Feather name="refresh-cw" size={20} color={colors.red} strokeWidth={2.5} />
+                </TouchableOpacity>
+              )
             }
           topTicketView={
             <>
             {/* <View> */}
               {/* Grouped type selector and amount to reduce gap */}
               <View className="gap-2">
-                <View className="flex-row gap-3">
-                  <TouchableOpacity
-                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-surface border border-border rounded-full active:opacity-70 overflow-hidden relative"
-                    onPress={() => setIsExpense(true)}
-                  >
-                    <Animated.View 
-                      className="absolute inset-0 bg-segmentedControl" 
-                      style={{ transform: [{ translateX: expenseBgTranslate }] }} 
-                    />
-                    <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
-                      <Animated.View style={{ position: 'absolute', opacity: expenseInactiveOpacity }}>
-                        <Ionicons name="pricetag" size={16} color="red" />
-                      </Animated.View>
-                      <Animated.View style={{ position: 'absolute', opacity: expenseActiveOpacity }}>
-                        <Ionicons name="pricetag" size={16} color="white" />
-                      </Animated.View>
-                    </View>
-                    <Animated.Text
-                      className="font-sansMed text-lg ml-2"
-                      style={{ color: expenseTextColor }}
+                  <View className="flex-row gap-3">
+                    <TouchableOpacity
+                      className="flex-1 flex-row items-center justify-center p-2 py-3 bg-surface border border-border rounded-full active:opacity-70 overflow-hidden relative"
+                      onPress={() => setIsExpense(true)}
                     >
-                      Expense
-                    </Animated.Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    className="flex-1 flex-row items-center justify-center p-2 py-3 bg-surface border border-border rounded-full active:opacity-70 overflow-hidden relative"
-                    onPress={() => setIsExpense(false)}
-                  >
-                    <Animated.View 
-                      className="absolute inset-0 bg-segmentedControl" 
-                      style={{ transform: [{ translateX: incomeBgTranslate }] }} 
-                    />
-                    <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
-                      <Animated.View style={{ position: 'absolute', opacity: incomeInactiveOpacity }}>
-                        <Ionicons name="cash" size={16} color="#22c55e" />
-                      </Animated.View>
-                      <Animated.View style={{ position: 'absolute', opacity: incomeActiveOpacity }}>
-                        <Ionicons name="cash" size={16} color="white" />
-                      </Animated.View>
-                    </View>
-                    <Animated.Text
-                      className="font-sansMed text-lg ml-2"
-                      style={{ color: incomeTextColor }}
+                      <Animated.View 
+                        className="absolute inset-0 bg-segmentedControl" 
+                        style={{ transform: [{ translateX: expenseBgTranslate }] }} 
+                      />
+                      <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
+                        <Animated.View style={{ position: 'absolute', opacity: expenseInactiveOpacity }}>
+                          <Ionicons name="pricetag" size={16} color="red" />
+                        </Animated.View>
+                        <Animated.View style={{ position: 'absolute', opacity: expenseActiveOpacity }}>
+                          <Ionicons name="pricetag" size={16} color="white" />
+                        </Animated.View>
+                      </View>
+                      <Animated.Text
+                        className="font-sansMed text-lg ml-2"
+                        style={{ color: expenseTextColor }}
+                      >
+                        Expense
+                      </Animated.Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      className="flex-1 flex-row items-center justify-center p-2 py-3 bg-surface border border-border rounded-full active:opacity-70 overflow-hidden relative"
+                      onPress={() => setIsExpense(false)}
                     >
-                      Income
-                    </Animated.Text>
-                  </TouchableOpacity>
-                </View>
+                      <Animated.View 
+                        className="absolute inset-0 bg-segmentedControl" 
+                        style={{ transform: [{ translateX: incomeBgTranslate }] }} 
+                      />
+                      <View style={{ width: 16, height: 16, justifyContent: 'center', alignItems: 'center' }}>
+                        <Animated.View style={{ position: 'absolute', opacity: incomeInactiveOpacity }}>
+                          <Ionicons name="cash" size={16} color="#22c55e" />
+                        </Animated.View>
+                        <Animated.View style={{ position: 'absolute', opacity: incomeActiveOpacity }}>
+                          <Ionicons name="cash" size={16} color="white" />
+                        </Animated.View>
+                      </View>
+                      <Animated.Text
+                        className="font-sansMed text-lg ml-2"
+                        style={{ color: incomeTextColor }}
+                      >
+                        Income
+                      </Animated.Text>
+                    </TouchableOpacity>
+                  </View>
                 <View className="flex-row gap-3 items-center border-b border-b-border">
                   <Text className="font-sansBold text-5xl text-textMain leading-tight">
                     {currency}
@@ -429,20 +458,46 @@ const CreateScreen = () => {
               </View>
 
               <CardTitle title={"Date"} />
-              <AppPressable
-                onPress={() => setCalendarModalVisible(true)}
-                activeClassName="active:bg-borderSubtle"
-                className="flex-row items-center gap-4 border border-border bg-surface py-3 px-5 rounded-full"
-              >
-                <Ionicons
-                  name="calendar"
-                  size={22}
-                  color={colors.primary}
-                />
-                <Text className="font-sansMed text-textMain text-lg">
-                  {date}
-                </Text>
-              </AppPressable>
+              {Platform.OS === 'ios' ? (
+                <View className="flex-row items-center justify-between border border-border bg-surface py-2 px-5 rounded-full">
+                  <View className="flex-row items-center gap-4">
+                    <Ionicons name="calendar" size={22} color={colors.primary} />
+                    <Text className="font-sansMed text-textMain text-lg">Date</Text>
+                  </View>
+                  <DateTimePicker
+                    value={(() => {
+                      const [year, month, day] = date.split('-').map(Number);
+                      return new Date(year, month - 1, day);
+                    })()}
+                    onValueChange={(event, newDate) => {
+                      if (newDate) {
+                        const yyyy = newDate.getFullYear();
+                        const mm = String(newDate.getMonth() + 1).padStart(2, '0');
+                        const dd = String(newDate.getDate()).padStart(2, '0');
+                        setDate(`${yyyy}-${mm}-${dd}`);
+                      }
+                    }}
+                    mode="date"
+                    display="compact"
+                    style={{ width: 110, height: 34 }}
+                  />
+                </View>
+              ) : (
+                <AppPressable
+                  onPress={() => setCalendarModalVisible(true)}
+                  activeClassName="active:bg-borderSubtle"
+                  className="flex-row items-center gap-4 border border-border bg-surface py-3 px-5 rounded-full"
+                >
+                  <Ionicons
+                    name="calendar"
+                    size={22}
+                    color={colors.primary}
+                  />
+                  <Text className="font-sansMed text-textMain text-lg">
+                    {date}
+                  </Text>
+                </AppPressable>
+              )}
 
               <CardTitle title={"Title"} />
               <FieldInputBox
@@ -600,7 +655,7 @@ const CreateScreen = () => {
       </KeyboardAwareScrollView>
       <CategorySelectModal
         isVisible={isModalVisible}
-        onClose={toggleModal}
+        onClose={() => setModalVisible(false)}
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
@@ -614,7 +669,7 @@ const CreateScreen = () => {
         date={date}
         onSelectDate={setDate}
       />
-    </View>
+    </SafeScreen>
   );
 };
 

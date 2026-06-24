@@ -5,7 +5,8 @@ import {
   TouchableOpacity, 
   ScrollView, 
   TextInput,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Modal from "react-native-modal";
@@ -265,21 +266,49 @@ const TransactionFilter = ({
   const canDeleteDatePill = dateRanges.length > 1 || (activeDateRange && activeDateRange.type !== 'all');
   const canDeleteAmountPill = amountRanges.length > 1 || (activeAmountRange && (activeAmountRange.minAmount || activeAmountRange.maxAmount));
 
+  const handleOpenFilter = () => {
+    setStagedFilters(activeFilters);
+    const dr = (activeFilters.dateRanges || DEFAULT_DATE_RANGES)[0];
+    const ar = (activeFilters.amountRanges || DEFAULT_AMOUNT_RANGES)[0];
+    setActiveDatePillId(dr?.id || 'default');
+    setActiveAmountPillId(ar?.id || 'default');
+    setIsModalVisible(true);
+  };
+
   return (
     <>
-      <AppPressable 
-        onPress={() => {
-          setStagedFilters(activeFilters);
-          const dr = (activeFilters.dateRanges || DEFAULT_DATE_RANGES)[0];
-          const ar = (activeFilters.amountRanges || DEFAULT_AMOUNT_RANGES)[0];
-          setActiveDatePillId(dr?.id || 'default');
-          setActiveAmountPillId(ar?.id || 'default');
-          setIsModalVisible(true);
-        }}
-        className={`w-14 h-14 items-center justify-center rounded-2xl ${hasActiveFilters ? 'bg-primary' : 'bg-surface border border-border'}`}
-      >
-        <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : themeColors.textMuted} />
-      </AppPressable>
+      {Platform.OS === 'ios' ? (
+        (() => {
+          const { Host, Button } = require('@expo/ui/swift-ui');
+          const { buttonStyle, buttonBorderShape, controlSize, labelStyle, frame, opacity } =
+            require('@expo/ui/swift-ui/modifiers');
+
+          return (
+            <Host matchContents>
+              <Button
+                label="Filter"
+                systemImage="line.3.horizontal.decrease"
+                onPress={handleOpenFilter}
+                modifiers={[
+                  buttonStyle(hasActiveFilters ? 'bordered' : 'glass'),
+                  buttonBorderShape('circle'),
+                  controlSize('large'),
+                  labelStyle('iconOnly'),
+                  frame({ width: 44, height: 44 }),
+                  opacity(0.5),
+                ]}
+              />
+            </Host>
+          );
+        })()
+      ) : (
+        <AppPressable 
+          onPress={handleOpenFilter}
+          className={`w-14 h-14 items-center justify-center rounded-2xl ${hasActiveFilters ? 'bg-primary' : 'bg-surface border border-border'}`}
+        >
+          <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : themeColors.textMuted} />
+        </AppPressable>
+      )}
 
       <Modal
         isVisible={isModalVisible}

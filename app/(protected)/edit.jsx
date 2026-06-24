@@ -29,6 +29,7 @@ import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 import CategorySelectModal from "@/components/CategorySelectModal";
 import DateSelectModal from "@/components/DateSelectModal";
 import Ticket from "@/components/Ticket";
+import SafeScreen from "@/components/SafeScreen";
 
 const PASTEL_PALETTE = [
   "#FFC6FF", // Pastel Pink
@@ -271,7 +272,7 @@ const EditScreen = () => {
   if (!transaction) return <PageLoader />;
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeScreen>
       <NestedTopBar
         title="Edit Transaction"
         onBack={handleBackPress}
@@ -517,7 +518,7 @@ const EditScreen = () => {
       </KeyboardAwareScrollView>
       <CategorySelectModal
         isVisible={isModalVisible}
-        onClose={toggleModal}
+        onClose={() => setModalVisible(false)}
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
@@ -531,7 +532,7 @@ const EditScreen = () => {
         date={date}
         onSelectDate={setDate}
       />
-    </View>
+    </SafeScreen>
   );
 };
 

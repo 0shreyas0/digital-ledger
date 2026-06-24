@@ -1,26 +1,114 @@
-import { Text, Pressable } from 'react-native'
-import React from 'react'
-import { Ionicons } from '@expo/vector-icons'
-import { useTheme } from '@/context/ThemeContext'
+import { Platform, Pressable, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import React from 'react';
+import { Ionicons } from '@expo/vector-icons';
 
-const BluePressable = ({ name, text, direction = "left", isLoading = false, disabled = isLoading, loadingText = "Loading", hasIcon = true, ...props }) => {
-  const { colors } = useTheme();
+function ioniconsToSF(ioniconsName) {
+  const map = {
+    add: 'plus',
+    checkmark: 'checkmark',
+    'checkmark-circle': 'checkmark.circle',
+    close: 'xmark',
+    save: 'checkmark',
+    create: 'pencil',
+    trash: 'trash',
+    pencil: 'pencil',
+    'arrow-back': 'chevron.left',
+    'chevron-back': 'chevron.left',
+  };
+  return map[ioniconsName] ?? ioniconsName;
+}
+
+const BluePressable = ({
+  name,
+  text,
+  direction = 'left',
+  isLoading = false,
+  disabled = isLoading,
+  loadingText = 'Loading',
+  hasIcon = true,
+  onPress,
+  style,
+  variant = 'transparent',   // ← 'transparent' or 'opaque'
+  ...props
+}) => {
+  if (Platform.OS === 'ios') {
+    const { Host, Button } = require('@expo/ui/swift-ui');
+    const {
+      buttonStyle,
+      buttonBorderShape,
+      labelStyle,
+      controlSize,
+      imageScale,
+      opacity,
+    } = require('@expo/ui/swift-ui/modifiers');
+
+    return (
+      <Host matchContents style={style}>
+        <Button
+          label={text || name}
+          systemImage={ioniconsToSF(name)}
+          onPress={disabled ? undefined : onPress}
+          modifiers={[
+            buttonStyle('glass'),
+            buttonBorderShape('circle'),
+            controlSize('large'),
+            labelStyle('iconOnly'),
+            imageScale('medium'),
+            opacity(variant === 'transparent' ? 0.5 : 1.0),
+          ]}
+        />
+      </Host>
+    );
+  }
+
   return (
     <Pressable
       {...props}
+      onPress={onPress}
       disabled={disabled}
-      className={`${direction == "left" ? "flex-row" : "flex-row-reverse"} ${isLoading ? "bg-textMuted" : "bg-primary active:bg-accent"} flex-row p-3 rounded-full gap-2 items-center`}
+      style={[
+        styles.androidWrapper,
+        isLoading && styles.androidDisabled,
+        direction === 'right' && styles.rowReverse,
+        style,
+      ]}
     >
       {({ pressed }) => (
         <>
-          {hasIcon && <Ionicons name={name} size={25} color={pressed ? colors.textMain : '#ffffff'} />}
-          <Text className={`font-sansBold text-xl ${direction == "left" ? "mr-1" : "ml-1"} ${pressed ? "text-textMain" : "text-white"}`}>
+          {isLoading
+            ? <ActivityIndicator size="small" color="#fff" />
+            : hasIcon && <Ionicons name={name} size={22} color="#ffffff" />
+          }
+          <Text style={[styles.androidLabel, pressed && { opacity: 0.75 }]}>
             {isLoading ? loadingText : text}
           </Text>
         </>
       )}
     </Pressable>
-  )
-}
+  );
+};
 
-export default BluePressable
+const styles = StyleSheet.create({
+  androidWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 100,
+    gap: 8,
+  },
+  androidDisabled: {
+    backgroundColor: '#9CA3AF',
+  },
+  rowReverse: {
+    flexDirection: 'row-reverse',
+  },
+  androidLabel: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontFamily: 'GoogleSans-Bold',
+  },
+});
+
+export default BluePressable;
