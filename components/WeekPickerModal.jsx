@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, Animated, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, Animated, Dimensions, Easing } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CloseButton from "./CloseButton";
 import NativeBottomSheet from "./NativeBottomSheet";
@@ -130,12 +130,12 @@ const WeekPickerModal = ({
     let targetSeg1 = { left: 0, top: 0, width: 0, opacity: 0 };
     let targetSeg2 = { left: 0, top: 0, width: 0, opacity: 0 };
 
-    if (startIdx !== -1 && endIdx !== -1) {
-      const row1 = Math.floor(startIdx / 7);
-      const col1 = startIdx % 7;
-      const row2 = Math.floor(endIdx / 7);
-      const col2 = endIdx % 7;
+    const row1 = startIdx !== -1 ? Math.floor(startIdx / 7) : -1;
+    const col1 = startIdx !== -1 ? startIdx % 7 : 0;
+    const row2 = endIdx !== -1 ? Math.floor(endIdx / 7) : -1;
+    const col2 = endIdx !== -1 ? endIdx % 7 : 0;
 
+    if (startIdx !== -1 && endIdx !== -1) {
       if (row1 === row2) {
         // Single row selection
         targetSeg1 = {
@@ -161,16 +161,21 @@ const WeekPickerModal = ({
       }
     }
 
-    Animated.parallel([
-      Animated.spring(seg1Left, { toValue: targetSeg1.left, useNativeDriver: false, friction: 8, tension: 40 }),
-      Animated.spring(seg1Top, { toValue: targetSeg1.top, useNativeDriver: false, friction: 8, tension: 40 }),
-      Animated.spring(seg1Width, { toValue: targetSeg1.width, useNativeDriver: false, friction: 8, tension: 40 }),
-      Animated.spring(seg1Opacity, { toValue: targetSeg1.opacity, useNativeDriver: false, friction: 8, tension: 40 }),
+    // Smooth L-shaped slide: Y-axis slides first (150ms), followed immediately by X-axis slither (220ms)
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(seg1Top, { toValue: targetSeg1.top, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+        Animated.timing(seg2Top, { toValue: targetSeg2.top, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+      ]),
+      Animated.parallel([
+        Animated.timing(seg1Left, { toValue: targetSeg1.left, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+        Animated.timing(seg1Width, { toValue: targetSeg1.width, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+        Animated.timing(seg1Opacity, { toValue: targetSeg1.opacity, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: false }),
 
-      Animated.spring(seg2Left, { toValue: targetSeg2.left, useNativeDriver: false, friction: 8, tension: 40 }),
-      Animated.spring(seg2Top, { toValue: targetSeg2.top, useNativeDriver: false, friction: 8, tension: 40 }),
-      Animated.spring(seg2Width, { toValue: targetSeg2.width, useNativeDriver: false, friction: 8, tension: 40 }),
-      Animated.spring(seg2Opacity, { toValue: targetSeg2.opacity, useNativeDriver: false, friction: 8, tension: 40 }),
+        Animated.timing(seg2Left, { toValue: targetSeg2.left, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+        Animated.timing(seg2Width, { toValue: targetSeg2.width, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+        Animated.timing(seg2Opacity, { toValue: targetSeg2.opacity, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+      ]),
     ]).start();
   };
 

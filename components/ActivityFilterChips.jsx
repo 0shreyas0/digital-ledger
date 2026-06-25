@@ -58,7 +58,13 @@ const ActivityFilterChips = ({ activeType = 'all', onPress }) => {
                       glassModifiers.buttonBorderShape('capsule'),
                       glassModifiers.controlSize('regular'),
                       glassModifiers.labelStyle(hasChevron ? 'titleAndIcon' : 'titleOnly'),
-                      glassModifiers.padding({ top: 8, bottom: 8, leading: 10, trailing: 10 }),
+                      glassModifiers.padding({
+                        top: 8,
+                        bottom: 8,
+                        leading: hasChevron ? 12 : 12,
+                        trailing: hasChevron ? 12 : 14,
+                      }),
+                      glassModifiers.fixedSize && glassModifiers.fixedSize(true, false),
                       isSelected && glassModifiers.foregroundStyle('#ffffff'),
                       glassModifiers.glassEffect({
                         glass: {
