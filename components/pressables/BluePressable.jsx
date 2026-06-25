@@ -1,6 +1,7 @@
 import { Platform, Pressable, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/context/ThemeContext';
 
 function ioniconsToSF(ioniconsName) {
   const map = {
@@ -31,6 +32,8 @@ const BluePressable = ({
   variant = 'transparent',   // ← 'transparent' or 'opaque'
   ...props
 }) => {
+  const { glassOpacity } = useTheme();
+
   if (Platform.OS === 'ios') {
     const { Host, Button } = require('@expo/ui/swift-ui');
     const {
@@ -54,7 +57,7 @@ const BluePressable = ({
             controlSize('large'),
             labelStyle('iconOnly'),
             imageScale('medium'),
-            opacity(variant === 'transparent' ? 0.5 : 1.0),
+            opacity(variant === 'transparent' ? glassOpacity : 1.0),
           ]}
         />
       </Host>

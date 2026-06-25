@@ -4,6 +4,7 @@ import { usePathname, withLayoutContext } from 'expo-router'
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useTheme } from '@/context/ThemeContext';
 import { createMaterialTopTabNavigator } from "expo-router/js-top-tabs";
 
 const { Navigator } = createMaterialTopTabNavigator();
@@ -102,6 +103,7 @@ const TAB_NAMES = ['index', 'activity', 'create', 'social', 'fields'];
 // };
 
 const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim }) => {
+  const { glassOpacity } = useTheme();
   const [tabBarWidth, setTabBarWidth] = useState(0);
 
   // Active area is the width minus the 16px padding on each side (32 total)
@@ -173,7 +175,7 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim
     <View style={StyleSheet.absoluteFillObject} onLayout={handleLayout} pointerEvents="none">
       <BlurView
         tint='default'
-        intensity={20}
+        intensity={Math.round(glassOpacity * 40)}
         experimentalBlurMethod="dimezisBlurView"
         style={{
           ...StyleSheet.absoluteFillObject,
@@ -208,7 +210,7 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim
         >
           <BlurView
             tint= 'systemUltraThinMaterialDark'
-            intensity={30}
+            intensity={Math.round(glassOpacity * 60)}
             experimentalBlurMethod="dimezisBlurView"
             style={StyleSheet.absoluteFillObject}
           />
@@ -217,8 +219,8 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim
               StyleSheet.absoluteFillObject,
               {
                 backgroundColor: Platform.OS === 'ios'
-                  ? 'rgba(255,255,255,0.1)'
-                  : 'rgba(255,255,255,0.25)',
+                  ? `rgba(255,255,255,${glassOpacity * 0.2})`
+                  : `rgba(255,255,255,${glassOpacity * 0.5})`,
               }
             ]}
           />
@@ -229,6 +231,7 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim
 };
 
 const CustomTabBar = ({ state, descriptors, navigation, position }) => {
+  const { glassOpacity, colors } = useTheme();
   // Drives the pill scale-up/scale-down animation
   const pressAnim = useRef(new Animated.Value(0)).current;
 
@@ -241,9 +244,9 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
         right: 0,
         height: 72, // FIXED: 60px pill + 6px top pad + 6px bottom pad = 72
         borderRadius: 36, // FIXED: Keep it perfectly rounded (72/2)
-        backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(255, 255, 255, 0.4)',
+        backgroundColor: Platform.OS === 'ios' ? 'transparent' : `rgba(${colors.card === '#FFFFFF' ? '255, 255, 255' : '15, 23, 42'}, ${glassOpacity * 0.8})`,
         borderWidth: 1.5,
-        borderColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
+        borderColor: Platform.OS === 'ios' ? `rgba(255, 255, 255, ${glassOpacity * 0.3})` : 'rgba(0, 0, 0, 0.06)',
         shadowColor: '#0f172a',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.15,

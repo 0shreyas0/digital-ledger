@@ -20,7 +20,7 @@ const DATE_FILTERS = [
  * On Android / older iOS: plain AppPressable pills.
  */
 const ActivityFilterChips = ({ activeType = 'all', onPress }) => {
-  const { colors } = useTheme();
+  const { colors, glassOpacity } = useTheme();
 
   const isGlassEffectAvailable =
     Platform.OS === 'ios' && require('expo-glass-effect').isGlassEffectAPIAvailable();
@@ -74,6 +74,7 @@ const ActivityFilterChips = ({ activeType = 'all', onPress }) => {
                         },
                         shape: 'capsule',
                       }),
+                      glassModifiers.opacity(isSelected ? 1.0 : glassOpacity),
                     ].filter(Boolean)}
                   />
                 );

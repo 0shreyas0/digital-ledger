@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, Easing, ScrollView, Platform } from 'react-native';
 import SafeScreen from '@/components/SafeScreen';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,9 +7,72 @@ import { useRouter } from 'expo-router';
 import NestedTopBar from '@/components/NestedTopBar';
 import AppPressable from '@/components/pressables/AppPressable';
 
+/**
+ * GlassOpacitySlider
+ *
+ * On iOS 26+ with the Glass Effect API: renders a native SwiftUI Slider
+ * inside a GlassEffectContainer — same pattern as ActivityFilterChips.
+ * On Android / older iOS: renders a plain @expo/ui universal Slider.
+ */
+const GlassOpacitySlider = ({ value, onChange, colors }) => {
+  const isGlassEffectAvailable =
+    Platform.OS === 'ios' && require('expo-glass-effect').isGlassEffectAPIAvailable();
+
+  const percentage = `${Math.round(value * 100)}%`;
+
+  if (isGlassEffectAvailable) {
+    const { Host, GlassEffectContainer, Slider } = require('@expo/ui/swift-ui');
+    const { tint, padding } = require('@expo/ui/swift-ui/modifiers');
+
+    return (
+      <View style={{ gap: 8, marginTop: 4 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text className="text-sm font-sansBold text-textMain">Glass Opacity</Text>
+          <Text className="text-sm font-sansBold text-primary">{percentage}</Text>
+        </View>
+        {/* 
+          Host must NOT use matchContents here — the Slider needs a proposed width from RN.
+          Give it width:'100%' + explicit height so SwiftUI has room to lay out the slider track.
+        */}
+        <Host style={{ width: '100%', height: 44 }}>
+          <GlassEffectContainer spacing={0}>
+            <Slider
+              value={value}
+              min={0.1}
+              max={1.0}
+              onValueChange={(v) => onChange(parseFloat(v.toFixed(2)))}
+              modifiers={[
+                tint(colors.primary),
+                padding({ top: 4, bottom: 4, leading: 8, trailing: 8 }),
+              ]}
+            />
+          </GlassEffectContainer>
+        </Host>
+      </View>
+    );
+  }
+
+  // Fallback: universal @expo/ui Slider for Android / older iOS
+  const { Slider } = require('@expo/ui');
+  return (
+    <View style={{ gap: 8, marginTop: 4 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text className="text-sm font-sansBold text-textMain">Glass Opacity</Text>
+        <Text className="text-sm font-sansBold text-primary">{percentage}</Text>
+      </View>
+      <Slider
+        value={value}
+        min={0.1}
+        max={1.0}
+        onValueChange={(v) => onChange(parseFloat(v.toFixed(2)))}
+      />
+    </View>
+  );
+};
+
 export default function SettingsScreen() {
   const router = useRouter();
-  const { theme, themeMode, setTheme, setThemeMode, colors } = useTheme();
+  const { theme, themeMode, setTheme, setThemeMode, glassOpacity, setGlassOpacity, colors } = useTheme();
 
   const themes = [
     { id: 'ice', label: 'Ice (Default)', icon: 'snow-outline', desc: 'Cool blue & slate tones' },
@@ -137,6 +200,17 @@ export default function SettingsScreen() {
             );
           })}
         </View>
+      </View>
+
+      {/* Glassmorphism Section */}
+      <View className="bg-card p-5 rounded-card gap-4 shadow-sm">
+        <Text className="text-lg font-sansBold text-textMain">
+          Glassmorphism
+        </Text>
+        <Text className="font-sansReg text-textMuted text-xs -mt-2">
+          Adjust the opacity level of all glass panels and blur effects across the app.
+        </Text>
+        <GlassOpacitySlider value={glassOpacity} onChange={setGlassOpacity} colors={colors} />
       </View>
 
     </ScrollView>

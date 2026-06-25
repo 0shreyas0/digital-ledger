@@ -32,7 +32,7 @@ const CirclePressable = ({
   variant = 'transparent',   // ← 'transparent' or 'opaque'
   ...props
 }) => {
-  const { colors } = useTheme();
+  const { colors, glassOpacity } = useTheme();
 
   if (Platform.OS === 'ios') {
     const { Host, Button } = require('@expo/ui/swift-ui');
@@ -52,7 +52,7 @@ const CirclePressable = ({
             controlSize('large'),
             labelStyle('iconOnly'),
             imageScale('medium'),
-            opacity(variant === 'transparent' ? 0.5 : 1.0),
+            opacity(variant === 'transparent' ? glassOpacity : 1.0),
             iconColor && tint(iconColor),
           ].filter(Boolean)}
         />

@@ -12,7 +12,7 @@ const SearchBar = ({
   variant = 'transparent',   // ← 'transparent' or 'opaque'
   style
 }) => {
-  const { colors } = useTheme();
+  const { colors, glassOpacity } = useTheme();
 
   const content = (
     <>
@@ -33,7 +33,7 @@ const SearchBar = ({
     if (isGlassEffectAPIAvailable()) {
       const { Host, HStack, Spacer } = require('@expo/ui/swift-ui');
       const { glassEffect, frame, opacity } = require('@expo/ui/swift-ui/modifiers');
-      const opacityVal = variant === 'transparent' ? 0.5 : 1.0;
+      const opacityVal = variant === 'transparent' ? glassOpacity : 1.0;
 
       return (
         <View className={containerClassName} style={[styles.flexFill, style]}>

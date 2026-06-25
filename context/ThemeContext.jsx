@@ -10,6 +10,7 @@ export const ThemeProvider = ({ children }) => {
   
   const [theme, setThemeState] = useState('ice'); // 'ice', 'coffee', 'purple'
   const [themeMode, setThemeModeState] = useState('system'); // 'light', 'dark', 'system'
+  const [glassOpacity, setGlassOpacityState] = useState(0.5); // ranges from 0.1 to 1.0
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load saved preferences
@@ -18,12 +19,19 @@ export const ThemeProvider = ({ children }) => {
       try {
         const savedTheme = await SecureStore.getItemAsync('user-theme');
         const savedMode = await SecureStore.getItemAsync('user-theme-mode');
+        const savedOpacity = await SecureStore.getItemAsync('user-glass-opacity');
         
         if (savedTheme && THEMES[savedTheme]) {
           setThemeState(savedTheme);
         }
         if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
           setThemeModeState(savedMode);
+        }
+        if (savedOpacity) {
+          const parsed = parseFloat(savedOpacity);
+          if (!isNaN(parsed) && parsed >= 0.1 && parsed <= 1.0) {
+            setGlassOpacityState(parsed);
+          }
         }
       } catch (error) {
         console.error("Error loading theme preferences:", error);
@@ -56,6 +64,17 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const setGlassOpacity = async (newOpacity) => {
+    if (typeof newOpacity === 'number' && newOpacity >= 0.1 && newOpacity <= 1.0) {
+      setGlassOpacityState(newOpacity);
+      try {
+        await SecureStore.setItemAsync('user-glass-opacity', newOpacity.toString());
+      } catch (error) {
+        console.error("Error saving glass opacity preference:", error);
+      }
+    }
+  };
+
   // Resolve light/dark based on the setting (themeMode) and device OS preference
   const colorScheme = themeMode === 'system' 
     ? (deviceColorScheme || 'light')
@@ -75,8 +94,10 @@ export const ThemeProvider = ({ children }) => {
       themeMode,
       colorScheme, // resolved active mode: 'light' or 'dark'
       colors, // dynamic JS color sheet matching active theme and colorScheme
+      glassOpacity,
       setTheme,
       setThemeMode,
+      setGlassOpacity,
     }}>
       {children}
     </ThemeContext.Provider>

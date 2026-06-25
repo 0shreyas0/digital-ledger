@@ -39,7 +39,7 @@ import MonthPickerModal from "@/components/MonthPickerModal";
 const Activity = () => {
   const router = useRouter();
   const { user } = useUser();
-  const { colors, theme, colorScheme } = useTheme();
+  const { colors, theme, colorScheme, glassOpacity } = useTheme();
   const insets = useSafeAreaInsets();
   const [headerHeight, setHeaderHeight] = useState(140);
 
@@ -438,24 +438,26 @@ const Activity = () => {
             const { GlassView, isGlassEffectAPIAvailable } = require('expo-glass-effect');
             if (isGlassEffectAPIAvailable()) {
               return (
-                <GlassView
-                  glassEffectStyle="regular"
-                  style={StyleSheet.absoluteFillObject}
-                />
+                <View style={[StyleSheet.absoluteFillObject, { opacity: glassOpacity }]}>
+                  <GlassView
+                    glassEffectStyle="regular"
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                </View>
               );
             }
             // Fallback for older iOS without glass effect API
             const { BlurView } = require('expo-blur');
             return (
               <BlurView
-                intensity={60}
+                intensity={Math.round(glassOpacity * 100)}
                 tint={colorScheme === 'dark' ? 'dark' : 'light'}
                 style={StyleSheet.absoluteFillObject}
               />
             );
           })()
         ) : (
-          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, opacity: 0.95 }]} />
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, opacity: glassOpacity }]} />
         )}
         <View className="px-6 pt-4">
           <View className="flex-row items-center gap-3">
