@@ -10,6 +10,7 @@ import {
   Dimensions,
   Platform,
   StyleSheet,
+  LayoutAnimation,
 } from "react-native";
 import React, { useCallback, useState, useMemo, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,6 +32,8 @@ import TransactionFilter from "@/components/TransactionFilter";
 import ActivityFilterChips from "@/components/ActivityFilterChips";
 import Graph from "@/components/analytics/Graph";
 import BalanceCard from "@/components/BalanceCard";
+import WeekPickerModal from "@/components/WeekPickerModal";
+import MonthPickerModal from "@/components/MonthPickerModal";
 
 
 const Activity = () => {
@@ -283,6 +286,7 @@ const Activity = () => {
 
     const fmt = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setFilters({
       ...filters,
       dateRanges: [{ id: "default", type: "week", start: fmt(startDate), end: fmt(endDate) }]
@@ -340,22 +344,6 @@ const Activity = () => {
       setIsMonthPickerVisible(true);
     }
   };
-
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dialYears = Array.from({ length: 11 }, (_, i) => 2020 + i);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const yearScrollRef = React.useRef(null);
-
-  useEffect(() => {
-    if (isMonthPickerVisible && yearScrollRef.current) {
-      const index = dialYears.indexOf(selectedYear);
-      if (index !== -1) {
-        setTimeout(() => {
-          yearScrollRef.current?.scrollTo({ y: index * 40, animated: true });
-        }, 100);
-      }
-    }
-  }, [isMonthPickerVisible]);
 
   const clearFilters = () => {
     setFilters({
@@ -496,81 +484,20 @@ const Activity = () => {
         </View>
       </View>
 
-      <Modal
+      <WeekPickerModal
         isVisible={isWeekPickerVisible}
-        onBackdropPress={() => setIsWeekPickerVisible(false)}
-        style={{ justifyContent: "flex-end", margin: 0 }}
-      >
-        <View className="bg-card rounded-t-3xl p-6">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="font-sansBold text-xl">Select Start of Week</Text>
-            <CloseButton onPress={() => setIsWeekPickerVisible(false)} />
-          </View>
-          <Calendar
-            onDayPress={selectWeek}
-            markingType={'period'}
-            markedDates={markedWeekDates}
-            theme={{
-              todayTextColor: colors.primary,
-              selectedDayBackgroundColor: colors.primary,
-              textDayFontFamily: 'GoogleSans-Regular',
-              textMonthFontFamily: 'GoogleSans-Bold',
-              textDayHeaderFontFamily: 'GoogleSans-Medium',
-            }}
-          />
-        </View>
-      </Modal>
+        onClose={() => setIsWeekPickerVisible(false)}
+        onSelectWeek={selectWeek}
+        markedWeekDates={markedWeekDates}
+        colors={colors}
+      />
 
-      <Modal
+      <MonthPickerModal
         isVisible={isMonthPickerVisible}
-        onBackdropPress={() => setIsMonthPickerVisible(false)}
-        style={{ justifyContent: "flex-end", margin: 0 }}
-      >
-        <View className="bg-card rounded-t-3xl p-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="font-sansBold text-xl">Select Month & Year</Text>
-            <CloseButton onPress={() => setIsMonthPickerVisible(false)} />
-          </View>
-
-          <View className="items-center mb-6">
-            <View className="h-24 w-full border-y border-borderSubtle items-center justify-center">
-              <ScrollView
-                ref={yearScrollRef}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={40}
-                decelerationRate="fast"
-                onMomentumScrollEnd={(e) => {
-                  const index = Math.round(e.nativeEvent.contentOffset.y / 40);
-                  const year = dialYears[index];
-                  if (year) setSelectedYear(year);
-                }}
-                contentContainerStyle={{ paddingVertical: 28 }}
-              >
-                {dialYears.map(y => (
-                  <View key={y} style={{ height: 40 }} className="items-center justify-center w-40">
-                    <Text className={`font-sansBold text-2xl ${selectedYear === y ? 'text-textMain' : 'text-borderSubtle'}`}>
-                      {y}
-                    </Text>
-                  </View>
-                ))}
-              </ScrollView>
-              <View className="absolute pointer-events-none h-1 w-12 bg-primary bottom-0 rounded-full" />
-            </View>
-          </View>
-
-          <View className="flex-row flex-wrap gap-2">
-            {months.map((m, i) => (
-              <TouchableOpacity
-                key={m}
-                onPress={() => selectMonth(i, selectedYear)}
-                className={`w-[31%] p-4 rounded-2xl items-center border ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i + 1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'bg-segmentedControl border-segmentedControl' : 'bg-surface border-borderSubtle'}`}
-              >
-                <Text className={`font-sansMed ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i + 1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'text-white' : 'text-textMain'}`}>{m.slice(0, 3)}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setIsMonthPickerVisible(false)}
+        onSelectMonth={selectMonth}
+        activeDateRange={filters.dateRanges[0]}
+      />
     </View>
   );
 };
