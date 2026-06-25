@@ -5,6 +5,7 @@ import {
   TextInput,
   View,
   TouchableOpacity,
+  Pressable,
 } from "react-native";
 import AppPressable from "@/components/pressables/AppPressable";
 import React, { useCallback, useState, forwardRef, useImperativeHandle } from "react";
@@ -13,9 +14,8 @@ import { useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "expo-router/react-navigation";
 import Modal from "react-native-modal";
 import NativeBottomSheet from "@/components/NativeBottomSheet";
-
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
-import CirclePressable from "@/components/pressables/CirclePressable";
 import BluePressable from "@/components/pressables/BluePressable";
 import PageLoader from "@/components/PageLoader";
 import CloseButton from "@/components/CloseButton";
@@ -200,16 +200,18 @@ const TagsView = forwardRef((props, ref) => {
               activeClassName="active:opacity-70"
               style={{ backgroundColor: item.color }}
             >
-              {/* stopPropagation wrapper so pencil press doesn't also navigate */}
               <View
                 onStartShouldSetResponder={() => true}
                 onTouchEnd={(e) => e.stopPropagation()}
               >
-                <CirclePressable
-                  name={"pencil"}
+                <Pressable
                   onPress={() => openEditModal(item)}
-                  className="mr-3"
-                />
+                  className="h-14 w-14 p-3 rounded-full active:bg-accent items-center justify-center mr-3"
+                >
+                  {({ pressed }) => (
+                    <Ionicons size={22} name="pencil" color={pressed ? "#000000" : colors.textMain} />
+                  )}
+                </Pressable>
               </View>
               <View className="flex-1">
                 <Text className="font-sansBold text-lg text-textMain">
@@ -221,11 +223,15 @@ const TagsView = forwardRef((props, ref) => {
                     : "No transactions yet"}
                 </Text>
               </View>
-              <CirclePressable
-                name={"trash-outline"}
+              <Pressable
+                className="h-14 w-14 p-3 rounded-full active:bg-accent items-center justify-center"
                 disabled={deletingTagId === item.tag_id}
                 onPress={() => handleDeleteTag(item)}
-              />
+              >
+                {({ pressed }) => (
+                  <Ionicons size={22} name="trash-outline" color={pressed ? "#000000" : colors.red} />
+                )}
+              </Pressable>
             </AppPressable>
           )}
         />

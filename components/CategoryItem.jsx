@@ -1,8 +1,7 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import AppPressable from "@/components/pressables/AppPressable";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import CirclePressable from "@/components/pressables/CirclePressable";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -42,12 +41,15 @@ const CategoryItem = ({ item, onDelete, isDeleting = false, onPress, onEditIconP
           </Text>
         </View>
       </View>
-      <CirclePressable
-        className="active:bg-accent"
-        name={"trash-outline"}
+      <Pressable
+        className="h-14 w-14 p-3 rounded-full active:bg-accent items-center justify-center"
         disabled={isDeleting}
         onPress={() => onDelete(item)}
-      />
+      >
+        {({ pressed }) => (
+          <Ionicons size={22} name="trash-outline" color={pressed ? "#000000" : colors.red} />
+        )}
+      </Pressable>
     </AppPressable>
   );
 };

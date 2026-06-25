@@ -12,6 +12,7 @@ function ioniconsToSF(ioniconsName) {
     add: 'plus',
     checkmark: 'checkmark',
     trash: 'trash',
+    'trash-outline': 'trash',
     pencil: 'pencil',
     create: 'pencil',
     'log-out': 'rectangle.portrait.and.arrow.right',
@@ -35,7 +36,7 @@ const CirclePressable = ({
 
   if (Platform.OS === 'ios') {
     const { Host, Button } = require('@expo/ui/swift-ui');
-    const { buttonStyle, buttonBorderShape, controlSize, labelStyle, imageScale, frame, opacity } =
+    const { buttonStyle, buttonBorderShape, controlSize, labelStyle, imageScale, frame, opacity, tint } =
       require('@expo/ui/swift-ui/modifiers');
 
     return (
@@ -52,7 +53,8 @@ const CirclePressable = ({
             labelStyle('iconOnly'),
             imageScale('medium'),
             opacity(variant === 'transparent' ? 0.5 : 1.0),
-          ]}
+            iconColor && tint(iconColor),
+          ].filter(Boolean)}
         />
       </Host>
     );

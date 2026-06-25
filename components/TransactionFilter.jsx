@@ -290,12 +290,12 @@ const TransactionFilter = ({
                 systemImage="line.3.horizontal.decrease"
                 onPress={handleOpenFilter}
                 modifiers={[
-                  buttonStyle(hasActiveFilters ? 'bordered' : 'glass'),
+                  buttonStyle(hasActiveFilters ? 'borderedProminent' : 'glass'),
                   buttonBorderShape('circle'),
                   controlSize('large'),
                   labelStyle('iconOnly'),
                   frame({ width: 44, height: 44 }),
-                  opacity(0.5),
+                  opacity(1.0),
                 ]}
               />
             </Host>

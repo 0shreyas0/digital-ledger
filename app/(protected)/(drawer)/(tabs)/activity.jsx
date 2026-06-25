@@ -8,8 +8,11 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  Platform,
+  StyleSheet,
 } from "react-native";
 import React, { useCallback, useState, useMemo, useEffect } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,15 +28,23 @@ import Modal from "react-native-modal";
 import { useTheme } from "@/context/ThemeContext";
 import SearchBar from "@/components/SearchBar";
 import TransactionFilter from "@/components/TransactionFilter";
-import AppPressable from "@/components/pressables/AppPressable";
+import ActivityFilterChips from "@/components/ActivityFilterChips";
 import Graph from "@/components/analytics/Graph";
 import BalanceCard from "@/components/BalanceCard";
-import SafeScreen from "@/components/SafeScreen";
+
 
 const Activity = () => {
   const router = useRouter();
   const { user } = useUser();
-  const { colors } = useTheme();
+  const { colors, theme, colorScheme } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [headerHeight, setHeaderHeight] = useState(140);
+
+  const handleHeaderLayout = useCallback((e) => {
+    const { height } = e.nativeEvent.layout;
+    setHeaderHeight(height);
+  }, []);
+
   const { transactions: globalTransactions, isLoading, loadData, deleteTransaction: contextDeleteTransaction } = useTransactions();
   const { categories, loadCategories } = useCategories(user);
   const { tags, loadTags } = useTags(user);
@@ -161,7 +172,7 @@ const Activity = () => {
           // Default Match ALL (AND)
           if (hasType && txn.type !== filters.type) return false;
           if (hasCategories && !filters.categories.includes(txn.category)) return false;
-          
+
           if (hasTags) {
             if (!txn.tags || txn.tags.length === 0) return false;
             const hasTag = txn.tags.some(tag => filters.tags.includes(tag.name));
@@ -178,17 +189,17 @@ const Activity = () => {
 
   const graphData = useMemo(() => {
     if (!filteredTransactions || filteredTransactions.length === 0) return [];
-    
+
     // Sort transactions oldest to newest
     const sorted = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     // Group by date to prevent duplicate dates on the X-axis line chart and make it cleaner
     const grouped = [];
     sorted.forEach((txn) => {
       const formattedDate = txn.date
         ? new Date(txn.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })
         : "";
-      
+
       const lastGroup = grouped[grouped.length - 1];
       if (lastGroup && lastGroup.dateStr === formattedDate) {
         lastGroup.amount += Math.abs(txn.amount);
@@ -255,9 +266,9 @@ const Activity = () => {
   const selectMonth = (monthIndex, year) => {
     const startDate = new Date(year, monthIndex, 1);
     const endDate = new Date(year, monthIndex + 1, 0); // Last day of month
-    
+
     const fmt = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    
+
     setFilters({
       ...filters,
       dateRanges: [{ id: "default", type: "month", start: fmt(startDate), end: fmt(endDate) }]
@@ -282,39 +293,35 @@ const Activity = () => {
   const markedWeekDates = useMemo(() => {
     const dr = filters.dateRanges[0];
     if (!dr || dr.type !== "week" || !dr.start || !dr.end) return {};
-    
+
     // Check if the range is exactly 7 days to confirm it's a 'week' selection
     const start = new Date(dr.start);
     const end = new Date(dr.end);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays !== 6) return {}; // Not a week range
 
     let marked = {};
     let current = new Date(start);
     for (let i = 0; i <= 6; i++) {
-        const dateStr = current.getFullYear() + '-' + String(current.getMonth() + 1).padStart(2, '0') + '-' + String(current.getDate()).padStart(2, '0');
-        marked[dateStr] = {
-            selected: true,
-            color: colors.primary,
-            textColor: 'white',
-            startingDay: i === 0,
-            endingDay: i === 6
-        };
-        current.setDate(current.getDate() + 1);
+      const dateStr = current.getFullYear() + '-' + String(current.getMonth() + 1).padStart(2, '0') + '-' + String(current.getDate()).padStart(2, '0');
+      marked[dateStr] = {
+        selected: true,
+        color: colors.primary,
+        textColor: 'white',
+        startingDay: i === 0,
+        endingDay: i === 6
+      };
+      current.setDate(current.getDate() + 1);
     }
     return marked;
   }, [filters.dateRanges]);
 
   const hasActiveFilters = filters.categories.length > 0 || filters.amountRanges.some(ar => ar.minAmount || ar.maxAmount) || filters.type !== "all" || searchQuery !== "" || filters.dateRanges.some(dr => dr.type !== "all");
 
-  const dateFilters = [
-    { label: "All", value: "all" },
-    { label: "Today", value: "today" },
-    { label: "Week", value: "week" },
-    { label: "Month", value: "month" },
-  ];
+
+
 
   const handleQuickFilterPress = (value) => {
     if (value === "today") {
@@ -335,18 +342,18 @@ const Activity = () => {
   };
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dialYears = Array.from({ length: 11 }, (_, i) => 2020 + i); 
+  const dialYears = Array.from({ length: 11 }, (_, i) => 2020 + i);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const yearScrollRef = React.useRef(null);
 
   useEffect(() => {
     if (isMonthPickerVisible && yearScrollRef.current) {
-        const index = dialYears.indexOf(selectedYear);
-        if (index !== -1) {
-            setTimeout(() => {
-                yearScrollRef.current?.scrollTo({ y: index * 40, animated: true });
-            }, 100);
-        }
+      const index = dialYears.indexOf(selectedYear);
+      if (index !== -1) {
+        setTimeout(() => {
+          yearScrollRef.current?.scrollTo({ y: index * 40, animated: true });
+        }, 100);
+      }
     }
   }, [isMonthPickerVisible]);
 
@@ -363,135 +370,20 @@ const Activity = () => {
   };
 
   return (
-    <SafeScreen>
-      {/* Header & Search */}
-      <View className="px-6 pt-4 pb-6">
-        <View className="flex-row items-center gap-3">
-          <SearchBar
-            placeholder="Search transactions..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            containerClassName="flex-1"
-          />
-          <TransactionFilter
-            categories={categories}
-            tags={tags}
-            activeFilters={filters}
-            onApply={setFilters}
-            onClear={clearFilters}
-          />
-        </View>
-      </View>
-
-      {/* Quick Date Filters */}
-      <View className="mb-4">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 10, flexGrow: 1, justifyContent: 'center' }}>
-          {dateFilters.map((f) => (
-            <AppPressable
-              key={f.value}
-              onPress={() => handleQuickFilterPress(f.value)}
-              className={`px-5 py-2 rounded-full border ${filters.dateRanges[0]?.type === f.value ? 'bg-segmentedControl border-segmentedControl' : 'bg-card border-borderSubtle'}`}
-            >
-               {({ pressed }) => (
-                 <View className="flex-row items-center gap-1">
-                  <Text className={`font-sansMed ${pressed ? 'text-black' : (filters.dateRanges[0]?.type === f.value ? 'text-white' : 'text-textMain')}`}>
-                    {f.label}
-                  </Text>
-                  {(f.value === "week" || f.value === "month") && (
-                     <Ionicons name="chevron-down" size={12} color={pressed ? 'black' : (filters.dateRanges[0]?.type === f.value ? 'white' : colors.textMuted)} />
-                  )}
-                 </View>
-               )}
-            </AppPressable>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Week Picker Modal */}
-      <Modal
-        isVisible={isWeekPickerVisible}
-        onBackdropPress={() => setIsWeekPickerVisible(false)}
-        style={{ justifyContent: "flex-end", margin: 0 }}
-      >
-         <View className="bg-card rounded-t-3xl p-6">
-            <View className="flex-row justify-between items-center mb-4">
-                <Text className="font-sansBold text-xl">Select Start of Week</Text>
-                <CloseButton onPress={() => setIsWeekPickerVisible(false)} />
-            </View>
-            <Calendar
-                onDayPress={selectWeek}
-                markingType={'period'}
-                markedDates={markedWeekDates}
-                theme={{
-                    todayTextColor: colors.primary,
-                    selectedDayBackgroundColor: colors.primary,
-                    textDayFontFamily: 'GoogleSans-Regular',
-                    textMonthFontFamily: 'GoogleSans-Bold',
-                    textDayHeaderFontFamily: 'GoogleSans-Medium',
-                }}
-            />
-         </View>
-      </Modal>
-
-      {/* Month Picker Modal */}
-      <Modal
-        isVisible={isMonthPickerVisible}
-        onBackdropPress={() => setIsMonthPickerVisible(false)}
-        style={{ justifyContent: "flex-end", margin: 0 }}
-      >
-         <View className="bg-card rounded-t-3xl p-6">
-            <View className="flex-row justify-between items-center mb-6">
-                <Text className="font-sansBold text-xl">Select Month & Year</Text>
-                <CloseButton onPress={() => setIsMonthPickerVisible(false)} />
-            </View>
-            
-            <View className="items-center mb-6">
-                <View className="h-24 w-full border-y border-borderSubtle items-center justify-center">
-                    <ScrollView 
-                        ref={yearScrollRef}
-                        showsVerticalScrollIndicator={false}
-                        snapToInterval={40}
-                        decelerationRate="fast"
-                        onMomentumScrollEnd={(e) => {
-                            const index = Math.round(e.nativeEvent.contentOffset.y / 40);
-                            const year = dialYears[index];
-                            if (year) setSelectedYear(year);
-                        }}
-                        contentContainerStyle={{ paddingVertical: 28 }}
-                    >
-                        {dialYears.map(y => (
-                            <View key={y} style={{ height: 40 }} className="items-center justify-center w-40">
-                                <Text className={`font-sansBold text-2xl ${selectedYear === y ? 'text-textMain' : 'text-borderSubtle'}`}>
-                                    {y}
-                                </Text>
-                            </View>
-                        ))}
-                    </ScrollView>
-                    <View className="absolute pointer-events-none h-1 w-12 bg-primary bottom-0 rounded-full" />
-                </View>
-            </View>
-
-            <View className="flex-row flex-wrap gap-2">
-                {months.map((m, i) => (
-                    <TouchableOpacity 
-                        key={m} 
-                        onPress={() => selectMonth(i, selectedYear)}
-                        className={`w-[31%] p-4 rounded-2xl items-center border ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i+1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'bg-segmentedControl border-segmentedControl' : 'bg-surface border-borderSubtle'}`}
-                    >
-                        <Text className={`font-sansMed ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i+1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'text-white' : 'text-textMain'}`}>{m.slice(0, 3)}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-         </View>
-      </Modal>
-
+    <View className={`flex-1 bg-background theme-${theme} ${colorScheme === 'dark' ? 'dark' : 'light'}`}>
       {((isLoading || isSyncing) && !refreshing && (localTransactions.length === 0 || hasActiveFilters)) ? (
         <PageLoader />
       ) : (
         <FlatList
           data={filteredTransactions}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}
+          contentContainerStyle={{
+            paddingTop: Math.max(headerHeight - 14),
+            // paddingTop: 5, 
+            paddingHorizontal: 24,
+            paddingBottom: 110
+          }}
+          scrollIndicatorInsets={{ top: headerHeight }}
           ListHeaderComponent={
             <View>
               <BalanceCard
@@ -526,12 +418,11 @@ const Activity = () => {
             />
           )}
           ListEmptyComponent={
-            // Hide empty state while loading or debouncing to prevent "flicking"
             (isLoading || isSyncing) ? null : (
               <View className="mt-10">
-                <NoTransactionFound 
-                  mode={hasActiveFilters ? "filter" : "initial"} 
-                  onClear={clearFilters} 
+                <NoTransactionFound
+                  mode={hasActiveFilters ? "filter" : "initial"}
+                  onClear={clearFilters}
                 />
               </View>
             )
@@ -541,7 +432,146 @@ const Activity = () => {
           }
         />
       )}
-    </SafeScreen>
+
+      {/* Absolute Translucent Glass Header */}
+      <View
+        onLayout={handleHeaderLayout}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          paddingTop: insets.top,
+          zIndex: 10,
+        }}
+      >
+        {Platform.OS === 'ios' ? (
+          (() => {
+            const { GlassView, isGlassEffectAPIAvailable } = require('expo-glass-effect');
+            if (isGlassEffectAPIAvailable()) {
+              return (
+                <GlassView
+                  glassEffectStyle="regular"
+                  style={StyleSheet.absoluteFillObject}
+                />
+              );
+            }
+            // Fallback for older iOS without glass effect API
+            const { BlurView } = require('expo-blur');
+            return (
+              <BlurView
+                intensity={60}
+                tint={colorScheme === 'dark' ? 'dark' : 'light'}
+                style={StyleSheet.absoluteFillObject}
+              />
+            );
+          })()
+        ) : (
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, opacity: 0.95 }]} />
+        )}
+        <View className="px-6 pt-4">
+          <View className="flex-row items-center gap-3">
+            <SearchBar
+              placeholder="Search transactions..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              containerClassName="flex-1"
+              variant="opaque"
+            />
+            <TransactionFilter
+              categories={categories}
+              tags={tags}
+              activeFilters={filters}
+              onApply={setFilters}
+              onClear={clearFilters}
+            />
+          </View>
+        </View>
+
+        <View>
+          <ActivityFilterChips
+            activeType={filters.dateRanges[0]?.type ?? 'all'}
+            onPress={handleQuickFilterPress}
+          />
+        </View>
+      </View>
+
+      <Modal
+        isVisible={isWeekPickerVisible}
+        onBackdropPress={() => setIsWeekPickerVisible(false)}
+        style={{ justifyContent: "flex-end", margin: 0 }}
+      >
+        <View className="bg-card rounded-t-3xl p-6">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="font-sansBold text-xl">Select Start of Week</Text>
+            <CloseButton onPress={() => setIsWeekPickerVisible(false)} />
+          </View>
+          <Calendar
+            onDayPress={selectWeek}
+            markingType={'period'}
+            markedDates={markedWeekDates}
+            theme={{
+              todayTextColor: colors.primary,
+              selectedDayBackgroundColor: colors.primary,
+              textDayFontFamily: 'GoogleSans-Regular',
+              textMonthFontFamily: 'GoogleSans-Bold',
+              textDayHeaderFontFamily: 'GoogleSans-Medium',
+            }}
+          />
+        </View>
+      </Modal>
+
+      <Modal
+        isVisible={isMonthPickerVisible}
+        onBackdropPress={() => setIsMonthPickerVisible(false)}
+        style={{ justifyContent: "flex-end", margin: 0 }}
+      >
+        <View className="bg-card rounded-t-3xl p-6">
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="font-sansBold text-xl">Select Month & Year</Text>
+            <CloseButton onPress={() => setIsMonthPickerVisible(false)} />
+          </View>
+
+          <View className="items-center mb-6">
+            <View className="h-24 w-full border-y border-borderSubtle items-center justify-center">
+              <ScrollView
+                ref={yearScrollRef}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={40}
+                decelerationRate="fast"
+                onMomentumScrollEnd={(e) => {
+                  const index = Math.round(e.nativeEvent.contentOffset.y / 40);
+                  const year = dialYears[index];
+                  if (year) setSelectedYear(year);
+                }}
+                contentContainerStyle={{ paddingVertical: 28 }}
+              >
+                {dialYears.map(y => (
+                  <View key={y} style={{ height: 40 }} className="items-center justify-center w-40">
+                    <Text className={`font-sansBold text-2xl ${selectedYear === y ? 'text-textMain' : 'text-borderSubtle'}`}>
+                      {y}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <View className="absolute pointer-events-none h-1 w-12 bg-primary bottom-0 rounded-full" />
+            </View>
+          </View>
+
+          <View className="flex-row flex-wrap gap-2">
+            {months.map((m, i) => (
+              <TouchableOpacity
+                key={m}
+                onPress={() => selectMonth(i, selectedYear)}
+                className={`w-[31%] p-4 rounded-2xl items-center border ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i + 1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'bg-segmentedControl border-segmentedControl' : 'bg-surface border-borderSubtle'}`}
+              >
+                <Text className={`font-sansMed ${filters.dateRanges[0]?.type === "month" && filters.dateRanges[0]?.start?.split('-')[1] == String(i + 1).padStart(2, '0') && filters.dateRanges[0]?.start?.split('-')[0] == selectedYear ? 'text-white' : 'text-textMain'}`}>{m.slice(0, 3)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 

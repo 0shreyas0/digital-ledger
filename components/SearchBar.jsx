@@ -9,6 +9,7 @@ const SearchBar = ({
   placeholder = "Search...",
   containerClassName = "",
   placeholderTextColor,
+  variant = 'transparent',   // ← 'transparent' or 'opaque'
   style
 }) => {
   const { colors } = useTheme();
@@ -27,43 +28,35 @@ const SearchBar = ({
   );
 
   if (Platform.OS === 'ios') {
-    const { GlassView, isGlassEffectAPIAvailable } = require('expo-glass-effect');
+    const { isGlassEffectAPIAvailable } = require('expo-glass-effect');
 
     if (isGlassEffectAPIAvailable()) {
       const { Host, HStack, Spacer } = require('@expo/ui/swift-ui');
       const { glassEffect, frame, opacity } = require('@expo/ui/swift-ui/modifiers');
+      const opacityVal = variant === 'transparent' ? 0.5 : 1.0;
 
       return (
         <View className={containerClassName} style={[styles.flexFill, style]}>
-          {/* Layer 1: GlassView for the blur material at 50% opacity */}
-          <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            <GlassView
-              glassEffectStyle="regular"
-              style={styles.glassBackground}
-            />
-          </View>
-
-          {/* Layer 2: SwiftUI HStack for the shine border at 50% opacity */}
+          {/* SwiftUI liquid glass layer — same material as the tab bar */}
           <Host
-            style={{
-              position: 'absolute',
-              top: 0, left: 0, right: 0,
-              height: 44,
-            }}
+            style={StyleSheet.absoluteFill}
             pointerEvents="none"
           >
             <HStack
               modifiers={[
                 frame({ minWidth: 0, maxWidth: 999999, minHeight: 0, maxHeight: 999999 }),
-                glassEffect({ shape: 'capsule' }),
-                opacity(0.5),
+                glassEffect({
+                  glass: { variant: 'regular', interactive: true },
+                  shape: 'capsule',
+                }),
+                opacity(opacityVal),
               ]}
             >
               <Spacer />
             </HStack>
           </Host>
 
-          {/* Layer 3: Interactive TextInput content at full opacity */}
+          {/* Interactive RN content on top */}
           <View style={styles.foregroundContainer}>
             {content}
           </View>
@@ -95,11 +88,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     gap: 8,
     flex: 1,
-  },
-  glassBackground: {
-    flex: 1,
-    borderRadius: 22,
-    opacity: 0.5,
   },
   foregroundContainer: {
     flex: 1,
