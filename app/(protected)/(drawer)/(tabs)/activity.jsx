@@ -32,8 +32,7 @@ import TransactionFilter from "@/components/TransactionFilter";
 import ActivityFilterChips from "@/components/ActivityFilterChips";
 import Graph from "@/components/analytics/Graph";
 import BalanceCard from "@/components/BalanceCard";
-import WeekPickerModal from "@/components/WeekPickerModal";
-import MonthPickerModal from "@/components/MonthPickerModal";
+import { WeekPickerModal, MonthPickerModal } from "@/components/modals";
 
 
 const Activity = () => {
@@ -366,8 +365,7 @@ const Activity = () => {
           data={filteredTransactions}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{
-            paddingTop: Math.max(headerHeight - 14),
-            // paddingTop: 5, 
+            paddingTop: Platform.OS === 'android' ? headerHeight : Math.max(headerHeight - 14, 0),
             paddingHorizontal: 24,
             paddingBottom: 110
           }}
@@ -438,12 +436,10 @@ const Activity = () => {
             const { GlassView, isGlassEffectAPIAvailable } = require('expo-glass-effect');
             if (isGlassEffectAPIAvailable()) {
               return (
-                <View style={[StyleSheet.absoluteFillObject, { opacity: glassOpacity }]}>
-                  <GlassView
-                    glassEffectStyle="regular"
-                    style={StyleSheet.absoluteFillObject}
-                  />
-                </View>
+                <GlassView
+                  glassEffectStyle="regular"
+                  style={[StyleSheet.absoluteFillObject, { opacity: glassOpacity }]}
+                />
               );
             }
             // Fallback for older iOS without glass effect API

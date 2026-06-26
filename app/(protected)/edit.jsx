@@ -26,8 +26,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useTags } from "@/hooks/useTags";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
-import CategorySelectModal from "@/components/CategorySelectModal";
-import DateSelectModal from "@/components/DateSelectModal";
+import { CategorySelectModal, DateSelectModal } from "@/components/modals";
 import Ticket from "@/components/Ticket";
 import SafeScreen from "@/components/SafeScreen";
 

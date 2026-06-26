@@ -2,8 +2,8 @@ import React from "react";
 import { View, Text } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { useTheme } from "@/context/ThemeContext";
-import CloseButton from "./CloseButton";
-import NativeBottomSheet from "./NativeBottomSheet";
+import CloseButton from "../CloseButton";
+import NativeBottomSheet from "../NativeBottomSheet";
 
 const DateSelectModal = ({
   isVisible,

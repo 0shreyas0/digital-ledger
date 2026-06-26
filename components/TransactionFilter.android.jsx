@@ -1,12 +1,18 @@
+/**
+ * TransactionFilter — Android
+ *
+ * Filter button: plain AppPressable with primary background when active.
+ * Modal body: react-native-modal slide-up sheet (same as iOS).
+ */
+
 import React, { useState, useMemo } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
   TextInput,
   Alert,
-  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Modal from "react-native-modal";
@@ -18,11 +24,6 @@ import SegmentControl from "./SegmentControl";
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import CascadingDropdown from './CascadingDropdown';
 import AppPressable from './pressables/AppPressable';
-
-/**
- * TransactionFilter Component
- * Encapsulates the filter button and the advanced filter modal.
- */
 
 const DEFAULT_DATE_RANGES = [{ id: 'default', type: 'all', start: null, end: null }];
 const DEFAULT_AMOUNT_RANGES = [{ id: 'default', minAmount: '', maxAmount: '' }];
@@ -45,12 +46,12 @@ const formatAmountLabel = (ar) => {
   return `${min} → ${max}`;
 };
 
-const TransactionFilter = ({ 
-  categories = [], 
+const TransactionFilter = ({
+  categories = [],
   tags = [],
-  activeFilters = {}, 
+  activeFilters = {},
   onApply,
-  onClear
+  onClear,
 }) => {
   const { colors: themeColors } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -69,10 +70,10 @@ const TransactionFilter = ({
 
   const hasActiveFilters = useMemo(() => {
     return (
-      (activeFilters.categories && activeFilters.categories.length > 0) || 
+      (activeFilters.categories && activeFilters.categories.length > 0) ||
       (activeFilters.tags && activeFilters.tags.length > 0) ||
-      (activeFilters.dateRanges && activeFilters.dateRanges.some(dr => dr.type !== 'all')) || 
-      (activeFilters.amountRanges && activeFilters.amountRanges.some(ar => ar.minAmount || ar.maxAmount)) || 
+      (activeFilters.dateRanges && activeFilters.dateRanges.some(dr => dr.type !== 'all')) ||
+      (activeFilters.amountRanges && activeFilters.amountRanges.some(ar => ar.minAmount || ar.maxAmount)) ||
       (activeFilters.type && activeFilters.type !== 'all')
     );
   }, [activeFilters]);
@@ -277,39 +278,15 @@ const TransactionFilter = ({
 
   return (
     <>
-      {Platform.OS === 'ios' ? (
-        (() => {
-          const { Host, Button } = require('@expo/ui/swift-ui');
-          const { buttonStyle, buttonBorderShape, controlSize, labelStyle, frame, opacity } =
-            require('@expo/ui/swift-ui/modifiers');
+      {/* ── Android: plain AppPressable filter button ── */}
+      <AppPressable
+        onPress={handleOpenFilter}
+        className={`w-14 h-14 items-center justify-center rounded-2xl ${hasActiveFilters ? 'bg-primary' : 'bg-surface border border-border'}`}
+      >
+        <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : themeColors.textMuted} />
+      </AppPressable>
 
-          return (
-            <Host matchContents>
-              <Button
-                label="Filter"
-                systemImage="line.3.horizontal.decrease"
-                onPress={handleOpenFilter}
-                modifiers={[
-                  buttonStyle(hasActiveFilters ? 'borderedProminent' : 'glass'),
-                  buttonBorderShape('circle'),
-                  controlSize('large'),
-                  labelStyle('iconOnly'),
-                  frame({ width: 44, height: 44 }),
-                  opacity(1.0),
-                ]}
-              />
-            </Host>
-          );
-        })()
-      ) : (
-        <AppPressable 
-          onPress={handleOpenFilter}
-          className={`w-14 h-14 items-center justify-center rounded-2xl ${hasActiveFilters ? 'bg-primary' : 'bg-surface border border-border'}`}
-        >
-          <Ionicons name="filter" size={20} color={hasActiveFilters ? 'white' : themeColors.textMuted} />
-        </AppPressable>
-      )}
-
+      {/* ── Shared modal body ── */}
       <Modal
         isVisible={isModalVisible}
         onBackdropPress={() => setIsModalVisible(false)}
@@ -362,9 +339,9 @@ const TransactionFilter = ({
                   const isActive = (stagedFilters.type || 'all') === type;
                   return (
                     <TouchableOpacity
-                       key={type}
-                       onPress={() => updateStaged('type', type)}
-                       className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-primary border-primary' : 'bg-surface border border-borderSubtle'}`}
+                      key={type}
+                      onPress={() => updateStaged('type', type)}
+                      className={`px-5 py-2 rounded-xl border ${isActive ? 'bg-primary border-primary' : 'bg-surface border border-borderSubtle'}`}
                     >
                       <Text className={`font-sansMed capitalize ${isActive ? 'text-white' : 'text-textMuted'}`}>
                         {type}
@@ -383,7 +360,6 @@ const TransactionFilter = ({
               showDelete={canDeleteDatePill}
               onDelete={deleteActiveDateGroup}
             >
-              {/* Date pills — only shown in Match Any mode */}
               {isMatchAny && (
                 <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
@@ -418,10 +394,7 @@ const TransactionFilter = ({
                 </Animated.View>
               )}
 
-              {/* Calendar */}
-              <Animated.View
-                className="border border-borderSubtle rounded-3xl overflow-hidden bg-card"
-              >
+              <Animated.View className="border border-borderSubtle rounded-3xl overflow-hidden bg-card">
                 <Calendar
                   markingType="period"
                   markedDates={markedDates}
@@ -447,7 +420,6 @@ const TransactionFilter = ({
               showDelete={canDeleteAmountPill}
               onDelete={deleteActiveAmountGroup}
             >
-              {/* Amount pills — only shown in Match Any mode */}
               {isMatchAny && (
                 <Animated.View layout={LinearTransition.duration(250)} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
@@ -482,7 +454,6 @@ const TransactionFilter = ({
                 </Animated.View>
               )}
 
-              {/* Amount inline editor */}
               <View className="flex-row items-center gap-3">
                 <TextInput
                   placeholder="Min"
@@ -577,7 +548,7 @@ const TransactionFilter = ({
                             style={isSelected ? { backgroundColor: item.color, borderColor: item.color } : {}}
                             className={`flex-row items-center px-4 py-3 mb-2 rounded-2xl border ${isSelected ? '' : 'bg-card border-borderSubtle'}`}
                           >
-                            <Text className={`font-sansMed text-lg ${isSelected ? 'text-textMain' : 'text-textMain'}`}>
+                            <Text className="font-sansMed text-lg text-textMain">
                               {item.tag_name}
                             </Text>
                           </TouchableOpacity>
@@ -588,7 +559,6 @@ const TransactionFilter = ({
                 </ScrollView>
               </Animated.View>
             </Animated.View>
-
           </ScrollView>
 
           <TouchableOpacity onPress={handleClear} className="items-center">

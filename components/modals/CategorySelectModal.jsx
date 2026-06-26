@@ -3,8 +3,8 @@ import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from "react-nat
 import AppPressable from "@/components/pressables/AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
-import CloseButton from "./CloseButton";
-import NativeBottomSheet from "./NativeBottomSheet";
+import CloseButton from "../CloseButton";
+import NativeBottomSheet from "../NativeBottomSheet";
 import { DEFAULT_CATEGORY_ICON } from "@/constants/categoryIcons";
 
 const CategorySelectModal = ({

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useColorScheme as useDeviceColorScheme } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { THEMES } from '@/constants/colors';
@@ -12,6 +12,7 @@ export const ThemeProvider = ({ children }) => {
   const [themeMode, setThemeModeState] = useState('system'); // 'light', 'dark', 'system'
   const [glassOpacity, setGlassOpacityState] = useState(0.5); // ranges from 0.1 to 1.0
   const [isLoaded, setIsLoaded] = useState(false);
+  const opacityTimeoutRef = useRef(null);
 
   // Load saved preferences
   useEffect(() => {
@@ -64,14 +65,19 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  const setGlassOpacity = async (newOpacity) => {
+  const setGlassOpacity = (newOpacity) => {
     if (typeof newOpacity === 'number' && newOpacity >= 0.1 && newOpacity <= 1.0) {
       setGlassOpacityState(newOpacity);
-      try {
-        await SecureStore.setItemAsync('user-glass-opacity', newOpacity.toString());
-      } catch (error) {
-        console.error("Error saving glass opacity preference:", error);
+      if (opacityTimeoutRef.current) {
+        clearTimeout(opacityTimeoutRef.current);
       }
+      opacityTimeoutRef.current = setTimeout(async () => {
+        try {
+          await SecureStore.setItemAsync('user-glass-opacity', newOpacity.toString());
+        } catch (error) {
+          console.error("Error saving glass opacity preference:", error);
+        }
+      }, 400);
     }
   };
 

@@ -1,4 +1,4 @@
-import { View, Platform, StyleSheet, Animated, Pressable, Easing } from 'react-native'
+import { View, Platform, StyleSheet, Animated, Pressable, Easing, Dimensions } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
 import { usePathname, withLayoutContext } from 'expo-router'
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/context/ThemeContext';
 import { createMaterialTopTabNavigator } from "expo-router/js-top-tabs";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { Navigator } = createMaterialTopTabNavigator();
 const MaterialTopTabs = withLayoutContext(Navigator);
@@ -21,10 +22,10 @@ const TAB_NAMES = ['index', 'activity', 'create', 'social', 'fields'];
 //   const activeTabWidth = activeAreaWidth / tabCount;
 
 //   const EXTRA_WIDTH = 26;
-  
+
 //   const PILL_WIDTH = activeTabWidth + EXTRA_WIDTH;
 //   const PILL_HEIGHT = 62;
-  
+
 //   // FIXED: Changed 14 back to 16 to match paddingHorizontal perfectly
 //   // Centered offset: 16px padding - (20 / 2) = 16 - 10 = 6px
 //   const PILL_OFFSET_X = 16 - (EXTRA_WIDTH / 2); 
@@ -104,60 +105,48 @@ const TAB_NAMES = ['index', 'activity', 'create', 'social', 'fields'];
 
 const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim }) => {
   const { glassOpacity } = useTheme();
-  const [tabBarWidth, setTabBarWidth] = useState(0);
+  const [tabBarWidth, setTabBarWidth] = useState(Dimensions.get('window').width - 32);
 
-  // Active area is the width minus the 16px padding on each side (32 total)
-  const activeAreaWidth = tabBarWidth ? tabBarWidth - 32 : 0;
+  // Expand active area to increase per-step travel distance (pill starts at -5, so needs wider steps)
+  const activeAreaWidth = tabBarWidth ? tabBarWidth - 2 : 0;
   const activeTabWidth = activeAreaWidth / tabCount;
 
-  const EXTRA_WIDTH = 26;
+  const EXTRA_WIDTH = 10; // Positive overhang to create a distinct capsule/pill shape
   const PILL_WIDTH = activeTabWidth + EXTRA_WIDTH;
-  const PILL_HEIGHT = 62;
-  
-  // Centered offset: 16px padding - (20 / 2) = 16 - 10 = 6px
-  const PILL_OFFSET_X = 16 - (EXTRA_WIDTH / 2); 
+  const PILL_HEIGHT = 46; // Shorter height for a sleeker profile
+  const TAB_BAR_HEIGHT = 72; // must match outer container height
+  const PILL_TOP = 5; // Centered vertically
+
+  // Centered offset: adjusted left offset to align horizontally with the icons
+  const PILL_OFFSET_X = -4;
+
+  // Local spring animation for active tab sliding (guarantees 100% reliability and smooth iOS motion)
+  const slideAnim = useRef(new Animated.Value(selectedIndex)).current;
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: selectedIndex,
+      useNativeDriver: true,
+      tension: 160,
+      friction: 16,
+    }).start();
+  }, [selectedIndex]);
 
   // Dynamically generate the interpolation arrays based on tabCount
   const positionInput = [];
   const translateXOutput = [];
-  const scaleXOutput = [];
 
   for (let i = 0; i < tabCount; i++) {
-    // Resting points (Exactly on a tab)
     positionInput.push(i);
     translateXOutput.push(PILL_OFFSET_X + i * activeTabWidth);
-    scaleXOutput.push(1); // Normal width at rest
-
-    if (i < tabCount - 1) {
-      // Quarter-ramp up: pill starts widening early
-      positionInput.push(i + 0.25);
-      translateXOutput.push(PILL_OFFSET_X + (i + 0.25) * activeTabWidth);
-      scaleXOutput.push(1.25);
-
-      // Peak stretch at the halfway point between tabs
-      positionInput.push(i + 0.5);
-      translateXOutput.push(PILL_OFFSET_X + (i + 0.5) * activeTabWidth);
-      scaleXOutput.push(1.5); // Stretch 50% wider at peak drag
-
-      // Quarter-ramp down: pill narrows as it lands
-      positionInput.push(i + 0.75);
-      translateXOutput.push(PILL_OFFSET_X + (i + 0.75) * activeTabWidth);
-      scaleXOutput.push(1.25);
-    }
   }
 
-  // Create the exact values linked to the user's swipe gesture
-  const translateX = position && positionInput.length ? position.interpolate({
+  // Create the exact values linked to the spring gesture
+  const translateX = slideAnim.interpolate({
     inputRange: positionInput,
     outputRange: translateXOutput,
     extrapolate: 'clamp',
-  }) : 0;
-
-  const scaleX = position && positionInput.length ? position.interpolate({
-    inputRange: positionInput,
-    outputRange: scaleXOutput,
-    extrapolate: 'clamp',
-  }) : 1;
+  });
 
   // Simple linear scaling: 0 (rest) -> 1, 1 (fully pressed) -> 1.15 (scaled up)
   const pillPressScale = pressAnim ? pressAnim.interpolate({
@@ -173,57 +162,56 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim
 
   return (
     <View style={StyleSheet.absoluteFillObject} onLayout={handleLayout} pointerEvents="none">
-      <BlurView
-        tint='default'
-        intensity={Math.round(glassOpacity * 40)}
-        experimentalBlurMethod="dimezisBlurView"
-        style={{
-          ...StyleSheet.absoluteFillObject,
-          borderRadius: 36, 
-          overflow: 'hidden',
-        }}
-      />
-      
+      {/* iOS only: full-tab BlurView glass background */}
+      {Platform.OS === 'ios' && (
+        <BlurView
+          tint='default'
+          intensity={Math.round(10 + glassOpacity * 80)}
+          experimentalBlurMethod="dimezisBlurView"
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            borderRadius: 36,
+            overflow: 'hidden',
+          }}
+        />
+      )}
+
       {tabBarWidth > 0 && (
         <Animated.View
           pointerEvents="none"
           style={{
             position: 'absolute',
-            top: '50%',
-            marginTop: -(PILL_HEIGHT / 2),
-            left: 0, 
+            top: PILL_TOP,
+            left: 0,
             width: PILL_WIDTH,
             height: PILL_HEIGHT,
             borderRadius: PILL_HEIGHT / 2,
-            overflow: 'hidden', 
-            shadowColor: '#007aff',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.10,
-            shadowRadius: 8,
-            borderWidth: 1,
+            overflow: 'hidden',
+            borderWidth: Platform.OS === 'ios' ? 1 : 0,
             borderColor: Platform.OS === 'ios'
               ? 'rgba(255,255,255,0.6)'
-              : 'rgba(255,255,255,0.8)',
-            // scaleX = swipe stretch on drag; pillPressScale = responsive hold/tap scale
-            transform: [{ translateX }, { scaleX }, { scale: pillPressScale }],
+              : 'transparent',
+            backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(0, 122, 255, 0.22)',
+            transform: [{ translateX }, { scale: pillPressScale }],
           }}
         >
-          <BlurView
-            tint= 'systemUltraThinMaterialDark'
-            intensity={Math.round(glassOpacity * 60)}
-            experimentalBlurMethod="dimezisBlurView"
-            style={StyleSheet.absoluteFillObject}
-          />
-          <View
-            style={[
-              StyleSheet.absoluteFillObject,
-              {
-                backgroundColor: Platform.OS === 'ios'
-                  ? `rgba(255,255,255,${glassOpacity * 0.2})`
-                  : `rgba(255,255,255,${glassOpacity * 0.5})`,
-              }
-            ]}
-          />
+          {Platform.OS === 'ios' && (
+            // iOS: glass blur pill
+            <>
+              <BlurView
+                tint='systemUltraThinMaterialDark'
+                intensity={Math.round(10 + glassOpacity * 90)}
+                experimentalBlurMethod="dimezisBlurView"
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View
+                style={[
+                  StyleSheet.absoluteFillObject,
+                  { backgroundColor: `rgba(255,255,255,${glassOpacity * 0.2})` }
+                ]}
+              />
+            </>
+          )}
         </Animated.View>
       )}
     </View>
@@ -232,25 +220,37 @@ const AnimatedTabBarBackground = ({ selectedIndex, tabCount, position, pressAnim
 
 const CustomTabBar = ({ state, descriptors, navigation, position }) => {
   const { glassOpacity, colors } = useTheme();
+  const insets = useSafeAreaInsets();
   // Drives the pill scale-up/scale-down animation
   const pressAnim = useRef(new Animated.Value(0)).current;
+  // Sit 12px above the system nav bar on iOS; on Android, optimize for gesture/3-button modes
+  const bottomOffset = Platform.OS === 'ios'
+    ? insets.bottom + 12
+    : insets.bottom > 30
+      ? insets.bottom + 6   // 3-button navigation (e.g. 48px inset): sit tightly above buttons
+      : Math.max(insets.bottom, 12); // gesture navigation (e.g. 16-24px inset): match side margin (16px) for corner concentricity
 
   return (
     <View
       style={{
         position: 'absolute',
-        bottom: 20,
+        bottom: bottomOffset,
         left: 0,
         right: 0,
         height: 72, // FIXED: 60px pill + 6px top pad + 6px bottom pad = 72
         borderRadius: 36, // FIXED: Keep it perfectly rounded (72/2)
-        backgroundColor: Platform.OS === 'ios' ? 'transparent' : `rgba(${colors.card === '#FFFFFF' ? '255, 255, 255' : '15, 23, 42'}, ${glassOpacity * 0.8})`,
-        borderWidth: 1.5,
-        borderColor: Platform.OS === 'ios' ? `rgba(255, 255, 255, ${glassOpacity * 0.3})` : 'rgba(0, 0, 0, 0.06)',
-        shadowColor: '#0f172a',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
+        backgroundColor: Platform.OS === 'ios'
+          ? 'transparent'
+          : colors.card === '#FFFFFF'
+            ? '#FFFFFF'   // light mode: pure white
+            : 'rgba(22, 27, 40, 0.98)',      // dark mode: near-opaque dark navy
+        borderWidth: Platform.OS === 'ios' ? 1.5 : 1,
+        borderColor: Platform.OS === 'ios'
+          ? `rgba(255, 255, 255, ${glassOpacity * 0.3})`
+          : colors.card === '#FFFFFF'
+            ? 'rgba(0, 0, 0, 0.08)'
+            : 'rgba(255, 255, 255, 0.08)',
+        shadowOpacity: Platform.OS === 'ios' ? 0.15 : 0,
         elevation: 0,
         paddingTop: 6,
         paddingBottom: 6,
@@ -344,7 +344,7 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
                 transform: [{ scale: iconScale }]
               }}>
                 <Animated.View style={{ position: 'absolute', opacity: inactiveOpacity }}>
-                  {options.tabBarIcon && options.tabBarIcon({ focused: false, color: '#000000' })}
+                  {options.tabBarIcon && options.tabBarIcon({ focused: false, color: colors.textMain })}
                 </Animated.View>
                 <Animated.View style={{ position: 'absolute', opacity: activeOpacity }}>
                   {options.tabBarIcon && options.tabBarIcon({ focused: true, color: '#007aff' })}
@@ -352,7 +352,7 @@ const CustomTabBar = ({ state, descriptors, navigation, position }) => {
               </Animated.View>
               <View style={{ marginTop: 2, alignItems: 'center', justifyContent: 'center' }}>
                 <Animated.Text style={{
-                  color: '#000000',
+                  color: colors.textMain,
                   fontFamily: 'sansMed',
                   fontSize: 10,
                   opacity: inactiveOpacity
@@ -403,7 +403,7 @@ const AndroidTabs = () => {
         tabBarInactiveTintColor: '#000000',
         tabBarShowLabel: true,
         tabBarShowIcon: true,
-        tabBarIndicatorStyle: { display: 'none' }, 
+        tabBarIndicatorStyle: { display: 'none' },
         tabBarLabelStyle: {
           fontFamily: 'sansMed',
           fontSize: 10,

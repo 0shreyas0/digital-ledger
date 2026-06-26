@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Animated } from "react-native";
-import CloseButton from "./CloseButton";
-import NativeBottomSheet from "./NativeBottomSheet";
+import CloseButton from "../CloseButton";
+import NativeBottomSheet from "../NativeBottomSheet";
 import { useTheme } from "@/context/ThemeContext";
 
 const months = [

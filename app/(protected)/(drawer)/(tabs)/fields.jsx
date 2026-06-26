@@ -14,50 +14,13 @@ import SafeScreen from "@/components/SafeScreen";
 const CustomSegmentedControl = ({ activeTab, onTabPress, colors }) => {
   const pillWidth = useRef(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
-  const stretchAnim = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const animateTo = useCallback((toPx) => {
-    // Phase 1: stretch pill toward target
-    Animated.timing(stretchAnim, {
-      toValue: 1.18,
-      duration: 110,
-      useNativeDriver: true,
-    }).start();
-
-    // Phase 2: spring slide — natural overshoot
-    Animated.spring(slideAnim, {
+    Animated.timing(slideAnim, {
       toValue: toPx,
+      duration: 200,
       useNativeDriver: true,
-      stiffness: 280,
-      damping: 22,
-      mass: 0.8,
     }).start();
-
-    // Phase 3: snap back + landing pulse
-    setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(stretchAnim, {
-          toValue: 1,
-          useNativeDriver: true,
-          stiffness: 400,
-          damping: 18,
-        }),
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 1.06,
-            duration: 80,
-            useNativeDriver: true,
-          }),
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-            stiffness: 350,
-            damping: 14,
-          }),
-        ]),
-      ]).start();
-    }, 100);
   }, []);
 
   const handlePress = useCallback((tab) => {
@@ -68,18 +31,18 @@ const CustomSegmentedControl = ({ activeTab, onTabPress, colors }) => {
 
   // Measure once, snap pill to correct side without animating
   const handleLayout = useCallback((e) => {
-    const half = e.nativeEvent.layout.width / 2;
-    pillWidth.current = half;
-    slideAnim.setValue(activeTab === 'tags' ? 0 : half);
+    const W = e.nativeEvent.layout.width;
+    // Account for padding (p-1 is 4px on each side) and border (1px on each side)
+    const travelDistance = (W - 10) / 2;
+    pillWidth.current = travelDistance;
+    slideAnim.setValue(activeTab === 'tags' ? 0 : travelDistance);
   }, [activeTab]);
 
   return (
     <View
-      className="flex-row items-center rounded-full border border-borderSubtle mt-1 relative overflow-hidden p-1"
+      className="flex-row items-center rounded-full border border-borderSubtle bg-white mt-1 relative overflow-hidden p-1"
       onLayout={handleLayout}
     >
-      <View style={StyleSheet.absoluteFillObject} className="bg-surface" />
-
       <View className="absolute inset-0 p-1" pointerEvents="none">
         <Animated.View
           style={{
@@ -87,8 +50,6 @@ const CustomSegmentedControl = ({ activeTab, onTabPress, colors }) => {
             height: '100%',
             transform: [
               { translateX: slideAnim },
-              { scaleX: stretchAnim },
-              { scale: scaleAnim },
             ],
           }}
           className="bg-segmentedControl rounded-full"

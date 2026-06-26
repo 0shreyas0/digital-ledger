@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, Animated, Dimensions, Easing } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import CloseButton from "./CloseButton";
-import NativeBottomSheet from "./NativeBottomSheet";
+import CloseButton from "../CloseButton";
+import NativeBottomSheet from "../NativeBottomSheet";
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const months = [

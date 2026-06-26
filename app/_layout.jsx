@@ -1,3 +1,4 @@
+import { LogBox } from "react-native";
 import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
@@ -8,6 +9,12 @@ import { TransactionProvider } from "@/context/TransactionContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "@/global.css";
+
+// Ignore third-party package and system warnings that cannot be fixed in application code
+LogBox.ignoreLogs([
+  "SafeAreaView has been deprecated", // from third-party library packages
+  "Clerk: Clerk has been loaded with development keys", // Clerk development environment notice
+]);
 
 SplashScreen.preventAutoHideAsync();
 

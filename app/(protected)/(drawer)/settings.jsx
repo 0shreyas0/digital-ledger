@@ -54,18 +54,39 @@ const GlassOpacitySlider = ({ value, onChange, colors }) => {
 
   // Fallback: universal @expo/ui Slider for Android / older iOS
   const { Slider } = require('@expo/ui');
+  
+  let sliderContent = (
+    <Slider
+      value={value}
+      min={0.1}
+      max={1.0}
+      onValueChange={(v) => onChange(parseFloat(v.toFixed(2)))}
+    />
+  );
+
+  if (Platform.OS === 'android') {
+    const { Host } = require('@expo/ui/jetpack-compose');
+    sliderContent = (
+      <Host style={{ width: '100%', height: 44 }}>
+        {sliderContent}
+      </Host>
+    );
+  } else if (Platform.OS === 'ios') {
+    const { Host } = require('@expo/ui/swift-ui');
+    sliderContent = (
+      <Host style={{ width: '100%', height: 44 }}>
+        {sliderContent}
+      </Host>
+    );
+  }
+
   return (
     <View style={{ gap: 8, marginTop: 4 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Text className="text-sm font-sansBold text-textMain">Glass Opacity</Text>
         <Text className="text-sm font-sansBold text-primary">{percentage}</Text>
       </View>
-      <Slider
-        value={value}
-        min={0.1}
-        max={1.0}
-        onValueChange={(v) => onChange(parseFloat(v.toFixed(2)))}
-      />
+      {sliderContent}
     </View>
   );
 };
@@ -202,16 +223,18 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Glassmorphism Section */}
-      <View className="bg-card p-5 rounded-card gap-4 shadow-sm">
-        <Text className="text-lg font-sansBold text-textMain">
-          Glassmorphism
-        </Text>
-        <Text className="font-sansReg text-textMuted text-xs -mt-2">
-          Adjust the opacity level of all glass panels and blur effects across the app.
-        </Text>
-        <GlassOpacitySlider value={glassOpacity} onChange={setGlassOpacity} colors={colors} />
-      </View>
+      {/* Glassmorphism Section - iOS Only */}
+      {Platform.OS === 'ios' && (
+        <View className="bg-card p-5 rounded-card gap-4 shadow-sm">
+          <Text className="text-lg font-sansBold text-textMain">
+            Glassmorphism
+          </Text>
+          <Text className="font-sansReg text-textMuted text-xs -mt-2">
+            Adjust the opacity level of all glass panels and blur effects across the app.
+          </Text>
+          <GlassOpacitySlider value={glassOpacity} onChange={setGlassOpacity} colors={colors} />
+        </View>
+      )}
 
     </ScrollView>
   </SafeScreen>
