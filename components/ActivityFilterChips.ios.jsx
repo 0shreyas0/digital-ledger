@@ -22,6 +22,7 @@ import {
   padding,
   foregroundStyle,
   glassEffect,
+  fixedSize,
 } from '@expo/ui/swift-ui/modifiers';
 
 const DATE_FILTERS = [
@@ -65,6 +66,7 @@ const ActivityFilterChips = ({ activeType = 'all', onPress }) => {
                     buttonBorderShape('capsule'),
                     controlSize('regular'),
                     labelStyle(hasChevron ? 'titleAndIcon' : 'titleOnly'),
+                    fixedSize({ horizontal: true, vertical: false }),
                     padding({
                       top: 8,
                       bottom: 8,
