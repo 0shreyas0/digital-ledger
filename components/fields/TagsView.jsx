@@ -200,19 +200,14 @@ const TagsView = forwardRef((props, ref) => {
               activeClassName="active:opacity-70"
               style={{ backgroundColor: item.color }}
             >
-              <View
-                onStartShouldSetResponder={() => true}
-                onTouchEnd={(e) => e.stopPropagation()}
+              <Pressable
+                onPress={() => openEditModal(item)}
+                className="h-14 w-14 p-3 rounded-full active:bg-accent items-center justify-center mr-3"
               >
-                <Pressable
-                  onPress={() => openEditModal(item)}
-                  className="h-14 w-14 p-3 rounded-full active:bg-accent items-center justify-center mr-3"
-                >
-                  {({ pressed }) => (
-                    <Ionicons size={22} name="pencil" color={pressed ? "#000000" : colors.textMain} />
-                  )}
-                </Pressable>
-              </View>
+                {({ pressed }) => (
+                  <Ionicons size={22} name="pencil" color={pressed ? "#000000" : colors.textMain} />
+                )}
+              </Pressable>
               <View className="flex-1">
                 <Text className="font-sansBold text-lg text-textMain">
                   {item.tag_name}

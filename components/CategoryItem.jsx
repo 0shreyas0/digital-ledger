@@ -15,21 +15,15 @@ const CategoryItem = ({ item, onDelete, isDeleting = false, onPress, onEditIconP
       className="flex-row items-center justify-between bg-card border border-borderSubtle rounded-card px-4 py-4"
     >
       <View className="flex-row items-center gap-3 flex-1">
-        {/* stopPropagation: wrap in a View that captures touch so it doesn't bubble to parent nav press */}
-        <View
-          onStartShouldSetResponder={() => true}
-          onTouchEnd={(e) => e.stopPropagation()}
-        >
-          <AppPressable onPress={onEditIconPress} className="bg-primary/20 rounded-full p-3">
-            {({ pressed }) => (
-              <Ionicons
-                name={item.icon || DEFAULT_CATEGORY_ICON}
-                size={20}
-                color={pressed ? "#000000" : colors.primary}
-              />
-            )}
-          </AppPressable>
-        </View>
+        <AppPressable onPress={onEditIconPress} className="bg-primary/20 rounded-full p-3">
+          {({ pressed }) => (
+            <Ionicons
+              name={item.icon || DEFAULT_CATEGORY_ICON}
+              size={20}
+              color={pressed ? "#000000" : colors.primary}
+            />
+          )}
+        </AppPressable>
         <View className="flex-1">
           <Text className="font-sansBold text-lg text-textMain">
             {item.category}
